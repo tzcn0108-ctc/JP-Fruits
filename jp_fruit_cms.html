@@ -143,6 +143,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
       <div class="nav-section">設定</div>
       <div class="nav-item" onclick="showPage('featured')" id="nav-featured"><span class="icon">🏆</span>熱賣專區管理</div>
       <div class="nav-item" onclick="showPage('banner')" id="nav-banner"><span class="icon">🌟</span>本週主打 Banner</div>
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">⚙️</span>網站設定</div>
       <div class="nav-item" onclick="showPage('categories')" id="nav-categories"><span class="icon">🏷️</span>分類設定</div>
     </nav>
     <div class="sidebar-footer">
@@ -193,6 +194,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
         <div class="tab" onclick="filterProductStatus('discount',this)">特價</div>
         <div class="tab" onclick="filterProductStatus('oos',this)">售罄</div>
         <div class="tab" onclick="filterProductStatus('inactive',this)">下架</div>
+        <div class="tab" onclick="filterProductStatus('verify',this)">⚠️ 待核實英文名</div>
       </div>
       <div class="content" style="padding-top:16px;">
         <div class="table-wrap">
@@ -501,6 +503,103 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
   </div>
 </div>
 
+
+    <!-- SETTINGS -->
+    <div id="page-settings" style="display:none;">
+      <div class="header">
+        <div class="page-title">網站設定 Site Settings</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="saveSettings()">💾 儲存並發佈</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice">⚙️ 呢度嘅設定會同步到客戶訂單表格，包括所有文字、字體、聯絡方式。</div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🖋 字體 Font</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>主要字體 Main Font</label>
+              <select id="st-font">
+                <option value="'Noto Sans HK',sans-serif">Noto Sans HK（現用）</option>
+                <option value="'Noto Serif HK',serif">Noto Serif HK（書法感）</option>
+                <option value="Arial,sans-serif">Arial（簡潔）</option>
+                <option value="Georgia,serif">Georgia（優雅）</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>標題字體 Heading Font</label>
+              <select id="st-heading-font">
+                <option value="'Pacifico',cursive">Pacifico（現用手寫感）</option>
+                <option value="'Playfair Display',serif">Playfair Display（高端）</option>
+                <option value="inherit">與主要字體相同</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🏪 聯絡資料 Contact</div>
+          <div class="form-row">
+            <div class="form-group"><label>WhatsApp 號碼（落單用）</label><input type="text" id="st-whatsapp" placeholder="447700900000"></div>
+            <div class="form-group"><label>Facebook 連結</label><input type="text" id="st-facebook" placeholder="https://www.facebook.com/jpfruitsuk"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Instagram 連結</label><input type="text" id="st-instagram" placeholder="https://www.instagram.com/jp_fruit_swlondon"></div>
+            <div class="form-group"><label>WhatsApp 群組連結</label><input type="text" id="st-wagroup" placeholder="https://chat.whatsapp.com/..."></div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🦸 Hero 區域文字</div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 副標題（中文）</label><input type="text" id="st-hero-sub-zh" placeholder="精選日本時令水果、港式美食..."></div>
+            <div class="form-group"><label>🇬🇧 Subheading (EN)</label><input type="text" id="st-hero-sub-en" placeholder="Premium Japanese fruits, HK flavours..."></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 Chip 1</label><input type="text" id="st-chip1-zh" placeholder="✈️ 日本直送"></div>
+            <div class="form-group"><label>🇬🇧 Chip 1</label><input type="text" id="st-chip1-en" placeholder="✈️ Direct from Japan"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 Chip 2</label><input type="text" id="st-chip2-zh" placeholder="🏠 South London 送貨"></div>
+            <div class="form-group"><label>🇬🇧 Chip 2</label><input type="text" id="st-chip2-en" placeholder="🏠 South London Delivery"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 Chip 3</label><input type="text" id="st-chip3-zh" placeholder="💳 貨到付款"></div>
+            <div class="form-group"><label>🇬🇧 Chip 3</label><input type="text" id="st-chip3-en" placeholder="💳 Pay on Delivery"></div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🚚 送貨資訊（底部）</div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 送貨安排（中文）</label><textarea id="st-del-zh" rows="3" placeholder="逢週五送貨..."></textarea></div>
+            <div class="form-group"><label>🇬🇧 Delivery Info (EN)</label><textarea id="st-del-en" rows="3" placeholder="Delivery every Friday..."></textarea></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 聯絡我們（中文）</label><textarea id="st-contact-zh" rows="3" placeholder="截單後 WhatsApp 確認..."></textarea></div>
+            <div class="form-group"><label>🇬🇧 Contact Us (EN)</label><textarea id="st-contact-en" rows="3" placeholder="We'll confirm via WhatsApp..."></textarea></div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">⏰ 截單設定</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>截單日 Cutoff Day</label>
+              <select id="st-cutoff-day">
+                <option value="2">週二 Tuesday</option>
+                <option value="1">週一 Monday</option>
+                <option value="3">週三 Wednesday</option>
+                <option value="4">週四 Thursday</option>
+              </select>
+            </div>
+            <div class="form-group"><label>截單時間 Cutoff Time</label><input type="time" id="st-cutoff-time" value="13:00"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
 <!-- PRODUCT MODAL -->
 <div class="modal-overlay" id="product-modal">
   <div class="modal">
@@ -639,12 +738,13 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 <!-- CATEGORY MODAL -->
 <div class="modal-overlay" id="category-modal">
   <div class="modal" style="width:420px;">
-    <div class="modal-header"><div class="modal-title">新增分類</div><button class="close-btn" onclick="closeModal('category-modal')">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="cat-modal-title">新增分類</div><button class="close-btn" onclick="closeModal('category-modal')">✕</button></div>
     <div class="modal-body">
       <div class="form-group"><label>🇬🇧 English Category Name</label><input type="text" id="c-name" placeholder="e.g. HK Dim Sum"></div>
       <div class="form-group"><label>🇭🇰 中文分類名稱</label><input type="text" id="c-name-zh" placeholder="e.g. 港式點心"></div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-danger" id="cat-delete-btn" style="display:none;margin-right:auto;" onclick="deleteCategoryFromModal()">刪除分類</button>
       <button class="btn btn-ghost" onclick="closeModal('category-modal')">取消</button>
       <button class="btn btn-primary" onclick="saveCategory()">儲存</button>
     </div>
@@ -654,224 +754,224 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 <script>
 
 const SEED_PRODUCTS = [
-  {id:'p000',nameZh:'四川麻辣牛肉米線',nameEn:'Spicy Mala Tang with sliced beef',name:'Spicy Mala Tang with sliced beef',zh:'四川麻辣牛肉米線',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:64},
-  {id:'p001',nameZh:'新加坡海鮮喇沙湯麵',nameEn:'Singapore Seafood Laksa Ramen',name:'Singapore Seafood Laksa Ramen',zh:'新加坡海鮮喇沙湯麵',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:75},
-  {id:'p002',nameZh:'日式叉燒豬骨湯拉麵',nameEn:'Japanese Tonkotsu Ramen',name:'Japanese Tonkotsu Ramen',zh:'日式叉燒豬骨湯拉麵',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:65},
-  {id:'p003',nameZh:'馬拉椰香雞肉白湯拉麵',nameEn:'Malaysiana Chicken Ramen with Cocunut',name:'Malaysiana Chicken Ramen with Cocunut',zh:'馬拉椰香雞肉白湯拉麵',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
-  {id:'p004',nameZh:'港式濃茄牛肉湯麵',nameEn:'HK Style Tomato Beef Noodle Soup',name:'HK Style Tomato Beef Noodle Soup',zh:'港式濃茄牛肉湯麵',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p005',nameZh:'五色素食菠菜烏冬',nameEn:'Five Elements Spinach Veggie Udon',name:'Five Elements Spinach Veggie Udon',zh:'五色素食菠菜烏冬',cat:'others',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p006',nameZh:'菠蘿紅豆包',nameEn:'Red Bean Pineapple Bun',name:'Red Bean Pineapple Bun',zh:'菠蘿紅豆包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p007',nameZh:'Parma Ham芝士火腿包',nameEn:'Cheese and Parma Ham Bun',name:'Cheese and Parma Ham Bun',zh:'Parma Ham芝士火腿包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p008',nameZh:'特濃芝士腸仔包',nameEn:'Double Cheese Sausage Bun',name:'Double Cheese Sausage Bun',zh:'特濃芝士腸仔包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:26},
-  {id:'p009',nameZh:'粟米吞拿魚包',nameEn:'Corn and Tuna Bun 90g',name:'Corn and Tuna Bun 90g',zh:'粟米吞拿魚包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p010',nameZh:'餐蛋包',nameEn:'SPAM Egg Bun',name:'SPAM Egg Bun',zh:'餐蛋包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p011',nameZh:'特濃朱古力包',nameEn:'Double Cocoa Bun',name:'Double Cocoa Bun',zh:'特濃朱古力包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
-  {id:'p012',nameZh:'香蔥火腿包',nameEn:'Spring Onion and Ham Bun',name:'Spring Onion and Ham Bun',zh:'香蔥火腿包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21},
-  {id:'p013',nameZh:'Knead n Nap 包羅萬有套餐',nameEn:'Knead n Nap Build-Your-Own Bread Set',name:'Knead n Nap Build-Your-Own Bread Set',zh:'Knead n Nap 包羅萬有套餐',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:61},
-  {id:'p014',nameZh:'菠蘿叉燒包',nameEn:'Pineapple Cha Siu Bun 100g',name:'Pineapple Cha Siu Bun 100g',zh:'菠蘿叉燒包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:43},
-  {id:'p015',nameZh:'開心果溶岩包',nameEn:'Pistachio Lava Bun 100g',name:'Pistachio Lava Bun 100g',zh:'開心果溶岩包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p016',nameZh:'麻糬肉鬆包',nameEn:'Mochi Pork Floss Bun',name:'Mochi Pork Floss Bun',zh:'麻糬肉鬆包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
-  {id:'p017',nameZh:'椰蓉卷',nameEn:'Coconut Shreds Roll',name:'Coconut Shreds Roll',zh:'椰蓉卷',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p018',nameZh:'菠蘿包',nameEn:'Pineapple Bun',name:'Pineapple Bun',zh:'菠蘿包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:22},
-  {id:'p019',nameZh:'斯里蘭卡肉桂卷',nameEn:'Sri Lankan Cinnamon Roll',name:'Sri Lankan Cinnamon Roll',zh:'斯里蘭卡肉桂卷',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p020',nameZh:'紅豆麻糬包',nameEn:'Red Bean Mochi Bun',name:'Red Bean Mochi Bun',zh:'紅豆麻糬包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p021',nameZh:'日本甜王草莓',nameEn:'Amaou Strawberries',name:'Amaou Strawberries',zh:'日本甜王草莓',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p022',nameZh:'靜岡皇冠蜜瓜',nameEn:'Shizuka Crown Melon',name:'Shizuka Crown Melon',zh:'靜岡皇冠蜜瓜',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p023',nameZh:'赤肉蜜瓜',nameEn:'Japan Red Melon',name:'Japan Red Melon',zh:'赤肉蜜瓜',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p024',nameZh:'宮崎太陽之子芒果禮盒 1kg/盒',nameEn:'Miyazaki Sun Mango Gift Box 1kg',name:'Miyazaki Sun Mango Gift Box 1kg',zh:'宮崎太陽之子芒果禮盒 1kg/盒',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p025',nameZh:'土岐水蜜桃蘋果',nameEn:'Toki Peach Apple',name:'Toki Peach Apple',zh:'土岐水蜜桃蘋果',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p026',nameZh:'紅春香番薯',nameEn:'Beniharuka Sweet Potato',name:'Beniharuka Sweet Potato',zh:'紅春香番薯',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p027',nameZh:'日本祖父江銀杏禮盒 500g',nameEn:'Aichi Gingko Box Set 500g',name:'Aichi Gingko Box Set 500g',zh:'日本祖父江銀杏禮盒 500g',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p028',nameZh:'美味棧 清熱止咳潤肺湯包',nameEn:'Yummy House Herbal Lung Soothing Soup Pack',name:'Yummy House Herbal Lung Soothing Soup Pack',zh:'美味棧 清熱止咳潤肺湯包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p029',nameZh:'美味棧 羅漢果菜乾湯包',nameEn:'Yummy House Monk Fruit & Dried Veg Soup Pack',name:'Yummy House Monk Fruit & Dried Veg Soup Pack',zh:'美味棧 羅漢果菜乾湯包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
+  {id:'p000',nameZh:'四川麻辣牛肉米線',nameEn:'Spicy Mala Tang with sliced beef',name:'Spicy Mala Tang with sliced beef',zh:'四川麻辣牛肉米線',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:64},
+  {id:'p001',nameZh:'新加坡海鮮喇沙湯麵',nameEn:'Singapore Seafood Laksa Ramen',name:'Singapore Seafood Laksa Ramen',zh:'新加坡海鮮喇沙湯麵',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:75},
+  {id:'p002',nameZh:'日式叉燒豬骨湯拉麵',nameEn:'Japanese Tonkotsu Ramen',name:'Japanese Tonkotsu Ramen',zh:'日式叉燒豬骨湯拉麵',cat:'hk-homecook',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:65},
+  {id:'p003',nameZh:'馬拉椰香雞肉白湯拉麵',nameEn:'Malaysiana Chicken Ramen with Cocunut',name:'Malaysiana Chicken Ramen with Cocunut',zh:'馬拉椰香雞肉白湯拉麵',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
+  {id:'p004',nameZh:'港式濃茄牛肉湯麵',nameEn:'HK Style Tomato Beef Noodle Soup',name:'HK Style Tomato Beef Noodle Soup',zh:'港式濃茄牛肉湯麵',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p005',nameZh:'五色素食菠菜烏冬',nameEn:'Five Elements Spinach Veggie Udon',name:'Five Elements Spinach Veggie Udon',zh:'五色素食菠菜烏冬',cat:'others',price:9.9,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p006',nameZh:'菠蘿紅豆包',nameEn:'Red Bean Pineapple Bun',name:'Red Bean Pineapple Bun',zh:'菠蘿紅豆包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p007',nameZh:'Parma Ham芝士火腿包',nameEn:'Cheese and Parma Ham Bun',name:'Cheese and Parma Ham Bun',zh:'Parma Ham芝士火腿包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p008',nameZh:'特濃芝士腸仔包',nameEn:'Double Cheese Sausage Bun',name:'Double Cheese Sausage Bun',zh:'特濃芝士腸仔包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:26},
+  {id:'p009',nameZh:'粟米吞拿魚包',nameEn:'Corn and Tuna Bun 90g',name:'Corn and Tuna Bun 90g',zh:'粟米吞拿魚包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p010',nameZh:'餐蛋包',nameEn:'SPAM Egg Bun',name:'SPAM Egg Bun',zh:'餐蛋包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p011',nameZh:'特濃朱古力包',nameEn:'Double Cocoa Bun',name:'Double Cocoa Bun',zh:'特濃朱古力包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p012',nameZh:'香蔥火腿包',nameEn:'Spring Onion and Ham Bun',name:'Spring Onion and Ham Bun',zh:'香蔥火腿包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21},
+  {id:'p013',nameZh:'Knead n Nap 包羅萬有套餐',nameEn:'Knead n Nap Build-Your-Own Bread Set',name:'Knead n Nap Build-Your-Own Bread Set',zh:'Knead n Nap 包羅萬有套餐',cat:'bread',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:61},
+  {id:'p014',nameZh:'菠蘿叉燒包',nameEn:'Pineapple Cha Siu Bun 100g',name:'Pineapple Cha Siu Bun 100g',zh:'菠蘿叉燒包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:43},
+  {id:'p015',nameZh:'開心果溶岩包',nameEn:'Pistachio Lava Bun 100g',name:'Pistachio Lava Bun 100g',zh:'開心果溶岩包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p016',nameZh:'麻糬肉鬆包',nameEn:'Mochi Pork Floss Bun',name:'Mochi Pork Floss Bun',zh:'麻糬肉鬆包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p017',nameZh:'椰蓉卷',nameEn:'Coconut Shreds Roll',name:'Coconut Shreds Roll',zh:'椰蓉卷',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p018',nameZh:'菠蘿包',nameEn:'Pineapple Bun',name:'Pineapple Bun',zh:'菠蘿包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:22},
+  {id:'p019',nameZh:'斯里蘭卡肉桂卷',nameEn:'Sri Lankan Cinnamon Roll',name:'Sri Lankan Cinnamon Roll',zh:'斯里蘭卡肉桂卷',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p020',nameZh:'紅豆麻糬包',nameEn:'Red Bean Mochi Bun',name:'Red Bean Mochi Bun',zh:'紅豆麻糬包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p021',nameZh:'日本甜王草莓',nameEn:'Amaou Strawberries',name:'Amaou Strawberries',zh:'日本甜王草莓',cat:'fruits',price:35.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p022',nameZh:'靜岡皇冠蜜瓜',nameEn:'Shizuka Crown Melon',name:'Shizuka Crown Melon',zh:'靜岡皇冠蜜瓜',cat:'fruits',price:48.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p023',nameZh:'赤肉蜜瓜',nameEn:'Japan Red Melon',name:'Japan Red Melon',zh:'赤肉蜜瓜',cat:'fruits',price:38.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p024',nameZh:'宮崎太陽之子芒果禮盒 1kg/盒',nameEn:'Miyazaki Sun Mango Gift Box 1kg',name:'Miyazaki Sun Mango Gift Box 1kg',zh:'宮崎太陽之子芒果禮盒 1kg/盒',cat:'fruits',price:38.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0,needsVerify:true},
+  {id:'p025',nameZh:'土岐水蜜桃蘋果',nameEn:'Toki Peach Apple',name:'Toki Peach Apple',zh:'土岐水蜜桃蘋果',cat:'fruits',price:18.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0,needsVerify:true},
+  {id:'p026',nameZh:'紅春香番薯',nameEn:'Beniharuka Sweet Potato',name:'Beniharuka Sweet Potato',zh:'紅春香番薯',cat:'fruits',price:8.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p027',nameZh:'日本祖父江銀杏禮盒 500g',nameEn:'Aichi Gingko Box Set 500g',name:'Aichi Gingko Box Set 500g',zh:'日本祖父江銀杏禮盒 500g',cat:'fruits',price:18.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p028',nameZh:'美味棧 清熱止咳潤肺湯包',nameEn:'Yummy House Herbal Lung Soothing Soup Pack',name:'Yummy House Herbal Lung Soothing Soup Pack',zh:'美味棧 清熱止咳潤肺湯包',cat:'bread',price:2.2,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p029',nameZh:'美味棧 羅漢果菜乾湯包',nameEn:'Yummy House Monk Fruit & Dried Veg Soup Pack',name:'Yummy House Monk Fruit & Dried Veg Soup Pack',zh:'美味棧 羅漢果菜乾湯包',cat:'bread',price:2.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
   {id:'p030',nameZh:'美味棧 爽脆菜脯粒 70g',nameEn:'Yummy House Crunchy Pickled Radish 70g',name:'Yummy House Crunchy Pickled Radish 70g',zh:'美味棧 爽脆菜脯粒 70g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
   {id:'p031',nameZh:'美味棧爽口榨菜',nameEn:'Yummy House Sliced Mustard Tuber 70g x 3',name:'Yummy House Sliced Mustard Tuber 70g x 3',zh:'美味棧爽口榨菜',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
   {id:'p032',nameZh:'美味棧秘制雪菜粒',nameEn:'Yummy House Pickled Potherb 70g x 4',name:'Yummy House Pickled Potherb 70g x 4',zh:'美味棧秘制雪菜粒',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p033',nameZh:'叄拾士多「夠抽」甜豉油 30',nameEn:'30 Store Sweet Soy Sauce',name:'30 Store Sweet Soy Sauce',zh:'叄拾士多「夠抽」甜豉油 30',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p034',nameZh:'叄拾士多「勁蔥」蔥油 30',nameEn:'30 Store Spring Onion Oil',name:'30 Store Spring Onion Oil',zh:'叄拾士多「勁蔥」蔥油 30',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
-  {id:'p035',nameZh:'叄拾士多「辣招」蒜味辣椒醬 30',nameEn:'30 Store Garlic Chili Sauce',name:'30 Store Garlic Chili Sauce',zh:'叄拾士多「辣招」蒜味辣椒醬 30',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
-  {id:'p036',nameZh:'叄拾士多「蒜爆」蒜油 30',nameEn:'30 Store Garlic Oil',name:'30 Store Garlic Oil',zh:'叄拾士多「蒜爆」蒜油 30',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p037',nameZh:'文記 大樽裝魷魚味醬 338g',nameEn:'Man Kee Cuttlefish Sauce 338g',name:'Man Kee Cuttlefish Sauce 338g',zh:'文記 大樽裝魷魚味醬 338g',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p038',nameZh:'文記 秘制 XO 醬 220g',nameEn:'Man Kee XO Sauce 220g',name:'Man Kee XO Sauce 220g',zh:'文記 秘制 XO 醬 220g',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p039',nameZh:'文記 大樽裝咖喱醬 365g',nameEn:'Man Kee Curry Sauce 365g',name:'Man Kee Curry Sauce 365g',zh:'文記 大樽裝咖喱醬 365g',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
-  {id:'p040',nameZh:'文記 大樽裝辣椒油 340g',nameEn:'Man Kee Chili Oil 340g',name:'Man Kee Chili Oil 340g',zh:'文記 大樽裝辣椒油 340g',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
-  {id:'p041',nameZh:'冠華齋燒鵝 140g',nameEn:'Guanhua Roast Goose 140g',name:'Guanhua Roast Goose 140g',zh:'冠華齋燒鵝 140g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
-  {id:'p042',nameZh:'冠華紅燒辣魚柳 70g',nameEn:'Guanhua Spicy Braised Fish Fillet 70g',name:'Guanhua Spicy Braised Fish Fillet 70g',zh:'冠華紅燒辣魚柳 70g',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p043',nameZh:'冠華九製陳皮 110g',nameEn:'Guanhua Nine-Process Dried Tangerine Peel 110g',name:'Guanhua Nine-Process Dried Tangerine Peel 110g',zh:'冠華九製陳皮 110g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p044',nameZh:'冠華法製檸檬薑 50g',nameEn:'Guanhua Lemon Ginger Candy 50g',name:'Guanhua Lemon Ginger Candy 50g',zh:'冠華法製檸檬薑 50g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p045',nameZh:'冠華菩提金桔 40g',nameEn:'Guanhua Bodhi Kumquat 40g',name:'Guanhua Bodhi Kumquat 40g',zh:'冠華菩提金桔 40g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p046',nameZh:'冠華鹹香脆魚皮花生 95g',nameEn:'Guanhua Salted Crispy Fish Skin Peanuts 95g',name:'Guanhua Salted Crispy Fish Skin Peanuts 95g',zh:'冠華鹹香脆魚皮花生 95g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p047',nameZh:'味霸 全天然萬用調味料 250g',nameEn:'Taste Power All-Natural Seasoning 250g',name:'Taste Power All-Natural Seasoning 250g',zh:'味霸 全天然萬用調味料 250g',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p048',nameZh:'YAMAKI 日式昆布鰹魚湯底粉 50包',nameEn:'YAMAKI',name:'YAMAKI',zh:'YAMAKI 日式昆布鰹魚湯底粉 50包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21},
-  {id:'p049',nameZh:'悅和大紅浙醋 210ml',nameEn:'Yuet Wo Red Zhejiang Vinegar 210ml',name:'Yuet Wo Red Zhejiang Vinegar 210ml',zh:'悅和大紅浙醋 210ml',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p050',nameZh:'悅和甜豉油 210ml',nameEn:'Yuet Wo Sweet Soy Sauce 210ml',name:'Yuet Wo Sweet Soy Sauce 210ml',zh:'悅和甜豉油 210ml',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
-  {id:'p051',nameZh:'KIRIN 午後の紅茶 原味奶茶 500ml',nameEn:'KIRIN',name:'KIRIN',zh:'KIRIN 午後の紅茶 原味奶茶 500ml',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
-  {id:'p052',nameZh:'KIRIN 午後の紅茶 檸檬茶 500ml',nameEn:'KIRIN',name:'KIRIN',zh:'KIRIN 午後の紅茶 檸檬茶 500ml',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p053',nameZh:'伊藤園 無糖綠茶 600ml',nameEn:'Itoen Unsweetened Green Tea 600ml',name:'Itoen Unsweetened Green Tea 600ml',zh:'伊藤園 無糖綠茶 600ml',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p054',nameZh:'龍角散 免水潤顆粒粉劑 芒果味 20包',nameEn:'Ryukakusan Mango Throat Soothing Granules 20 Sachets',name:'Ryukakusan Mango Throat Soothing Granules 20 Sachets',zh:'龍角散 免水潤顆粒粉劑 芒果味 20包',cat:'fruits',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p055',nameZh:'龍角散 清涼潤喉糖 原味 88g',nameEn:'Ryukakusan Cool Throat Lozenges Original 88g',name:'Ryukakusan Cool Throat Lozenges Original 88g',zh:'龍角散 清涼潤喉糖 原味 88g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p056',nameZh:'牛角 紫菜飯素 20g',nameEn:'Gyukaku Nori Furikake Rice Seasoning 20g',name:'Gyukaku Nori Furikake Rice Seasoning 20g',zh:'牛角 紫菜飯素 20g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
-  {id:'p057',nameZh:'泰國有機乾米粉 200g',nameEn:'Thai Organic Dried Rice Noodles 200g',name:'Thai Organic Dried Rice Noodles 200g',zh:'泰國有機乾米粉 200g',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p058',nameZh:'乾河粉',nameEn:'Dried Phad Thai Noodles',name:'Dried Phad Thai Noodles',zh:'乾河粉',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
-  {id:'p059',nameZh:'泰式炒河烹飪套裝',nameEn:'Phad Thai Cooking Kit',name:'Phad Thai Cooking Kit',zh:'泰式炒河烹飪套裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p060',nameZh:'泰式豉油炒河烹飪套裝',nameEn:'Phad See Ew Cooking Kit',name:'Phad See Ew Cooking Kit',zh:'泰式豉油炒河烹飪套裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p061',nameZh:'泰式船麵烹飪套裝',nameEn:'Boat Soup Noodle Cooking Kit',name:'Boat Soup Noodle Cooking Kit',zh:'泰式船麵烹飪套裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p062',nameZh:'泰式沙嗲串燒烹飪套裝',nameEn:'Thai Satay BBQ Cooking Kit',name:'Thai Satay BBQ Cooking Kit',zh:'泰式沙嗲串燒烹飪套裝',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p063',nameZh:'黃咖喱烹飪套裝',nameEn:'Yellow Curry Cooking Kit',name:'Yellow Curry Cooking Kit',zh:'黃咖喱烹飪套裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p064',nameZh:'紅咖喱烹飪套裝',nameEn:'Red Curry Cooking Kit',name:'Red Curry Cooking Kit',zh:'紅咖喱烹飪套裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p065',nameZh:'青咖喱烹飪套裝',nameEn:'Green Curry Cooking Kit',name:'Green Curry Cooking Kit',zh:'青咖喱烹飪套裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p066',nameZh:'瑪莎文咖喱烹飪套裝',nameEn:'Massaman Curry Cooking Kit',name:'Massaman Curry Cooking Kit',zh:'瑪莎文咖喱烹飪套裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p067',nameZh:'即食黃咖喱',nameEn:'Ready to Eat Yellow Curry',name:'Ready to Eat Yellow Curry',zh:'即食黃咖喱',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p068',nameZh:'即食紅咖喱',nameEn:'Ready to Eat Red Curry',name:'Ready to Eat Red Curry',zh:'即食紅咖喱',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p069',nameZh:'即食青咖喱',nameEn:'Ready to Eat Green Curry',name:'Ready to Eat Green Curry',zh:'即食青咖喱',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
-  {id:'p070',nameZh:'即食瑪莎文咖喱',nameEn:'Ready to Eat Massaman Curry',name:'Ready to Eat Massaman Curry',zh:'即食瑪莎文咖喱',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p071',nameZh:'Ottogi 泡菜味拉麵 120g x5包',nameEn:'Ottogi',name:'Ottogi',zh:'Ottogi 泡菜味拉麵 120g x5包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
-  {id:'p072',nameZh:'出前一丁麻油麵 5包裝',nameEn:'Nissin Demae Ramen Sesame Oil 5-Pack',name:'出前一丁麻油麵 5包裝',zh:'出前一丁麻油麵 5包裝',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p033',nameZh:'叄拾士多「夠抽」甜豉油 30',nameEn:'30 Store Sweet Soy Sauce',name:'30 Store Sweet Soy Sauce',zh:'叄拾士多「夠抽」甜豉油 30',cat:'sauces',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9,needsVerify:true},
+  {id:'p034',nameZh:'叄拾士多「勁蔥」蔥油 30',nameEn:'30 Store Spring Onion Oil',name:'30 Store Spring Onion Oil',zh:'叄拾士多「勁蔥」蔥油 30',cat:'sauces',price:3.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19,needsVerify:true},
+  {id:'p035',nameZh:'叄拾士多「辣招」蒜味辣椒醬 30',nameEn:'30 Store Garlic Chili Sauce',name:'30 Store Garlic Chili Sauce',zh:'叄拾士多「辣招」蒜味辣椒醬 30',cat:'sauces',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2,needsVerify:true},
+  {id:'p036',nameZh:'叄拾士多「蒜爆」蒜油 30',nameEn:'30 Store Garlic Oil',name:'30 Store Garlic Oil',zh:'叄拾士多「蒜爆」蒜油 30',cat:'sauces',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p037',nameZh:'文記 大樽裝魷魚味醬 338g',nameEn:'Man Kee Cuttlefish Sauce 338g',name:'Man Kee Cuttlefish Sauce 338g',zh:'文記 大樽裝魷魚味醬 338g',cat:'frozen-seafood',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p038',nameZh:'文記 秘制 XO 醬 220g',nameEn:'Man Kee XO Sauce 220g',name:'Man Kee XO Sauce 220g',zh:'文記 秘制 XO 醬 220g',cat:'sauces',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p039',nameZh:'文記 大樽裝咖喱醬 365g',nameEn:'Man Kee Curry Sauce 365g',name:'Man Kee Curry Sauce 365g',zh:'文記 大樽裝咖喱醬 365g',cat:'sauces',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
+  {id:'p040',nameZh:'文記 大樽裝辣椒油 340g',nameEn:'Man Kee Chili Oil 340g',name:'Man Kee Chili Oil 340g',zh:'文記 大樽裝辣椒油 340g',cat:'sauces',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p041',nameZh:'冠華齋燒鵝 140g',nameEn:'Guanhua Roast Goose 140g',name:'Guanhua Roast Goose 140g',zh:'冠華齋燒鵝 140g',cat:'snacks',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
+  {id:'p042',nameZh:'冠華紅燒辣魚柳 70g',nameEn:'Guanhua Spicy Braised Fish Fillet 70g',name:'Guanhua Spicy Braised Fish Fillet 70g',zh:'冠華紅燒辣魚柳 70g',cat:'frozen-seafood',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p043',nameZh:'冠華九製陳皮 110g',nameEn:'Guanhua Nine-Process Dried Tangerine Peel 110g',name:'Guanhua Nine-Process Dried Tangerine Peel 110g',zh:'冠華九製陳皮 110g',cat:'snacks',price:1.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p044',nameZh:'冠華法製檸檬薑 50g',nameEn:'Guanhua Lemon Ginger Candy 50g',name:'Guanhua Lemon Ginger Candy 50g',zh:'冠華法製檸檬薑 50g',cat:'snacks',price:1.7,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p045',nameZh:'冠華菩提金桔 40g',nameEn:'Guanhua Bodhi Kumquat 40g',name:'Guanhua Bodhi Kumquat 40g',zh:'冠華菩提金桔 40g',cat:'snacks',price:2.3,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p046',nameZh:'冠華鹹香脆魚皮花生 95g',nameEn:'Guanhua Salted Crispy Fish Skin Peanuts 95g',name:'Guanhua Salted Crispy Fish Skin Peanuts 95g',zh:'冠華鹹香脆魚皮花生 95g',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p047',nameZh:'味霸 全天然萬用調味料 250g',nameEn:'Taste Power All-Natural Seasoning 250g',name:'Taste Power All-Natural Seasoning 250g',zh:'味霸 全天然萬用調味料 250g',cat:'sauces',price:7.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p048',nameZh:'YAMAKI 日式昆布鰹魚湯底粉 50包',nameEn:'YAMAKI',name:'YAMAKI',zh:'YAMAKI 日式昆布鰹魚湯底粉 50包',cat:'bread',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21},
+  {id:'p049',nameZh:'悅和大紅浙醋 210ml',nameEn:'Yuet Wo Red Zhejiang Vinegar 210ml',name:'Yuet Wo Red Zhejiang Vinegar 210ml',zh:'悅和大紅浙醋 210ml',cat:'sauces',price:2.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
+  {id:'p050',nameZh:'悅和甜豉油 210ml',nameEn:'Yuet Wo Sweet Soy Sauce 210ml',name:'Yuet Wo Sweet Soy Sauce 210ml',zh:'悅和甜豉油 210ml',cat:'sauces',price:2.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8,needsVerify:true},
+  {id:'p051',nameZh:'KIRIN 午後の紅茶 原味奶茶 500ml',nameEn:'KIRIN',name:'KIRIN',zh:'KIRIN 午後の紅茶 原味奶茶 500ml',cat:'snacks',price:1.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
+  {id:'p052',nameZh:'KIRIN 午後の紅茶 檸檬茶 500ml',nameEn:'KIRIN',name:'KIRIN',zh:'KIRIN 午後の紅茶 檸檬茶 500ml',cat:'snacks',price:1.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p053',nameZh:'伊藤園 無糖綠茶 600ml',nameEn:'Itoen Unsweetened Green Tea 600ml',name:'Itoen Unsweetened Green Tea 600ml',zh:'伊藤園 無糖綠茶 600ml',cat:'snacks',price:1.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3,needsVerify:true},
+  {id:'p054',nameZh:'龍角散 免水潤顆粒粉劑 芒果味 20包',nameEn:'Ryukakusan Mango Throat Soothing Granules 20 Sachets',name:'Ryukakusan Mango Throat Soothing Granules 20 Sachets',zh:'龍角散 免水潤顆粒粉劑 芒果味 20包',cat:'fruits',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p055',nameZh:'龍角散 清涼潤喉糖 原味 88g',nameEn:'Ryukakusan Cool Throat Lozenges Original 88g',name:'Ryukakusan Cool Throat Lozenges Original 88g',zh:'龍角散 清涼潤喉糖 原味 88g',cat:'snacks',price:3.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
+  {id:'p056',nameZh:'牛角 紫菜飯素 20g',nameEn:'Gyukaku Nori Furikake Rice Seasoning 20g',name:'Gyukaku Nori Furikake Rice Seasoning 20g',zh:'牛角 紫菜飯素 20g',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20,needsVerify:true},
+  {id:'p057',nameZh:'泰國有機乾米粉 200g',nameEn:'Thai Organic Dried Rice Noodles 200g',name:'Thai Organic Dried Rice Noodles 200g',zh:'泰國有機乾米粉 200g',cat:'noodles',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11,needsVerify:true},
+  {id:'p058',nameZh:'乾河粉',nameEn:'Dried Phad Thai Noodles',name:'Dried Phad Thai Noodles',zh:'乾河粉',cat:'noodles',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10,needsVerify:true},
+  {id:'p059',nameZh:'泰式炒河烹飪套裝',nameEn:'Phad Thai Cooking Kit',name:'Phad Thai Cooking Kit',zh:'泰式炒河烹飪套裝',cat:'noodles',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p060',nameZh:'泰式豉油炒河烹飪套裝',nameEn:'Phad See Ew Cooking Kit',name:'Phad See Ew Cooking Kit',zh:'泰式豉油炒河烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p061',nameZh:'泰式船麵烹飪套裝',nameEn:'Boat Soup Noodle Cooking Kit',name:'Boat Soup Noodle Cooking Kit',zh:'泰式船麵烹飪套裝',cat:'noodles',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p062',nameZh:'泰式沙嗲串燒烹飪套裝',nameEn:'Thai Satay BBQ Cooking Kit',name:'Thai Satay BBQ Cooking Kit',zh:'泰式沙嗲串燒烹飪套裝',cat:'frozen-seafood',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p063',nameZh:'黃咖喱烹飪套裝',nameEn:'Yellow Curry Cooking Kit',name:'Yellow Curry Cooking Kit',zh:'黃咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p064',nameZh:'紅咖喱烹飪套裝',nameEn:'Red Curry Cooking Kit',name:'Red Curry Cooking Kit',zh:'紅咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p065',nameZh:'青咖喱烹飪套裝',nameEn:'Green Curry Cooking Kit',name:'Green Curry Cooking Kit',zh:'青咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p066',nameZh:'瑪莎文咖喱烹飪套裝',nameEn:'Massaman Curry Cooking Kit',name:'Massaman Curry Cooking Kit',zh:'瑪莎文咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p067',nameZh:'即食黃咖喱',nameEn:'Ready to Eat Yellow Curry',name:'Ready to Eat Yellow Curry',zh:'即食黃咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p068',nameZh:'即食紅咖喱',nameEn:'Ready to Eat Red Curry',name:'Ready to Eat Red Curry',zh:'即食紅咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p069',nameZh:'即食青咖喱',nameEn:'Ready to Eat Green Curry',name:'Ready to Eat Green Curry',zh:'即食青咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p070',nameZh:'即食瑪莎文咖喱',nameEn:'Ready to Eat Massaman Curry',name:'Ready to Eat Massaman Curry',zh:'即食瑪莎文咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p071',nameZh:'Ottogi 泡菜味拉麵 120g x5包',nameEn:'Ottogi',name:'Ottogi',zh:'Ottogi 泡菜味拉麵 120g x5包',cat:'bread',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p072',nameZh:'出前一丁麻油麵 5包裝',nameEn:'Nissin Demae Ramen Sesame Oil 5-Pack',name:'出前一丁麻油麵 5包裝',zh:'出前一丁麻油麵 5包裝',cat:'bread',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
   {id:'p073',nameZh:'*NEW* 韓國 Haitai 水梨汁 238ml',nameEn:'*NEW*',name:'*NEW*',zh:'*NEW* 韓國 Haitai 水梨汁 238ml',cat:'snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
-  {id:'p074',nameZh:'福字雞汁伊麵 5包',nameEn:'FUKU Instant Noodle X5',name:'FUKU Instant Noodle X5',zh:'福字雞汁伊麵 5包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p075',nameZh:'福字上湯米粉 5包裝',nameEn:'FUKU Instant Rice Noodle X5',name:'FUKU Instant Rice Noodle X5',zh:'福字上湯米粉 5包裝',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p076',nameZh:'極上靚蝦麵 粗麵 12個裝',nameEn:'Shrimp Roe Noodle 12 PCS Thick',name:'Shrimp Roe Noodle 12 PCS Thick',zh:'極上靚蝦麵 粗麵 12個裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p077',nameZh:'濃香魚湯芫荽麵 中麵 12個裝',nameEn:'Wing Lok Fish Coriander Noodle',name:'Wing Lok Fish Coriander Noodle',zh:'濃香魚湯芫荽麵 中麵 12個裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p078',nameZh:'極上菠菜麵 中麵 12個裝',nameEn:'Wing Lok Premium Spinach Noodle',name:'Wing Lok Premium Spinach Noodle',zh:'極上菠菜麵 中麵 12個裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p079',nameZh:'特濃蝦子麵 粗麵 12個裝',nameEn:'Wing Lok Premium Shrimp Roe Noodle Thick',name:'Wing Lok Premium Shrimp Roe Noodle Thick',zh:'特濃蝦子麵 粗麵 12個裝',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p080',nameZh:'新鮮米磨腸粉 400g',nameEn:'Fresh Ground Rice Cheung Fun 400g',name:'Fresh Ground Rice Cheung Fun 400g',zh:'新鮮米磨腸粉 400g',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:36},
-  {id:'p081',nameZh:'新鮮米磨蔥花腸粉 400g',nameEn:'Fresh Ground Rice Cheung Fun with Spring Onion 400g',name:'Fresh Ground Rice Cheung Fun with Spring Onion 400g',zh:'新鮮米磨蔥花腸粉 400g',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:34},
-  {id:'p082',nameZh:'新鮮河粉 400g',nameEn:'Fresh Ho Fun Rice Noodles 400g',name:'Fresh Ho Fun Rice Noodles 400g',zh:'新鮮河粉 400g',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p083',nameZh:'蝦記金牌蝦子麵 600g',nameEn:'Ha Kee Gold Medal Shrimp Roe Noodles 600g',name:'Ha Kee Gold Medal Shrimp Roe Noodles 600g',zh:'蝦記金牌蝦子麵 600g',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
-  {id:'p084',nameZh:'牛魔皇 麻辣湯米線 500g',nameEn:'Spicy Mala Soup Rice Noodles 500g',name:'牛魔皇 麻辣湯米線 500g',zh:'牛魔皇 麻辣湯米線 500g',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
-  {id:'p085',nameZh:'夠 Pork 皇 豬骨湯米線 500g',nameEn:'Pork Bone Soup Rice Noodles 500g',name:'夠 Pork 皇 豬骨湯米線 500g',zh:'夠 Pork 皇 豬骨湯米線 500g',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p086',nameZh:'孖寶皇 酸辣湯米線 500g',nameEn:'Hot & Sour Soup Rice Noodles 500g',name:'孖寶皇 酸辣湯米線 500g',zh:'孖寶皇 酸辣湯米線 500g',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p087',nameZh:'皇上皇 全部都要米線套餐',nameEn:'Royal Choice All-in-One Rice Noodle Set',name:'Royal Choice All-in-One Rice Noodle Set',zh:'皇上皇 全部都要米線套餐',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
-  {id:'p088',nameZh:'漢典紅燒牛肉麵',nameEn:'Authentic Taiwanese Beef Noodle Pack',name:'Authentic Taiwanese Beef Noodle Pack',zh:'漢典紅燒牛肉麵',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:78},
-  {id:'p089',nameZh:'漢典麻辣牛肉麵',nameEn:'Authentic Taiwanese Beef Noodle Pack Spicy',name:'Authentic Taiwanese Beef Noodle Pack Spicy',zh:'漢典麻辣牛肉麵',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
-  {id:'p090',nameZh:'漢典台灣蔥抓餅 600g',nameEn:'Taiwanese Scallion Pancake 600g',name:'漢典台灣蔥抓餅 600g',zh:'漢典台灣蔥抓餅 600g',cat:'noodles',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
-  {id:'p091',nameZh:'漢典越式牛肉湯河',nameEn:'Vietnamese Beef Pho Noodle Pack',name:'漢典越式牛肉湯河',zh:'漢典越式牛肉湯河',cat:'others',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:16},
-  {id:'p092',nameZh:'漢典台式扣肉刈包 190g',nameEn:'Taiwanese Pork Belly Gua Bao 190g',name:'漢典台式扣肉刈包 190g',zh:'漢典台式扣肉刈包 190g',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
-  {id:'p093',nameZh:'香港仔清湯牛腩',nameEn:'Hong Kong Boy Slow Cook Beef Brisket',name:'Hong Kong Boy Slow Cook Beef Brisket',zh:'香港仔清湯牛腩',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:30},
-  {id:'p094',nameZh:'香港仔秘製原味牛丸',nameEn:'Hong Kong Boy Beef Ball',name:'Hong Kong Boy Beef Ball',zh:'香港仔秘製原味牛丸',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
-  {id:'p095',nameZh:'香港仔秘製黑椒牛丸',nameEn:'Hong Kong Boy Black Pepper Beef Ball',name:'Hong Kong Boy Black Pepper Beef Ball',zh:'香港仔秘製黑椒牛丸',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:30},
-  {id:'p096',nameZh:'香港仔沙爹牛肉',nameEn:'Hong Kong Boy Satay Beef',name:'Hong Kong Boy Satay Beef',zh:'香港仔沙爹牛肉',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
-  {id:'p097',nameZh:'香港仔秘製麻辣牛丸',nameEn:'Hong Kong Boy Spicy Beef Ball',name:'Hong Kong Boy Spicy Beef Ball',zh:'香港仔秘製麻辣牛丸',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p098',nameZh:'叄拾士多魚肉燒賣 30',nameEn:'Store HK Siu Mai overseas version',name:'Store HK Siu Mai overseas version',zh:'叄拾士多魚肉燒賣 30',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:41},
-  {id:'p099',nameZh:'家之美食 魚肉燒賣 454g',nameEn:'Home Yummy Fish Siu Mai 454g',name:'Home Yummy Fish Siu Mai 454g',zh:'家之美食 魚肉燒賣 454g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:48},
-  {id:'p100',nameZh:'豬蝦燒賣 20粒',nameEn:'Siu Mai Prawn & Pork 20pcs',name:'Siu Mai Prawn & Pork 20pcs',zh:'豬蝦燒賣 20粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:155},
-  {id:'p101',nameZh:'魚肉燒賣 20粒',nameEn:'Fish Siu Mai 20pcs',name:'Fish Siu Mai 20pcs',zh:'魚肉燒賣 20粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:93},
-  {id:'p102',nameZh:'牛肉燒賣 20粒',nameEn:'Beef Siu Mai 20pcs',name:'Beef Siu Mai 20pcs',zh:'牛肉燒賣 20粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:53},
-  {id:'p103',nameZh:'蝦餃 12粒',nameEn:'Shrimp Dumplings 12pcs',name:'Shrimp Dumplings 12pcs',zh:'蝦餃 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:47},
-  {id:'p104',nameZh:'鮮竹捲 10條',nameEn:'Bean Curd Roll 10pcs',name:'Bean Curd Roll 10pcs',zh:'鮮竹捲 10條',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:87},
-  {id:'p105',nameZh:'珍珠雞 4件',nameEn:'Mini Glutinous Rice 4pcs',name:'Mini Glutinous Rice 4pcs',zh:'珍珠雞 4件',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:127},
-  {id:'p106',nameZh:'奶黃包 6個',nameEn:'Custard Bun 6pcs',name:'Custard Bun 6pcs',zh:'奶黃包 6個',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
-  {id:'p107',nameZh:'叉燒包 6個',nameEn:'BBQ Pork Bun 6pcs',name:'BBQ Pork Bun 6pcs',zh:'叉燒包 6個',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:102},
-  {id:'p108',nameZh:'雞包 6個',nameEn:'Chicken Bun 6pcs',name:'Chicken Bun 6pcs',zh:'雞包 6個',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
-  {id:'p109',nameZh:'小籠包 12個',nameEn:'Siu Loong Bao 12pcs',name:'Siu Loong Bao 12pcs',zh:'小籠包 12個',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:24},
-  {id:'p110',nameZh:'黑金鋼豆沙包',nameEn:'Black Bean Sauce Spare Ribs 410g',name:'Black Bean Sauce Spare Ribs 410g',zh:'黑金鋼豆沙包',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p111',nameZh:'豉汁排骨 410g',nameEn:'Black Bean Sauce Spare Ribs 410g',name:'Black Bean Sauce Spare Ribs 410g',zh:'豉汁排骨 410g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:80},
-  {id:'p112',nameZh:'豉汁鳳爪 410g',nameEn:'Black Bean Sauce Chicken Feet 410g',name:'Black Bean Sauce Chicken Feet 410g',zh:'豉汁鳳爪 410g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:75},
-  {id:'p113',nameZh:'黑椒金錢肚 400g',nameEn:'Black Pepper Sauce Beef Tripe 400g',name:'Black Pepper Sauce Beef Tripe 400g',zh:'黑椒金錢肚 400g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
-  {id:'p114',nameZh:'南乳豬手 500g',nameEn:'Pork Trotters with Red Bean Curd 500g',name:'Pork Trotters with Red Bean Curd 500g',zh:'南乳豬手 500g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
-  {id:'p115',nameZh:'秘制墨魚丸 200g',nameEn:'Cuttlefish Ball 200g',name:'Cuttlefish Ball 200g',zh:'秘制墨魚丸 200g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:91},
-  {id:'p116',nameZh:'陳皮牛肉丸 200g',nameEn:'Chenpi Beef Ball 200g',name:'Chenpi Beef Ball 200g',zh:'陳皮牛肉丸 200g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:57},
-  {id:'p117',nameZh:'豬肉丸 200g',nameEn:'Pork Ball 200g',name:'Pork Ball 200g',zh:'豬肉丸 200g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:25},
-  {id:'p118',nameZh:'水晶餃 15粒',nameEn:'Crystal Dumpling 15pcs',name:'Crystal Dumpling 15pcs',zh:'水晶餃 15粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p119',nameZh:'鮮蝦雲吞 12粒',nameEn:'Fresh Prawn Wonton 12pcs',name:'鮮蝦雲吞 12粒',zh:'鮮蝦雲吞 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:66},
-  {id:'p120',nameZh:'韮菜餃 12粒',nameEn:'Chive Dumplings 12pcs',name:'韮菜餃 12粒',zh:'韮菜餃 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:31},
-  {id:'p121',nameZh:'鳳城水餃 12粒',nameEn:'Fengcheng Boiled Dumplings 12pcs',name:'鳳城水餃 12粒',zh:'鳳城水餃 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:82},
-  {id:'p122',nameZh:'四寶丸 16粒',nameEn:'Four Treasure Balls 16pcs',name:'四寶丸 16粒',zh:'四寶丸 16粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:16},
-  {id:'p123',nameZh:'黑松露豬肉丸 12粒',nameEn:'Black Truffle Pork Balls 12pcs',name:'黑松露豬肉丸 12粒',zh:'黑松露豬肉丸 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p124',nameZh:'羊肉餃 12粒',nameEn:'Lamb Dumplings 12pcs',name:'Lamb Dumplings 12pcs',zh:'羊肉餃 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p125',nameZh:'洋蔥牛肉餃 12粒',nameEn:'Onion Beef Dumplings 12pcs',name:'Onion Beef Dumplings 12pcs',zh:'洋蔥牛肉餃 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p126',nameZh:'康氏豬肉香菜水餃 410g',nameEn:'Hongs Pork & Coriander Dumplings',name:'Hongs Pork & Coriander Dumplings',zh:'康氏豬肉香菜水餃 410g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
-  {id:'p127',nameZh:'康氏西洋菜豬肉水餃 410g',nameEn:'Hongs Pork & Watercress Dumplings',name:'Hongs Pork & Watercress Dumplings',zh:'康氏西洋菜豬肉水餃 410g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:17},
+  {id:'p074',nameZh:'福字雞汁伊麵 5包',nameEn:'FUKU Instant Noodle X5',name:'FUKU Instant Noodle X5',zh:'福字雞汁伊麵 5包',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p075',nameZh:'福字上湯米粉 5包裝',nameEn:'FUKU Instant Rice Noodle X5',name:'FUKU Instant Rice Noodle X5',zh:'福字上湯米粉 5包裝',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p076',nameZh:'極上靚蝦麵 粗麵 12個裝',nameEn:'Shrimp Roe Noodle 12 PCS Thick',name:'Shrimp Roe Noodle 12 PCS Thick',zh:'極上靚蝦麵 粗麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p077',nameZh:'濃香魚湯芫荽麵 中麵 12個裝',nameEn:'Wing Lok Fish Coriander Noodle',name:'Wing Lok Fish Coriander Noodle',zh:'濃香魚湯芫荽麵 中麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p078',nameZh:'極上菠菜麵 中麵 12個裝',nameEn:'Wing Lok Premium Spinach Noodle',name:'Wing Lok Premium Spinach Noodle',zh:'極上菠菜麵 中麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p079',nameZh:'特濃蝦子麵 粗麵 12個裝',nameEn:'Wing Lok Premium Shrimp Roe Noodle Thick',name:'Wing Lok Premium Shrimp Roe Noodle Thick',zh:'特濃蝦子麵 粗麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p080',nameZh:'新鮮米磨腸粉 400g',nameEn:'Fresh Ground Rice Cheung Fun 400g',name:'Fresh Ground Rice Cheung Fun 400g',zh:'新鮮米磨腸粉 400g',cat:'frozen-seafood',price:2.69,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:36,needsVerify:true},
+  {id:'p081',nameZh:'新鮮米磨蔥花腸粉 400g',nameEn:'Fresh Ground Rice Cheung Fun with Spring Onion 400g',name:'Fresh Ground Rice Cheung Fun with Spring Onion 400g',zh:'新鮮米磨蔥花腸粉 400g',cat:'frozen-seafood',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:34},
+  {id:'p082',nameZh:'新鮮河粉 400g',nameEn:'Fresh Ho Fun Rice Noodles 400g',name:'Fresh Ho Fun Rice Noodles 400g',zh:'新鮮河粉 400g',cat:'noodles',price:2.59,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p083',nameZh:'蝦記金牌蝦子麵 600g',nameEn:'Ha Kee Gold Medal Shrimp Roe Noodles 600g',name:'Ha Kee Gold Medal Shrimp Roe Noodles 600g',zh:'蝦記金牌蝦子麵 600g',cat:'noodles',price:12.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8,needsVerify:true},
+  {id:'p084',nameZh:'牛魔皇 麻辣湯米線 500g',nameEn:'Spicy Mala Soup Rice Noodles 500g',name:'牛魔皇 麻辣湯米線 500g',zh:'牛魔皇 麻辣湯米線 500g',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12,needsVerify:true},
+  {id:'p085',nameZh:'夠 Pork 皇 豬骨湯米線 500g',nameEn:'Pork Bone Soup Rice Noodles 500g',name:'夠 Pork 皇 豬骨湯米線 500g',zh:'夠 Pork 皇 豬骨湯米線 500g',cat:'noodles',price:13.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p086',nameZh:'孖寶皇 酸辣湯米線 500g',nameEn:'Hot & Sour Soup Rice Noodles 500g',name:'孖寶皇 酸辣湯米線 500g',zh:'孖寶皇 酸辣湯米線 500g',cat:'noodles',price:15.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11,needsVerify:true},
+  {id:'p087',nameZh:'皇上皇 全部都要米線套餐',nameEn:'Royal Choice All-in-One Rice Noodle Set',name:'Royal Choice All-in-One Rice Noodle Set',zh:'皇上皇 全部都要米線套餐',cat:'noodles',price:18.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p088',nameZh:'漢典紅燒牛肉麵',nameEn:'Authentic Taiwanese Beef Noodle Pack',name:'Authentic Taiwanese Beef Noodle Pack',zh:'漢典紅燒牛肉麵',cat:'noodles',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:78},
+  {id:'p089',nameZh:'漢典麻辣牛肉麵',nameEn:'Authentic Taiwanese Beef Noodle Pack Spicy',name:'Authentic Taiwanese Beef Noodle Pack Spicy',zh:'漢典麻辣牛肉麵',cat:'noodles',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
+  {id:'p090',nameZh:'漢典台灣蔥抓餅 600g',nameEn:'Taiwanese Scallion Pancake 600g',name:'漢典台灣蔥抓餅 600g',zh:'漢典台灣蔥抓餅 600g',cat:'noodles',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14,needsVerify:true},
+  {id:'p091',nameZh:'漢典越式牛肉湯河',nameEn:'Vietnamese Beef Pho Noodle Pack',name:'漢典越式牛肉湯河',zh:'漢典越式牛肉湯河',cat:'others',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:16,needsVerify:true},
+  {id:'p092',nameZh:'漢典台式扣肉刈包 190g',nameEn:'Taiwanese Pork Belly Gua Bao 190g',name:'漢典台式扣肉刈包 190g',zh:'漢典台式扣肉刈包 190g',cat:'bread',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10,needsVerify:true},
+  {id:'p093',nameZh:'香港仔清湯牛腩',nameEn:'Hong Kong Boy Slow Cook Beef Brisket',name:'Hong Kong Boy Slow Cook Beef Brisket',zh:'香港仔清湯牛腩',cat:'hk-homecook',price:12.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:30},
+  {id:'p094',nameZh:'香港仔秘製原味牛丸',nameEn:'Hong Kong Boy Beef Ball',name:'Hong Kong Boy Beef Ball',zh:'香港仔秘製原味牛丸',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p095',nameZh:'香港仔秘製黑椒牛丸',nameEn:'Hong Kong Boy Black Pepper Beef Ball',name:'Hong Kong Boy Black Pepper Beef Ball',zh:'香港仔秘製黑椒牛丸',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:30},
+  {id:'p096',nameZh:'香港仔沙爹牛肉',nameEn:'Hong Kong Boy Satay Beef',name:'Hong Kong Boy Satay Beef',zh:'香港仔沙爹牛肉',cat:'hk-snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
+  {id:'p097',nameZh:'香港仔秘製麻辣牛丸',nameEn:'Hong Kong Boy Spicy Beef Ball',name:'Hong Kong Boy Spicy Beef Ball',zh:'香港仔秘製麻辣牛丸',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p098',nameZh:'叄拾士多魚肉燒賣 30',nameEn:'Store HK Siu Mai overseas version',name:'Store HK Siu Mai overseas version',zh:'叄拾士多魚肉燒賣 30',cat:'dim-sum',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:41},
+  {id:'p099',nameZh:'家之美食 魚肉燒賣 454g',nameEn:'Home Yummy Fish Siu Mai 454g',name:'Home Yummy Fish Siu Mai 454g',zh:'家之美食 魚肉燒賣 454g',cat:'dim-sum',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:48},
+  {id:'p100',nameZh:'豬蝦燒賣 20粒',nameEn:'Siu Mai Prawn & Pork 20pcs',name:'Siu Mai Prawn & Pork 20pcs',zh:'豬蝦燒賣 20粒',cat:'dim-sum',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:155},
+  {id:'p101',nameZh:'魚肉燒賣 20粒',nameEn:'Fish Siu Mai 20pcs',name:'Fish Siu Mai 20pcs',zh:'魚肉燒賣 20粒',cat:'dim-sum',price:5.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:93},
+  {id:'p102',nameZh:'牛肉燒賣 20粒',nameEn:'Beef Siu Mai 20pcs',name:'Beef Siu Mai 20pcs',zh:'牛肉燒賣 20粒',cat:'dim-sum',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:53},
+  {id:'p103',nameZh:'蝦餃 12粒',nameEn:'Shrimp Dumplings 12pcs',name:'Shrimp Dumplings 12pcs',zh:'蝦餃 12粒',cat:'dim-sum',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:47},
+  {id:'p104',nameZh:'鮮竹捲 10條',nameEn:'Bean Curd Roll 10pcs',name:'Bean Curd Roll 10pcs',zh:'鮮竹捲 10條',cat:'bread',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:87},
+  {id:'p105',nameZh:'珍珠雞 4件',nameEn:'Mini Glutinous Rice 4pcs',name:'Mini Glutinous Rice 4pcs',zh:'珍珠雞 4件',cat:'dim-sum',price:6.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:127},
+  {id:'p106',nameZh:'奶黃包 6個',nameEn:'Custard Bun 6pcs',name:'Custard Bun 6pcs',zh:'奶黃包 6個',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p107',nameZh:'叉燒包 6個',nameEn:'BBQ Pork Bun 6pcs',name:'BBQ Pork Bun 6pcs',zh:'叉燒包 6個',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:102},
+  {id:'p108',nameZh:'雞包 6個',nameEn:'Chicken Bun 6pcs',name:'Chicken Bun 6pcs',zh:'雞包 6個',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
+  {id:'p109',nameZh:'小籠包 12個',nameEn:'Siu Loong Bao 12pcs',name:'Siu Loong Bao 12pcs',zh:'小籠包 12個',cat:'bread',price:5.29,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:24},
+  {id:'p110',nameZh:'黑金鋼豆沙包',nameEn:'Black Bean Sauce Spare Ribs 410g',name:'Black Bean Sauce Spare Ribs 410g',zh:'黑金鋼豆沙包',cat:'bread',price:5.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p111',nameZh:'豉汁排骨 410g',nameEn:'Black Bean Sauce Spare Ribs 410g',name:'Black Bean Sauce Spare Ribs 410g',zh:'豉汁排骨 410g',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:80},
+  {id:'p112',nameZh:'豉汁鳳爪 410g',nameEn:'Black Bean Sauce Chicken Feet 410g',name:'Black Bean Sauce Chicken Feet 410g',zh:'豉汁鳳爪 410g',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:75},
+  {id:'p113',nameZh:'黑椒金錢肚 400g',nameEn:'Black Pepper Sauce Beef Tripe 400g',name:'Black Pepper Sauce Beef Tripe 400g',zh:'黑椒金錢肚 400g',cat:'dim-sum',price:7.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p114',nameZh:'南乳豬手 500g',nameEn:'Pork Trotters with Red Bean Curd 500g',name:'Pork Trotters with Red Bean Curd 500g',zh:'南乳豬手 500g',cat:'dim-sum',price:6.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
+  {id:'p115',nameZh:'秘制墨魚丸 200g',nameEn:'Cuttlefish Ball 200g',name:'Cuttlefish Ball 200g',zh:'秘制墨魚丸 200g',cat:'dim-sum',price:7.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:91},
+  {id:'p116',nameZh:'陳皮牛肉丸 200g',nameEn:'Chenpi Beef Ball 200g',name:'Chenpi Beef Ball 200g',zh:'陳皮牛肉丸 200g',cat:'dim-sum',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:57},
+  {id:'p117',nameZh:'豬肉丸 200g',nameEn:'Pork Ball 200g',name:'Pork Ball 200g',zh:'豬肉丸 200g',cat:'dim-sum',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:25},
+  {id:'p118',nameZh:'水晶餃 15粒',nameEn:'Crystal Dumpling 15pcs',name:'Crystal Dumpling 15pcs',zh:'水晶餃 15粒',cat:'dim-sum',price:6.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p119',nameZh:'鮮蝦雲吞 12粒',nameEn:'Fresh Prawn Wonton 12pcs',name:'鮮蝦雲吞 12粒',zh:'鮮蝦雲吞 12粒',cat:'dim-sum',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:66,needsVerify:true},
+  {id:'p120',nameZh:'韮菜餃 12粒',nameEn:'Chive Dumplings 12pcs',name:'韮菜餃 12粒',zh:'韮菜餃 12粒',cat:'dim-sum',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:31,needsVerify:true},
+  {id:'p121',nameZh:'鳳城水餃 12粒',nameEn:'Fengcheng Boiled Dumplings 12pcs',name:'鳳城水餃 12粒',zh:'鳳城水餃 12粒',cat:'dim-sum',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:82,needsVerify:true},
+  {id:'p122',nameZh:'四寶丸 16粒',nameEn:'Four Treasure Balls 16pcs',name:'四寶丸 16粒',zh:'四寶丸 16粒',cat:'dim-sum',price:11.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:16,needsVerify:true},
+  {id:'p123',nameZh:'黑松露豬肉丸 12粒',nameEn:'Black Truffle Pork Balls 12pcs',name:'黑松露豬肉丸 12粒',zh:'黑松露豬肉丸 12粒',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p124',nameZh:'羊肉餃 12粒',nameEn:'Lamb Dumplings 12pcs',name:'Lamb Dumplings 12pcs',zh:'羊肉餃 12粒',cat:'dim-sum',price:6.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p125',nameZh:'洋蔥牛肉餃 12粒',nameEn:'Onion Beef Dumplings 12pcs',name:'Onion Beef Dumplings 12pcs',zh:'洋蔥牛肉餃 12粒',cat:'dim-sum',price:6.5,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p126',nameZh:'康氏豬肉香菜水餃 410g',nameEn:'Hongs Pork & Coriander Dumplings',name:'Hongs Pork & Coriander Dumplings',zh:'康氏豬肉香菜水餃 410g',cat:'dim-sum',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p127',nameZh:'康氏西洋菜豬肉水餃 410g',nameEn:'Hongs Pork & Watercress Dumplings',name:'Hongs Pork & Watercress Dumplings',zh:'康氏西洋菜豬肉水餃 410g',cat:'dim-sum',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:17},
   {id:'p128',name:'康氏韭菜豬肉水餃 410g Hong\'s Pork & Chive Leaf Dumplings',zh:'',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
-  {id:'p129',nameZh:'Bobo 魚皮餃 200g',nameEn:'Bobo Fish Dumplings 200g',name:'Bobo Fish Dumplings 200g',zh:'Bobo 魚皮餃 200g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:100},
-  {id:'p130',nameZh:'Bobo 小五香魚卷 250g',nameEn:'Bobo Five Spices Fish Rolls 250g',name:'Bobo Five Spices Fish Rolls 250g',zh:'Bobo 小五香魚卷 250g',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:51},
-  {id:'p131',nameZh:'Bobo 白魚蛋 200g',nameEn:'Bobo White Fish Ball 200g',name:'Bobo White Fish Ball 200g',zh:'Bobo 白魚蛋 200g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:25},
-  {id:'p132',nameZh:'Bobo 墨魚丸 250g',nameEn:'Bobo Cuttlefish Ball 250g',name:'Bobo Cuttlefish Ball 250g',zh:'Bobo 墨魚丸 250g',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
-  {id:'p133',nameZh:'Bobo 一品鍋',nameEn:'Mix Combo Hotpot Selection',name:'Mix Combo Hotpot Selection',zh:'Bobo 一品鍋',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
-  {id:'p134',nameZh:'BOBO 炸魚腐竹卷 500g',nameEn:'BOBO',name:'BOBO',zh:'BOBO 炸魚腐竹卷 500g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p135',nameZh:'BOBO 娘惹香辣炸魚腐竹卷 250g',nameEn:'BOBO',name:'BOBO',zh:'BOBO 娘惹香辣炸魚腐竹卷 250g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
-  {id:'p136',nameZh:'BOBO 頂級炸魚雲吞',nameEn:'Premium Fried Fish Wonton 1kg',name:'Premium Fried Fish Wonton 1kg',zh:'BOBO 頂級炸魚雲吞',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p137',nameZh:'泰國沙爹魚串零食',nameEn:'Honey Roasted Satay Fish',name:'Honey Roasted Satay Fish',zh:'泰國沙爹魚串零食',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p138',nameZh:'叉燒 500g',nameEn:'BBQ Roast Pork 500g',name:'BBQ Roast Pork 500g',zh:'叉燒 500g',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
-  {id:'p139',nameZh:'烤鴨 1隻 850g',nameEn:'Roast Duck',name:'Roast Duck',zh:'烤鴨 1隻 850g',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
-  {id:'p140',nameZh:'豆腐火腩',nameEn:'Braised Tofu with Roast Pork Belly',name:'Braised Tofu with Roast Pork Belly',zh:'豆腐火腩',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:28},
-  {id:'p141',nameZh:'港式咖喱牛腩',nameEn:'Hong Kong Style Curry Beef',name:'Hong Kong Style Curry Beef',zh:'港式咖喱牛腩',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p142',nameZh:'梅菜扣肉',nameEn:'Braised Pork with Preserved Vegetables',name:'Braised Pork with Preserved Vegetables',zh:'梅菜扣肉',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:37},
-  {id:'p143',nameZh:'家餸柱侯牛腩',nameEn:'Homey Dish Chu Hou Beef Brisket',name:'Homey Dish Chu Hou Beef Brisket',zh:'家餸柱侯牛腩',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
-  {id:'p144',nameZh:'家餸梅子豬手',nameEn:'Homey Dish Braised Pig Knuckles with Plum',name:'Homey Dish Braised Pig Knuckles with Plum',zh:'家餸梅子豬手',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p145',nameZh:'家餸枝竹羊腩煲',nameEn:'Home-style Lamb Belly & Bean Curd Stick Pot',name:'Home-style Lamb Belly & Bean Curd Stick Pot',zh:'家餸枝竹羊腩煲',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21},
-  {id:'p146',nameZh:'胡椒豬肚雞湯',nameEn:'Pig Stomach Soup with Chicken & White Pepper',name:'Pig Stomach Soup with Chicken & White Pepper',zh:'胡椒豬肚雞湯',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
-  {id:'p147',nameZh:'蓮藕章魚煲豬骨',nameEn:'Lotus Root Dried Octopus Pork Soup',name:'Lotus Root Dried Octopus Pork Soup',zh:'蓮藕章魚煲豬骨',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p148',nameZh:'豬腳薑',nameEn:'Pork Knuckles & Ginger Stew',name:'Pork Knuckles & Ginger Stew',zh:'豬腳薑',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
-  {id:'p149',nameZh:'醉雞翼',nameEn:'Drunken Chicken Wings',name:'Drunken Chicken Wings',zh:'醉雞翼',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p150',nameZh:'鮑汁雞腳',nameEn:'Abalone Sauce Chicken Feet',name:'Abalone Sauce Chicken Feet',zh:'鮑汁雞腳',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
-  {id:'p151',nameZh:'椰汁紫米露',nameEn:'Coconut Purple Rice Dessert',name:'Coconut Purple Rice Dessert',zh:'椰汁紫米露',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
-  {id:'p152',nameZh:'家餸 2餸1湯套餐',nameEn:'Home-style 2 Dishes + 1 Soup Set',name:'Home-style 2 Dishes + 1 Soup Set',zh:'家餸 2餸1湯套餐',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:31},
-  {id:'p153',nameZh:'師父港式滷味',nameEn:'HK Lomei (Chicken Gizzards, Hog Uteri, Cuttlefish)',name:'HK Lomei (Chicken Gizzards, Hog Uteri, Cuttlefish)',zh:'師父港式滷味',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p154',nameZh:'咖喱魚蛋豬皮',nameEn:'HK Curry Fish Ball & Pork Crunch',name:'HK Curry Fish Ball & Pork Crunch',zh:'咖喱魚蛋豬皮',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p155',nameZh:'香辣涼拌雞腎',nameEn:'Spicy Chicken Gizzard Cold Serve',name:'Spicy Chicken Gizzard Cold Serve',zh:'香辣涼拌雞腎',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p156',nameZh:'香辣牛𦟌冷盤',nameEn:'Spicy Beef Shank Cold Serve',name:'Spicy Beef Shank Cold Serve',zh:'香辣牛𦟌冷盤',cat:'others',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p157',nameZh:'港式沙爹牛肉',nameEn:'HK Style Satay Beef',name:'HK Style Satay Beef',zh:'港式沙爹牛肉',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p158',nameZh:'五香肉丁',nameEn:'Five-Spiced Pork Cubes',name:'Five-Spiced Pork Cubes',zh:'五香肉丁',cat:'hk-homecook',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p159',nameZh:'潮式滷水豬耳 300g',nameEn:'Teochew Braised Pig Ear 300g',name:'潮式滷水豬耳 300g',zh:'潮式滷水豬耳 300g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p160',nameZh:'潮式香滑牛筋',nameEn:'Teochew Braised Beef Tendon',name:'潮式香滑牛筋',zh:'潮式香滑牛筋',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
-  {id:'p161',nameZh:'潮式五香牛肚 260g',nameEn:'Teochew Five-Spice Beef Tripe 260g',name:'潮式五香牛肚 260g',zh:'潮式五香牛肚 260g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:36},
-  {id:'p162',nameZh:'潮式滷水豬大腸 260g',nameEn:'Teochew Braised Pork Intestine 260g',name:'潮式滷水豬大腸 260g',zh:'潮式滷水豬大腸 260g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
-  {id:'p163',nameZh:'潮式秘制牛雜 410g',nameEn:'Teochew Braised Mixed Beef Offal 410g',name:'潮式秘制牛雜 410g',zh:'潮式秘制牛雜 410g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p164',nameZh:'潮式秘製崩沙腩 290g',nameEn:'Teochew Braised Pork Belly 290g',name:'潮式秘製崩沙腩 290g',zh:'潮式秘製崩沙腩 290g',cat:'hk-snacks',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p165',nameZh:'三文魚刺身大件裝',nameEn:'Large Pack of Salmon Sashimi',name:'Large Pack of Salmon Sashimi',zh:'三文魚刺身大件裝',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p166',nameZh:'三文魚刺身細件裝',nameEn:'Small Pack of Salmon Sashimi',name:'Small Pack of Salmon Sashimi',zh:'三文魚刺身細件裝',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:38},
-  {id:'p167',nameZh:'藍鰭吞拿魚中拖羅',nameEn:'Bluefin Tuna Chutoro',name:'Bluefin Tuna Chutoro',zh:'藍鰭吞拿魚中拖羅',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
-  {id:'p168',nameZh:'藍鰭吞拿魚大拖羅',nameEn:'Bluefin Tuna Otoro',name:'Bluefin Tuna Otoro',zh:'藍鰭吞拿魚大拖羅',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
-  {id:'p169',nameZh:'油甘魚刺身',nameEn:'Hamachi Yellow Tail Sashimi',name:'Hamachi Yellow Tail Sashimi',zh:'油甘魚刺身',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
-  {id:'p170',nameZh:'加拿大海膽刺身',nameEn:'Canadian Sea Urchin Sashimi',name:'Canadian Sea Urchin Sashimi',zh:'加拿大海膽刺身',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
-  {id:'p171',nameZh:'甜蝦刺身',nameEn:'Sweet Shrimp Sashimi',name:'Sweet Shrimp Sashimi',zh:'甜蝦刺身',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:32},
-  {id:'p172',nameZh:'帶子刺身',nameEn:'Scallop Sashimi',name:'Scallop Sashimi',zh:'帶子刺身',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p173',nameZh:'1kg 帶子刺身',nameEn:'Scallop Sashimi 1kg',name:'Scallop Sashimi 1kg',zh:'1kg 帶子刺身',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p174',nameZh:'北寄貝刺身',nameEn:'Wild Arctic Surfclam',name:'Wild Arctic Surfclam',zh:'北寄貝刺身',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p175',nameZh:'八爪魚片',nameEn:'Octopus Slices',name:'Octopus Slices',zh:'八爪魚片',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p176',nameZh:'急凍三文魚籽 200g',nameEn:'Frozen Salmon Roe 200g',name:'Frozen Salmon Roe 200g',zh:'急凍三文魚籽 200g',cat:'sashimi',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
-  {id:'p177',nameZh:'急凍芥辣八爪魚',nameEn:'Frozen Wasabi Octopus',name:'Frozen Wasabi Octopus',zh:'急凍芥辣八爪魚',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
-  {id:'p178',nameZh:'日本壽司腐皮袋',nameEn:'Inari Age Seasoned Fried Bean Curd',name:'Inari Age Seasoned Fried Bean Curd',zh:'日本壽司腐皮袋',cat:'others',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p179',nameZh:'蒲燒鰻魚',nameEn:'Broiled Eel',name:'Broiled Eel',zh:'蒲燒鰻魚',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:26},
-  {id:'p180',nameZh:'阿拉斯加去骨銀鱈魚柳',nameEn:'Alaska Black Cod',name:'Alaska Black Cod',zh:'阿拉斯加去骨銀鱈魚柳',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
-  {id:'p181',nameZh:'加拿大銀鱈魚原條去頭',nameEn:'Canadian Whole Head-off Black Cod',name:'Canadian Whole Head-off Black Cod',zh:'加拿大銀鱈魚原條去頭',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p182',nameZh:'愛爾蘭頂級牛小排肉片 200g',nameEn:'Premium Boneless Short Rib Slices 200g',name:'Premium Boneless Short Rib Slices 200g',zh:'愛爾蘭頂級牛小排肉片 200g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
-  {id:'p183',nameZh:'愛爾蘭頂級牛小排燒烤肉片 200g',nameEn:'Premium Boneless Short Rib BBQ Slices 200g',name:'Premium Boneless Short Rib BBQ Slices 200g',zh:'愛爾蘭頂級牛小排燒烤肉片 200g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p129',nameZh:'Bobo 魚皮餃 200g',nameEn:'Bobo Fish Dumplings 200g',name:'Bobo Fish Dumplings 200g',zh:'Bobo 魚皮餃 200g',cat:'hk-snacks',price:5.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:100},
+  {id:'p130',nameZh:'Bobo 小五香魚卷 250g',nameEn:'Bobo Five Spices Fish Rolls 250g',name:'Bobo Five Spices Fish Rolls 250g',zh:'Bobo 小五香魚卷 250g',cat:'bread',price:3.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:51},
+  {id:'p131',nameZh:'Bobo 白魚蛋 200g',nameEn:'Bobo White Fish Ball 200g',name:'Bobo White Fish Ball 200g',zh:'Bobo 白魚蛋 200g',cat:'hk-snacks',price:5.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:25},
+  {id:'p132',nameZh:'Bobo 墨魚丸 250g',nameEn:'Bobo Cuttlefish Ball 250g',name:'Bobo Cuttlefish Ball 250g',zh:'Bobo 墨魚丸 250g',cat:'dim-sum',price:5.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
+  {id:'p133',nameZh:'Bobo 一品鍋',nameEn:'Mix Combo Hotpot Selection',name:'Mix Combo Hotpot Selection',zh:'Bobo 一品鍋',cat:'hk-snacks',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
+  {id:'p134',nameZh:'BOBO 炸魚腐竹卷 500g',nameEn:'BOBO',name:'BOBO',zh:'BOBO 炸魚腐竹卷 500g',cat:'hk-snacks',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p135',nameZh:'BOBO 娘惹香辣炸魚腐竹卷 250g',nameEn:'BOBO',name:'BOBO',zh:'BOBO 娘惹香辣炸魚腐竹卷 250g',cat:'hk-snacks',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
+  {id:'p136',nameZh:'BOBO 頂級炸魚雲吞',nameEn:'Premium Fried Fish Wonton 1kg',name:'Premium Fried Fish Wonton 1kg',zh:'BOBO 頂級炸魚雲吞',cat:'hk-snacks',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p137',nameZh:'泰國沙爹魚串零食',nameEn:'Honey Roasted Satay Fish',name:'Honey Roasted Satay Fish',zh:'泰國沙爹魚串零食',cat:'hk-homecook',price:1.59,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p138',nameZh:'叉燒 500g',nameEn:'BBQ Roast Pork 500g',name:'BBQ Roast Pork 500g',zh:'叉燒 500g',cat:'hk-homecook',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p139',nameZh:'烤鴨 1隻 850g',nameEn:'Roast Duck',name:'Roast Duck',zh:'烤鴨 1隻 850g',cat:'hk-homecook',price:15.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p140',nameZh:'豆腐火腩',nameEn:'Braised Tofu with Roast Pork Belly',name:'Braised Tofu with Roast Pork Belly',zh:'豆腐火腩',cat:'hk-homecook',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:28},
+  {id:'p141',nameZh:'港式咖喱牛腩',nameEn:'Hong Kong Style Curry Beef',name:'Hong Kong Style Curry Beef',zh:'港式咖喱牛腩',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p142',nameZh:'梅菜扣肉',nameEn:'Braised Pork with Preserved Vegetables',name:'Braised Pork with Preserved Vegetables',zh:'梅菜扣肉',cat:'hk-homecook',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:37},
+  {id:'p143',nameZh:'家餸柱侯牛腩',nameEn:'Homey Dish Chu Hou Beef Brisket',name:'Homey Dish Chu Hou Beef Brisket',zh:'家餸柱侯牛腩',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
+  {id:'p144',nameZh:'家餸梅子豬手',nameEn:'Homey Dish Braised Pig Knuckles with Plum',name:'Homey Dish Braised Pig Knuckles with Plum',zh:'家餸梅子豬手',cat:'hk-homecook',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p145',nameZh:'家餸枝竹羊腩煲',nameEn:'Home-style Lamb Belly & Bean Curd Stick Pot',name:'Home-style Lamb Belly & Bean Curd Stick Pot',zh:'家餸枝竹羊腩煲',cat:'hk-homecook',price:12.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21,needsVerify:true},
+  {id:'p146',nameZh:'胡椒豬肚雞湯',nameEn:'Pig Stomach Soup with Chicken & White Pepper',name:'Pig Stomach Soup with Chicken & White Pepper',zh:'胡椒豬肚雞湯',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p147',nameZh:'蓮藕章魚煲豬骨',nameEn:'Lotus Root Dried Octopus Pork Soup',name:'Lotus Root Dried Octopus Pork Soup',zh:'蓮藕章魚煲豬骨',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p148',nameZh:'豬腳薑',nameEn:'Pork Knuckles & Ginger Stew',name:'Pork Knuckles & Ginger Stew',zh:'豬腳薑',cat:'hk-homecook',price:14.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9,needsVerify:true},
+  {id:'p149',nameZh:'醉雞翼',nameEn:'Drunken Chicken Wings',name:'Drunken Chicken Wings',zh:'醉雞翼',cat:'hk-homecook',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p150',nameZh:'鮑汁雞腳',nameEn:'Abalone Sauce Chicken Feet',name:'Abalone Sauce Chicken Feet',zh:'鮑汁雞腳',cat:'hk-homecook',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p151',nameZh:'椰汁紫米露',nameEn:'Coconut Purple Rice Dessert',name:'Coconut Purple Rice Dessert',zh:'椰汁紫米露',cat:'hk-homecook',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10,needsVerify:true},
+  {id:'p152',nameZh:'家餸 2餸1湯套餐',nameEn:'Home-style 2 Dishes + 1 Soup Set',name:'Home-style 2 Dishes + 1 Soup Set',zh:'家餸 2餸1湯套餐',cat:'hk-homecook',price:29.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:31,needsVerify:true},
+  {id:'p153',nameZh:'師父港式滷味',nameEn:'HK Lomei (Chicken Gizzards, Hog Uteri, Cuttlefish)',name:'HK Lomei (Chicken Gizzards, Hog Uteri, Cuttlefish)',zh:'師父港式滷味',cat:'hk-snacks',price:10.5,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p154',nameZh:'咖喱魚蛋豬皮',nameEn:'HK Curry Fish Ball & Pork Crunch',name:'HK Curry Fish Ball & Pork Crunch',zh:'咖喱魚蛋豬皮',cat:'hk-snacks',price:12.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p155',nameZh:'香辣涼拌雞腎',nameEn:'Spicy Chicken Gizzard Cold Serve',name:'Spicy Chicken Gizzard Cold Serve',zh:'香辣涼拌雞腎',cat:'hk-snacks',price:10.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p156',nameZh:'香辣牛𦟌冷盤',nameEn:'Spicy Beef Shank Cold Serve',name:'Spicy Beef Shank Cold Serve',zh:'香辣牛𦟌冷盤',cat:'others',price:7.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p157',nameZh:'港式沙爹牛肉',nameEn:'HK Style Satay Beef',name:'HK Style Satay Beef',zh:'港式沙爹牛肉',cat:'hk-snacks',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p158',nameZh:'五香肉丁',nameEn:'Five-Spiced Pork Cubes',name:'Five-Spiced Pork Cubes',zh:'五香肉丁',cat:'hk-homecook',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p159',nameZh:'潮式滷水豬耳 300g',nameEn:'Teochew Braised Pig Ear 300g',name:'潮式滷水豬耳 300g',zh:'潮式滷水豬耳 300g',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p160',nameZh:'潮式香滑牛筋',nameEn:'Teochew Braised Beef Tendon',name:'潮式香滑牛筋',zh:'潮式香滑牛筋',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23,needsVerify:true},
+  {id:'p161',nameZh:'潮式五香牛肚 260g',nameEn:'Teochew Five-Spice Beef Tripe 260g',name:'潮式五香牛肚 260g',zh:'潮式五香牛肚 260g',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:36,needsVerify:true},
+  {id:'p162',nameZh:'潮式滷水豬大腸 260g',nameEn:'Teochew Braised Pork Intestine 260g',name:'潮式滷水豬大腸 260g',zh:'潮式滷水豬大腸 260g',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14,needsVerify:true},
+  {id:'p163',nameZh:'潮式秘制牛雜 410g',nameEn:'Teochew Braised Mixed Beef Offal 410g',name:'潮式秘制牛雜 410g',zh:'潮式秘制牛雜 410g',cat:'hk-snacks',price:15.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p164',nameZh:'潮式秘製崩沙腩 290g',nameEn:'Teochew Braised Pork Belly 290g',name:'潮式秘製崩沙腩 290g',zh:'潮式秘製崩沙腩 290g',cat:'hk-snacks',price:11.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p165',nameZh:'三文魚刺身大件裝',nameEn:'Large Pack of Salmon Sashimi',name:'Large Pack of Salmon Sashimi',zh:'三文魚刺身大件裝',cat:'sashimi',price:30.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p166',nameZh:'三文魚刺身細件裝',nameEn:'Small Pack of Salmon Sashimi',name:'Small Pack of Salmon Sashimi',zh:'三文魚刺身細件裝',cat:'sashimi',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:38},
+  {id:'p167',nameZh:'藍鰭吞拿魚中拖羅',nameEn:'Bluefin Tuna Chutoro',name:'Bluefin Tuna Chutoro',zh:'藍鰭吞拿魚中拖羅',cat:'sashimi',price:32.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p168',nameZh:'藍鰭吞拿魚大拖羅',nameEn:'Bluefin Tuna Otoro',name:'Bluefin Tuna Otoro',zh:'藍鰭吞拿魚大拖羅',cat:'sashimi',price:48.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p169',nameZh:'油甘魚刺身',nameEn:'Hamachi Yellow Tail Sashimi',name:'Hamachi Yellow Tail Sashimi',zh:'油甘魚刺身',cat:'sashimi',price:18.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p170',nameZh:'加拿大海膽刺身',nameEn:'Canadian Sea Urchin Sashimi',name:'Canadian Sea Urchin Sashimi',zh:'加拿大海膽刺身',cat:'sashimi',price:22.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p171',nameZh:'甜蝦刺身',nameEn:'Sweet Shrimp Sashimi',name:'Sweet Shrimp Sashimi',zh:'甜蝦刺身',cat:'sashimi',price:7.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:32},
+  {id:'p172',nameZh:'帶子刺身',nameEn:'Scallop Sashimi',name:'Scallop Sashimi',zh:'帶子刺身',cat:'sashimi',price:49.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p173',nameZh:'1kg 帶子刺身',nameEn:'Scallop Sashimi 1kg',name:'Scallop Sashimi 1kg',zh:'1kg 帶子刺身',cat:'sashimi',price:49.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p174',nameZh:'北寄貝刺身',nameEn:'Wild Arctic Surfclam',name:'Wild Arctic Surfclam',zh:'北寄貝刺身',cat:'sashimi',price:30.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p175',nameZh:'八爪魚片',nameEn:'Octopus Slices',name:'Octopus Slices',zh:'八爪魚片',cat:'sashimi',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p176',nameZh:'急凍三文魚籽 200g',nameEn:'Frozen Salmon Roe 200g',name:'Frozen Salmon Roe 200g',zh:'急凍三文魚籽 200g',cat:'sashimi',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p177',nameZh:'急凍芥辣八爪魚',nameEn:'Frozen Wasabi Octopus',name:'Frozen Wasabi Octopus',zh:'急凍芥辣八爪魚',cat:'frozen-seafood',price:10.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p178',nameZh:'日本壽司腐皮袋',nameEn:'Inari Age Seasoned Fried Bean Curd',name:'Inari Age Seasoned Fried Bean Curd',zh:'日本壽司腐皮袋',cat:'others',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p179',nameZh:'蒲燒鰻魚',nameEn:'Broiled Eel',name:'Broiled Eel',zh:'蒲燒鰻魚',cat:'frozen-seafood',price:11.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:26},
+  {id:'p180',nameZh:'阿拉斯加去骨銀鱈魚柳',nameEn:'Alaska Black Cod',name:'Alaska Black Cod',zh:'阿拉斯加去骨銀鱈魚柳',cat:'frozen-seafood',price:22.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p181',nameZh:'加拿大銀鱈魚原條去頭',nameEn:'Canadian Whole Head-off Black Cod',name:'Canadian Whole Head-off Black Cod',zh:'加拿大銀鱈魚原條去頭',cat:'frozen-seafood',price:38.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p182',nameZh:'愛爾蘭頂級牛小排肉片 200g',nameEn:'Premium Boneless Short Rib Slices 200g',name:'Premium Boneless Short Rib Slices 200g',zh:'愛爾蘭頂級牛小排肉片 200g',cat:'premium-meat',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p183',nameZh:'愛爾蘭頂級牛小排燒烤肉片 200g',nameEn:'Premium Boneless Short Rib BBQ Slices 200g',name:'Premium Boneless Short Rib BBQ Slices 200g',zh:'愛爾蘭頂級牛小排燒烤肉片 200g',cat:'premium-meat',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
   {id:'p184',nameZh:'愛爾蘭優質牛小排肉片 250g',nameEn:'Prime Boneless Short Rib Slices 250g',name:'Prime Boneless Short Rib Slices 250g',zh:'愛爾蘭優質牛小排肉片 250g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
-  {id:'p185',nameZh:'愛爾蘭高級牛頸脊肉片 200g',nameEn:'Premium Chuck Tail Flap Slices 200g',name:'Premium Chuck Tail Flap Slices 200g',zh:'愛爾蘭高級牛頸脊肉片 200g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
-  {id:'p186',nameZh:'愛爾蘭牛仔骨',nameEn:'Irish Asado Beef Ribs',name:'Irish Asado Beef Ribs',zh:'愛爾蘭牛仔骨',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
-  {id:'p187',nameZh:'愛爾蘭無骨牛小排',nameEn:'Irish Beef Short Ribs',name:'Irish Beef Short Ribs',zh:'愛爾蘭無骨牛小排',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:44},
-  {id:'p188',nameZh:'精選梅花豚肉片 250g',nameEn:'Pork Upper Shoulder Slices 250g',name:'Pork Upper Shoulder Slices 250g',zh:'精選梅花豚肉片 250g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
-  {id:'p189',nameZh:'西班牙豬腩肉片 500g',nameEn:'Spanish Pork Belly Slices 500g',name:'Spanish Pork Belly Slices 500g',zh:'西班牙豬腩肉片 500g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
-  {id:'p190',nameZh:'伊比利亞梅頭肉片 500g',nameEn:'Iberico Pork Collar Slices 500g',name:'Iberico Pork Collar Slices 500g',zh:'伊比利亞梅頭肉片 500g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p191',nameZh:'Iberico 豬頸肉',nameEn:'Iberico Secreto',name:'Iberico Secreto',zh:'Iberico 豬頸肉',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:32},
-  {id:'p192',nameZh:'Iberico 扇子肉',nameEn:'Iberico Abanico',name:'Iberico Abanico',zh:'Iberico 扇子肉',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
-  {id:'p193',nameZh:'鹿兒島 A3 和牛片 200g',nameEn:'Kagoshima A3 Wagyu Slices 200g',name:'Kagoshima A3 Wagyu Slices 200g',zh:'鹿兒島 A3 和牛片 200g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p185',nameZh:'愛爾蘭高級牛頸脊肉片 200g',nameEn:'Premium Chuck Tail Flap Slices 200g',name:'Premium Chuck Tail Flap Slices 200g',zh:'愛爾蘭高級牛頸脊肉片 200g',cat:'premium-meat',price:11.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
+  {id:'p186',nameZh:'愛爾蘭牛仔骨',nameEn:'Irish Asado Beef Ribs',name:'Irish Asado Beef Ribs',zh:'愛爾蘭牛仔骨',cat:'premium-meat',price:22.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p187',nameZh:'愛爾蘭無骨牛小排',nameEn:'Irish Beef Short Ribs',name:'Irish Beef Short Ribs',zh:'愛爾蘭無骨牛小排',cat:'premium-meat',price:28.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:44},
+  {id:'p188',nameZh:'精選梅花豚肉片 250g',nameEn:'Pork Upper Shoulder Slices 250g',name:'Pork Upper Shoulder Slices 250g',zh:'精選梅花豚肉片 250g',cat:'premium-meat',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
+  {id:'p189',nameZh:'西班牙豬腩肉片 500g',nameEn:'Spanish Pork Belly Slices 500g',name:'Spanish Pork Belly Slices 500g',zh:'西班牙豬腩肉片 500g',cat:'premium-meat',price:11.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p190',nameZh:'伊比利亞梅頭肉片 500g',nameEn:'Iberico Pork Collar Slices 500g',name:'Iberico Pork Collar Slices 500g',zh:'伊比利亞梅頭肉片 500g',cat:'premium-meat',price:16.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p191',nameZh:'Iberico 豬頸肉',nameEn:'Iberico Secreto',name:'Iberico Secreto',zh:'Iberico 豬頸肉',cat:'premium-meat',price:16.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:32},
+  {id:'p192',nameZh:'Iberico 扇子肉',nameEn:'Iberico Abanico',name:'Iberico Abanico',zh:'Iberico 扇子肉',cat:'premium-meat',price:16.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p193',nameZh:'鹿兒島 A3 和牛片 200g',nameEn:'Kagoshima A3 Wagyu Slices 200g',name:'Kagoshima A3 Wagyu Slices 200g',zh:'鹿兒島 A3 和牛片 200g',cat:'premium-meat',price:24.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
   {id:'p194',nameZh:'英國無激素走地豬豬軟骨 400g',nameEn:'Dingley Dell Pork Soft Bone 400g',name:'Dingley Dell Pork Soft Bone 400g',zh:'英國無激素走地豬豬軟骨 400g',cat:'premium-meat',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
-  {id:'p195',nameZh:'日式雞肉串燒 800g',nameEn:'Chicken Yakitori',name:'Chicken Yakitori',zh:'日式雞肉串燒 800g',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
-  {id:'p196',nameZh:'急凍魷魚鬚',nameEn:'Frozen Squid Tentacles',name:'Frozen Squid Tentacles',zh:'急凍魷魚鬚',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p197',nameZh:'急凍阿根廷紅蝦',nameEn:'Argentine Red Shrimp',name:'Argentine Red Shrimp',zh:'急凍阿根廷紅蝦',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p198',nameZh:'紀文頂級仿蟹柳',nameEn:'Kibun Frozen Imitation Crab Meat Stick',name:'Kibun Frozen Imitation Crab Meat Stick',zh:'紀文頂級仿蟹柳',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
-  {id:'p199',nameZh:'韓國中華沙律 350g',nameEn:'Korean Chinese Salad 350g',name:'韓國中華沙律 350g',zh:'韓國中華沙律 350g',cat:'others',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p200',nameZh:'日式章魚小丸子',nameEn:'Takoyaki',name:'Takoyaki',zh:'日式章魚小丸子',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
-  {id:'p201',nameZh:'日式玉子燒',nameEn:'Japanese Rolled Egg Omelet',name:'Japanese Rolled Egg Omelet',zh:'日式玉子燒',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
-  {id:'p202',nameZh:'韓國急凍手打烏冬',nameEn:'Korean Frozen Handmade Udon',name:'Korean Frozen Handmade Udon',zh:'韓國急凍手打烏冬',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:85},
-  {id:'p203',nameZh:'日式炸蝦天婦羅 850g',nameEn:'Japanese Style Breaded Prawn 52pcs',name:'Japanese Style Breaded Prawn 52pcs',zh:'日式炸蝦天婦羅 850g',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:1},
-  {id:'p204',nameZh:'日式章魚丸 400g',nameEn:'Japanese Style Octopus Ball',name:'Japanese Style Octopus Ball',zh:'日式章魚丸 400g',cat:'frozen-seafood',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:1},
-  {id:'p205',nameZh:'五香鹹肉糭',nameEn:'Wu Xiang Five-Spice Zongzi',name:'Wu Xiang Five-Spice Zongzi',zh:'五香鹹肉糭',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:35},
-  {id:'p206',nameZh:'頂級鮑魚瑤柱鹹肉糭',nameEn:'Premium Abalone & Dried Scallop Zongzi',name:'Premium Abalone & Dried Scallop Zongzi',zh:'頂級鮑魚瑤柱鹹肉糭',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
-  {id:'p207',nameZh:'Inaka 雞肉餃子 600g',nameEn:'Inaka',name:'Inaka',zh:'Inaka 雞肉餃子 600g',cat:'others',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
-  {id:'p208',nameZh:'台灣奇美芝麻包 6個裝',nameEn:'Chimei Sesame Bun',name:'Chimei Sesame Bun',zh:'台灣奇美芝麻包 6個裝',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
-  {id:'p209',nameZh:'台灣奇美紅豆包 6個裝',nameEn:'Chimei Red Bean Bun',name:'Chimei Red Bean Bun',zh:'台灣奇美紅豆包 6個裝',cat:'bread',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
-  {id:'p210',nameZh:'Shiseido 資生堂花語蜜潤洗髮露 450ml',nameEn:'Shiseido Aqua Intensive Shampoo 450ml',name:'Shiseido Aqua Intensive Shampoo 450ml',zh:'Shiseido 資生堂花語蜜潤洗髮露 450ml',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
-  {id:'p211',nameZh:'50惠 養潤豐盈洗髮露 400ml',nameEn:'50 Megumi Nourishing Volume Shampoo 400ml',name:'50 Megumi Nourishing Volume Shampoo 400ml',zh:'50惠 養潤豐盈洗髮露 400ml',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p212',nameZh:'Lion 獅王 Kirei Kirei 兒童泡泡消毒洗手液 250ml',nameEn:'Lion Kirei Kirei Kids Foaming Hand Soap 250ml',name:'Lion Kirei Kirei Kids Foaming Hand Soap 250ml',zh:'Lion 獅王 Kirei Kirei 兒童泡泡消毒洗手液 250ml',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
-  {id:'p213',nameZh:'Lion 獅王 6-12歲兒童牙膏 提子味 60ml',nameEn:'Lion Kids Toothpaste Grape 60ml (Age 6-12)',name:'Lion Kids Toothpaste Grape 60ml (Age 6-12)',zh:'Lion 獅王 6-12歲兒童牙膏 提子味 60ml',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p214',nameZh:'HADA LABO 肌研',nameEn:'Hada Labo Premium Hydrating Eye Cream 20g',name:'Hada Labo Premium Hydrating Eye Cream 20g',zh:'HADA LABO 肌研',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
-  {id:'p215',nameZh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 26cm',nameEn:'Unicharm Sofy Ultra Thin Daily Pads 26cm',name:'Unicharm Sofy Ultra Thin Daily Pads 26cm',zh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 26cm',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
-  {id:'p216',nameZh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 21cm',nameEn:'Unicharm Sofy Ultra Thin Daily Pads 21cm',name:'Unicharm Sofy Ultra Thin Daily Pads 21cm',zh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 21cm',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
-  {id:'p217',nameZh:'曼秀雷敦藥用薄荷潤唇膏 XD 4g 2支裝',nameEn:'Mentholatum Medicated Mint Lip Balm XD 4g (2-pack)',name:'Mentholatum Medicated Mint Lip Balm XD 4g (2-pack)',zh:'曼秀雷敦藥用薄荷潤唇膏 XD 4g 2支裝',cat:'personal-care',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5}
+  {id:'p195',nameZh:'日式雞肉串燒 800g',nameEn:'Chicken Yakitori',name:'Chicken Yakitori',zh:'日式雞肉串燒 800g',cat:'frozen-seafood',price:17.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p196',nameZh:'急凍魷魚鬚',nameEn:'Frozen Squid Tentacles',name:'Frozen Squid Tentacles',zh:'急凍魷魚鬚',cat:'frozen-seafood',price:12.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p197',nameZh:'急凍阿根廷紅蝦',nameEn:'Argentine Red Shrimp',name:'Argentine Red Shrimp',zh:'急凍阿根廷紅蝦',cat:'frozen-seafood',price:36.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p198',nameZh:'紀文頂級仿蟹柳',nameEn:'Kibun Frozen Imitation Crab Meat Stick',name:'Kibun Frozen Imitation Crab Meat Stick',zh:'紀文頂級仿蟹柳',cat:'bread',price:5.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
+  {id:'p199',nameZh:'韓國中華沙律 350g',nameEn:'Korean Chinese Salad 350g',name:'韓國中華沙律 350g',zh:'韓國中華沙律 350g',cat:'others',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p200',nameZh:'日式章魚小丸子',nameEn:'Takoyaki',name:'Takoyaki',zh:'日式章魚小丸子',cat:'frozen-seafood',price:8.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p201',nameZh:'日式玉子燒',nameEn:'Japanese Rolled Egg Omelet',name:'Japanese Rolled Egg Omelet',zh:'日式玉子燒',cat:'bread',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p202',nameZh:'韓國急凍手打烏冬',nameEn:'Korean Frozen Handmade Udon',name:'Korean Frozen Handmade Udon',zh:'韓國急凍手打烏冬',cat:'frozen-seafood',price:4.65,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:85},
+  {id:'p203',nameZh:'日式炸蝦天婦羅 850g',nameEn:'Japanese Style Breaded Prawn 52pcs',name:'Japanese Style Breaded Prawn 52pcs',zh:'日式炸蝦天婦羅 850g',cat:'frozen-seafood',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:1},
+  {id:'p204',nameZh:'日式章魚丸 400g',nameEn:'Japanese Style Octopus Ball',name:'Japanese Style Octopus Ball',zh:'日式章魚丸 400g',cat:'frozen-seafood',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:1},
+  {id:'p205',nameZh:'五香鹹肉糭',nameEn:'Wu Xiang Five-Spice Zongzi',name:'Wu Xiang Five-Spice Zongzi',zh:'五香鹹肉糭',cat:'dim-sum',price:8.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:35},
+  {id:'p206',nameZh:'頂級鮑魚瑤柱鹹肉糭',nameEn:'Premium Abalone & Dried Scallop Zongzi',name:'Premium Abalone & Dried Scallop Zongzi',zh:'頂級鮑魚瑤柱鹹肉糭',cat:'dim-sum',price:12.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p207',nameZh:'Inaka 雞肉餃子 600g',nameEn:'Inaka',name:'Inaka',zh:'Inaka 雞肉餃子 600g',cat:'others',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p208',nameZh:'台灣奇美芝麻包 6個裝',nameEn:'Chimei Sesame Bun',name:'Chimei Sesame Bun',zh:'台灣奇美芝麻包 6個裝',cat:'bread',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p209',nameZh:'台灣奇美紅豆包 6個裝',nameEn:'Chimei Red Bean Bun',name:'Chimei Red Bean Bun',zh:'台灣奇美紅豆包 6個裝',cat:'bread',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p210',nameZh:'Shiseido 資生堂花語蜜潤洗髮露 450ml',nameEn:'Shiseido Aqua Intensive Shampoo 450ml',name:'Shiseido Aqua Intensive Shampoo 450ml',zh:'Shiseido 資生堂花語蜜潤洗髮露 450ml',cat:'personal-care',price:11.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2,needsVerify:true},
+  {id:'p211',nameZh:'50惠 養潤豐盈洗髮露 400ml',nameEn:'50 Megumi Nourishing Volume Shampoo 400ml',name:'50 Megumi Nourishing Volume Shampoo 400ml',zh:'50惠 養潤豐盈洗髮露 400ml',cat:'personal-care',price:10.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3,needsVerify:true},
+  {id:'p212',nameZh:'Lion 獅王 Kirei Kirei 兒童泡泡消毒洗手液 250ml',nameEn:'Lion Kirei Kirei Kids Foaming Hand Soap 250ml',name:'Lion Kirei Kirei Kids Foaming Hand Soap 250ml',zh:'Lion 獅王 Kirei Kirei 兒童泡泡消毒洗手液 250ml',cat:'personal-care',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3,needsVerify:true},
+  {id:'p213',nameZh:'Lion 獅王 6-12歲兒童牙膏 提子味 60ml',nameEn:'Lion Kids Toothpaste Grape 60ml (Age 6-12)',name:'Lion Kids Toothpaste Grape 60ml (Age 6-12)',zh:'Lion 獅王 6-12歲兒童牙膏 提子味 60ml',cat:'personal-care',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4,needsVerify:true},
+  {id:'p214',nameZh:'HADA LABO 肌研',nameEn:'Hada Labo Premium Hydrating Eye Cream 20g',name:'Hada Labo Premium Hydrating Eye Cream 20g',zh:'HADA LABO 肌研',cat:'personal-care',price:14.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2,needsVerify:true},
+  {id:'p215',nameZh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 26cm',nameEn:'Unicharm Sofy Ultra Thin Daily Pads 26cm',name:'Unicharm Sofy Ultra Thin Daily Pads 26cm',zh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 26cm',cat:'personal-care',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
+  {id:'p216',nameZh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 21cm',nameEn:'Unicharm Sofy Ultra Thin Daily Pads 21cm',name:'Unicharm Sofy Ultra Thin Daily Pads 21cm',zh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 21cm',cat:'personal-care',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p217',nameZh:'曼秀雷敦藥用薄荷潤唇膏 XD 4g 2支裝',nameEn:'Mentholatum Medicated Mint Lip Balm XD 4g (2-pack)',name:'Mentholatum Medicated Mint Lip Balm XD 4g (2-pack)',zh:'曼秀雷敦藥用薄荷潤唇膏 XD 4g 2支裝',cat:'personal-care',price:1.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5,needsVerify:true}
 ];
 
 const SEED_CATEGORIES = [
@@ -907,6 +1007,7 @@ let state = {
   editingSetId: null,
   editingProductId: null,
   productStatusFilter: 'all',
+  editingCategoryId: null,
   productSearchQuery: '',
   productCatFilter: '',
   showLowOnly: false,
@@ -916,10 +1017,9 @@ let state = {
 };
 
 // ── STORAGE ──────────────────────────────────────────────────
-// Storage works in Claude Artifacts (window.storage) AND local HTML (localStorage)
 async function dbGet() {
   if (typeof window.storage !== 'undefined') {
-    try { const r = await window.storage.get('jpfruit-v2', true); if (r) return JSON.parse(r.value); } catch(e) {}
+    try { const r = await window.storage.get('jpfruit-v2',true); if(r) return JSON.parse(r.value); } catch(e) {}
   }
   try { const raw = localStorage.getItem('jpfruit-v2'); return raw ? JSON.parse(raw) : null; } catch(e) { return null; }
 }
@@ -930,28 +1030,25 @@ async function loadData() {
     const saved = await dbGet();
     if (saved) {
       state.products = saved.products || [];
-      state.orders = saved.orders || [];
+      state.orders   = saved.orders   || [];
       state.categories = saved.categories || SEED_CATEGORIES;
-      state.banner = saved.banner || {...DEFAULT_BANNER};
-      state.sets = saved.sets || [];
-      // Merge any new seed products not yet saved
-      const existingIds = new Set(state.products.map(p => p.id));
+      state.banner   = saved.banner   || {...DEFAULT_BANNER};
+      state.sets     = saved.sets     || [];
+      state.settings = saved.settings || {};
+      const existingIds = new Set(state.products.map(p=>p.id));
       for (const sp of SEED_PRODUCTS) {
         if (!existingIds.has(sp.id)) state.products.push(sp);
       }
     } else {
-      // First run — load all seeds
       state.categories = SEED_CATEGORIES;
-      state.products = SEED_PRODUCTS.map(p => ({...p}));
-      state.sets = [];
-      state.orders = [];
-      state.banner = {...DEFAULT_BANNER};
+      state.products   = SEED_PRODUCTS.map(p=>({...p}));
+      state.sets=[]; state.orders=[]; state.settings={};
       await saveData();
     }
   } catch(e) {
-    console.error('loadData error:', e);
+    console.error('loadData:',e);
     state.categories = SEED_CATEGORIES;
-    state.products = SEED_PRODUCTS.map(p => ({...p}));
+    state.products   = SEED_PRODUCTS.map(p=>({...p}));
   }
   setSyncing(false);
   renderAll();
@@ -960,13 +1057,10 @@ async function loadData() {
 async function saveData() {
   setSyncing(true);
   const data = JSON.stringify({
-    products: state.products,
-    orders: state.orders,
-    categories: state.categories,
-    banner: state.banner,
-    sets: state.sets,
+    products: state.products, orders: state.orders,
+    categories: state.categories, banner: state.banner,
+    sets: state.sets, settings: state.settings||{},
   });
-  // Save to both storages for reliability
   if (typeof window.storage !== 'undefined') {
     try { await window.storage.set('jpfruit-v2', data, true); } catch(e) {}
   }
@@ -985,7 +1079,7 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(page) {
-  ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories'].forEach(p => {
+  ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings'].forEach(p => {
     document.getElementById('page-'+p).style.display = p===page?'block':'none';
     const el = document.getElementById('nav-'+p);
     if(el) el.classList.toggle('active', p===page);
@@ -998,6 +1092,7 @@ function showPage(page) {
   if(page==='reports') initReports();
   if(page==='featured') renderFeaturedPage();
   if(page==='banner') renderBannerPage();
+  if(page==='settings') initSettings();
   if(page==='categories') renderCategories();
 }
 
@@ -1102,7 +1197,13 @@ function renderProducts() {
     const statusBadge = !p.active?'<span class="badge badge-gray">下架</span>':p.stock===0?'<span class="badge badge-red">售罄</span>':'<span class="badge badge-green">上架</span>';
     html += `<tr>
       <td>
-        <div style="font-size:0.84rem;max-width:300px;">${p.name}</div>
+        <div style="font-size:0.84rem;font-weight:500;max-width:300px;">${p.nameZh||p.zh||p.name}</div>
+        <div style="font-size:0.73rem;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px;">
+          <span>${p.nameEn||''}</span>
+          ${p.needsVerify
+            ? '<span title="英文名由 AI 生成，請核實" style="background:#F5C842;color:#1a1a00;font-size:0.6rem;padding:1px 6px;border-radius:4px;cursor:help;flex-shrink:0;">⚠️ 待核實</span>'
+            : '<span style="background:rgba(0,200,150,0.15);color:var(--green);font-size:0.6rem;padding:1px 6px;border-radius:4px;flex-shrink:0;">✓ 已核實</span>'}
+        </div>
         ${p.featured?'<span class="badge badge-gold" style="margin-top:2px;font-size:0.65rem;">推介</span>':''}
         ${p.historicSold?`<span style="font-size:0.7rem;color:var(--muted)">歷史銷量: ${p.historicSold}</span>`:'<span style="font-size:0.7rem;color:var(--muted)">新產品</span>'}
       </td>
@@ -1246,6 +1347,7 @@ function saveProduct() {
     active: document.getElementById('p-active').checked,
     featured: document.getElementById('p-featured').checked,
     historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
+    needsVerify: false,
   };
   if (state.editingProductId) state.products = state.products.map(p=>p.id===state.editingProductId?product:p);
   else state.products.push(product);
@@ -1321,18 +1423,52 @@ function renderCategories() {
   tbody.innerHTML = state.categories.map(c=>{
     const count = state.products.filter(p=>p.cat===c.id).length;
     return `<tr>
-      <td>${c.name}</td><td>${c.zh}</td>
+      <td style="font-weight:500">${c.name}</td><td>${c.zh}</td>
       <td><span class="badge badge-blue">${count} 款</span></td>
-      <td><div class="row-actions"><button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">刪除</button></div></td>
+      <td><div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editCategory('${c.id}')">✏️ 編輯</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">刪除</button>
+      </div></td>
     </tr>`;
   }).join('');
 }
-function openCategoryModal() { document.getElementById('c-name').value=''; document.getElementById('c-name-zh').value=''; document.getElementById('category-modal').classList.add('open'); }
+function openCategoryModal() {
+  state.editingCategoryId = null;
+  document.getElementById('c-name').value = '';
+  document.getElementById('c-name-zh').value = '';
+  document.getElementById('cat-modal-title').textContent = '新增分類';
+  document.getElementById('cat-delete-btn').style.display = 'none';
+  document.getElementById('category-modal').classList.add('open');
+}
+function editCategory(id) {
+  const cat = state.categories.find(x=>x.id===id); if(!cat) return;
+  state.editingCategoryId = id;
+  document.getElementById('c-name').value = cat.name||cat.id;
+  document.getElementById('c-name-zh').value = cat.zh||'';
+  document.getElementById('cat-modal-title').textContent = '編輯分類';
+  document.getElementById('cat-delete-btn').style.display = 'block';
+  document.getElementById('category-modal').classList.add('open');
+}
+function deleteCategoryFromModal() {
+  const id = state.editingCategoryId; if(!id) return;
+  if(state.products.find(p=>p.cat===id)) { alert('請先將此分類下嘅產品移走先！'); return; }
+  if(!confirm('確定刪除此分類？')) return;
+  state.categories = state.categories.filter(x=>x.id!==id);
+  saveData(); closeModal('category-modal'); renderCategories(); populateCategoryDropdowns();
+}
 function saveCategory() {
-  const name=document.getElementById('c-name').value.trim();
-  const zh=document.getElementById('c-name-zh').value.trim();
-  if(!name) return;
-  state.categories.push({id:name.toLowerCase().replace(/\s+/g,'-'),name,zh});
+  const name = document.getElementById('c-name').value.trim();
+  const zh   = document.getElementById('c-name-zh').value.trim();
+  if(!name) { alert('請填寫英文分類名稱！'); return; }
+  if (state.editingCategoryId) {
+    state.categories = state.categories.map(x=>
+      x.id===state.editingCategoryId ? {...x, name, zh} : x
+    );
+  } else {
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    if (state.categories.find(x=>x.id===id)) { alert('此分類已存在！'); return; }
+    state.categories.push({id, name, zh});
+  }
   saveData(); closeModal('category-modal'); renderCategories(); populateCategoryDropdowns();
 }
 function deleteCategory(id) {
@@ -2018,6 +2154,67 @@ function deleteSet() {
   saveData();
   closeModal('set-modal');
   renderSetsPage();
+}
+
+
+// ── SITE SETTINGS ─────────────────────────────────────────────
+const DEFAULT_SETTINGS = {
+  font:"'Noto Sans HK',sans-serif", headingFont:"'Pacifico',cursive",
+  whatsapp:'447700900000',
+  facebook:'https://www.facebook.com/jpfruitsuk',
+  instagram:'https://www.instagram.com/jp_fruit_swlondon',
+  wagroup:'https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK',
+  heroSubZh:'精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門',
+  heroSubEn:'Premium Japanese fruits, authentic HK flavours & Asian goods — delivered across South London',
+  chip1Zh:'✈️ 日本直送', chip1En:'✈️ Direct from Japan',
+  chip2Zh:'🏠 South London 送貨', chip2En:'🏠 South London Delivery',
+  chip3Zh:'💳 貨到付款', chip3En:'💳 Pay on Delivery',
+  deliveryZh:'逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。',
+  deliveryEn:"Delivery every Friday (Thursday if high volume). You'll be notified one day in advance.",
+  contactZh:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
+  contactEn:"We'll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri 9:30am–4:00pm",
+  cutoffDay:2, cutoffTime:'13:00',
+};
+
+function initSettings() {
+  const s = (state.settings && Object.keys(state.settings).length) ? state.settings : DEFAULT_SETTINGS;
+  const fields = {
+    'st-font':'font','st-heading-font':'headingFont','st-whatsapp':'whatsapp',
+    'st-facebook':'facebook','st-instagram':'instagram','st-wagroup':'wagroup',
+    'st-hero-sub-zh':'heroSubZh','st-hero-sub-en':'heroSubEn',
+    'st-chip1-zh':'chip1Zh','st-chip1-en':'chip1En',
+    'st-chip2-zh':'chip2Zh','st-chip2-en':'chip2En',
+    'st-chip3-zh':'chip3Zh','st-chip3-en':'chip3En',
+    'st-del-zh':'deliveryZh','st-del-en':'deliveryEn',
+    'st-contact-zh':'contactZh','st-contact-en':'contactEn',
+  };
+  for (const [id, key] of Object.entries(fields)) {
+    const el = document.getElementById(id);
+    if (el) el.value = s[key] || DEFAULT_SETTINGS[key] || '';
+  }
+  const day = document.getElementById('st-cutoff-day');
+  if (day) day.value = s.cutoffDay || 2;
+  const time = document.getElementById('st-cutoff-time');
+  if (time) time.value = s.cutoffTime || '13:00';
+}
+
+function saveSettings() {
+  const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  state.settings = {
+    font: gv('st-font'), headingFont: gv('st-heading-font'),
+    whatsapp: gv('st-whatsapp'), facebook: gv('st-facebook'),
+    instagram: gv('st-instagram'), wagroup: gv('st-wagroup'),
+    heroSubZh: gv('st-hero-sub-zh'), heroSubEn: gv('st-hero-sub-en'),
+    chip1Zh: gv('st-chip1-zh'), chip1En: gv('st-chip1-en'),
+    chip2Zh: gv('st-chip2-zh'), chip2En: gv('st-chip2-en'),
+    chip3Zh: gv('st-chip3-zh'), chip3En: gv('st-chip3-en'),
+    deliveryZh: gv('st-del-zh'), deliveryEn: gv('st-del-en'),
+    contactZh: gv('st-contact-zh'), contactEn: gv('st-contact-en'),
+    cutoffDay: parseInt(document.getElementById('st-cutoff-day')?.value) || 2,
+    cutoffTime: gv('st-cutoff-time') || '13:00',
+  };
+  saveData();
+  alert('✅ 設定已儲存！客戶網站下次載入時即時更新。');
 }
 
 loadData();
