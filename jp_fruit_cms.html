@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JP Fruit CMS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0F1117;--surface:#1A1D27;--surface2:#22263A;--surface3:#2A2F45;
+  --green:#00C896;--green-dim:#00896A;--gold:#F5C842;--red:#FF4D6D;
+  --blue:#4D9EFF;--text:#E8EAF0;--muted:#7A7F99;--border:#2E3350;
+  --radius:10px;--font:'Sora',sans-serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;}
+.main{flex:1;overflow:auto;}
+.logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.logo-title{font-size:1.1rem;font-weight:600;color:var(--green);}
+.logo-sub{font-size:0.7rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.nav{padding:12px 8px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:0.85rem;margin-bottom:2px;transition:all 0.15s;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--surface3);color:var(--green);font-weight:500;}
+.nav-item .icon{font-size:1rem;width:20px;text-align:center;}
+.nav-section{font-size:0.65rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:12px 10px 4px;margin-top:4px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border);}
+.sync-indicator{display:flex;align-items:center;gap:6px;font-size:0.72rem;color:var(--muted);}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.header{padding:20px 28px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.page-title{font-size:1.4rem;font-weight:600;letter-spacing:-0.5px;}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{padding:8px 14px;border-radius:8px;border:none;font-family:var(--font);font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--green);color:#000;}
+.btn-primary:hover{background:#00E6AD;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--border);}
+.btn-danger:hover{background:rgba(255,77,109,0.1);}
+.btn-sm{padding:5px 10px;font-size:0.75rem;}
+.btn-gold{background:var(--gold);color:#000;}
+.content{padding:20px 28px 40px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.stat-label{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.stat-value{font-size:1.6rem;font-weight:600;font-family:var(--mono);}
+.stat-value.green{color:var(--green);}
+.stat-value.gold{color:var(--gold);}
+.stat-value.red{color:var(--red);}
+.stat-value.blue{color:var(--blue);}
+.stat-sub{font-size:0.72rem;color:var(--muted);margin-top:4px;}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.table-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.table-title{font-weight:500;font-size:0.9rem;}
+.search-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-family:var(--font);font-size:0.82rem;}
+.search-box::placeholder{color:var(--muted);}
+.search-box:focus{outline:none;border-color:var(--green);}
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 14px;text-align:left;font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-weight:500;}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.83rem;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:500;}
+.badge-green{background:rgba(0,200,150,0.15);color:var(--green);}
+.badge-gold{background:rgba(245,200,66,0.15);color:var(--gold);}
+.badge-red{background:rgba(255,77,109,0.15);color:var(--red);}
+.badge-blue{background:rgba(77,158,255,0.15);color:var(--blue);}
+.badge-gray{background:var(--surface3);color:var(--muted);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:600px;max-height:90vh;overflow:auto;transform:translateY(20px);transition:transform 0.2s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1;}
+.modal-title{font-weight:600;font-size:1rem;}
+.modal-body{padding:20px 24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--surface);}
+.close-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;padding:4px;}
+.form-group{margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+label{display:block;font-size:0.75rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--font);font-size:0.85rem;transition:border 0.15s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);}
+select option{background:var(--surface2);}
+textarea{resize:vertical;min-height:60px;}
+.price-input{position:relative;}
+.price-input span{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.85rem;}
+.price-input input{padding-left:24px;}
+.toggle{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.toggle-switch{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;inset:0;background:var(--surface3);border-radius:20px;transition:0.2s;}
+.slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:0.2s;}
+input:checked+.slider{background:var(--green);}
+input:checked+.slider:before{transform:translateX(16px);background:white;}
+.inv-bar{width:80px;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px;}
+.inv-fill{height:100%;border-radius:3px;}
+.row-actions{display:flex;gap:4px;}
+.tabs{display:flex;gap:2px;padding:0 28px;margin-top:16px;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:9px 14px;font-size:0.82rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;white-space:nowrap;}
+.tab.active{color:var(--green);border-bottom-color:var(--green);font-weight:500;}
+.notice{background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.2);border-radius:8px;padding:10px 14px;font-size:0.8rem;color:var(--green);margin-bottom:16px;}
+.cat-chip{display:inline-block;padding:2px 8px;background:var(--surface3);border-radius:4px;font-size:0.72rem;color:var(--muted);}
+.sold-bar{display:inline-block;width:40px;height:4px;background:var(--surface3);border-radius:2px;vertical-align:middle;margin-right:4px;overflow:hidden;}
+.sold-fill{height:100%;background:var(--blue);border-radius:2px;}
+.pagination{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);}
+.page-info{flex:1;}
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.kanban-header{padding:12px 14px;border-bottom:1px solid var(--border);font-size:0.8rem;font-weight:500;display:flex;align-items:center;justify-content:space-between;}
+.kanban-count{font-size:0.72rem;background:var(--surface3);padding:2px 8px;border-radius:20px;color:var(--muted);}
+.kanban-items{padding:10px;min-height:180px;}
+.order-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s;}
+.order-card:hover{border-color:var(--green);}
+.order-id{font-family:var(--mono);font-size:0.72rem;color:var(--muted);}
+.order-name{font-weight:500;font-size:0.85rem;margin:3px 0;}
+.order-total{color:var(--green);font-family:var(--mono);font-size:0.82rem;}
+.order-area{font-size:0.72rem;color:var(--muted);}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.section-divider{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 14px;background:var(--bg);border-bottom:1px solid var(--border);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-title">JP Fruit CMS</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">主頁</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="icon">📊</span>儀表板</div>
+      <div class="nav-section">產品</div>
+      <div class="nav-item" onclick="showPage('products')" id="nav-products"><span class="icon">🛍️</span>產品管理</div>
+      <div class="nav-item" onclick="showPage('inventory')" id="nav-inventory"><span class="icon">📦</span>庫存管理</div>
+      <div class="nav-item" onclick="showPage('sets')" id="nav-sets"><span class="icon">🎁</span>套餐管理</div>
+      <div class="nav-section">訂單</div>
+      <div class="nav-item" onclick="showPage('orders')" id="nav-orders"><span class="icon">📋</span>訂單管理</div>
+      <div class="nav-item" onclick="showPage('reports')" id="nav-reports"><span class="icon">📊</span>報告 Reports</div>
+      <div class="nav-section">設定</div>
+      <div class="nav-item" onclick="showPage('featured')" id="nav-featured"><span class="icon">🏆</span>熱賣專區管理</div>
+      <div class="nav-item" onclick="showPage('banner')" id="nav-banner"><span class="icon">🌟</span>本週主打 Banner</div>
+      <div class="nav-item" onclick="showPage('categories')" id="nav-categories"><span class="icon">🏷️</span>分類設定</div>
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">⚙️</span>網站設定</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sync-indicator"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">載入中...</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="header">
+        <div class="page-title">儀表板 Dashboard</div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" onclick="showPage('orders')">睇訂單</button>
+          <button class="btn btn-primary" onclick="openProductModal()">+ 新增產品</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">產品總數</div><div class="stat-value blue" id="stat-products">-</div><div class="stat-sub">款產品</div></div>
+          <div class="stat-card"><div class="stat-label">需要補價錢</div><div class="stat-value gold" id="stat-noprice">-</div><div class="stat-sub">未填價錢</div></div>
+          <div class="stat-card"><div class="stat-label">售罄產品</div><div class="stat-value red" id="stat-oos">-</div><div class="stat-sub">庫存=0</div></div>
+          <div class="stat-card"><div class="stat-label">特價產品</div><div class="stat-value green" id="stat-discounts">-</div><div class="stat-sub">現正特價</div></div>
+        </div>
+        <div id="dash-alert"></div>
+        <div class="table-wrap" style="margin-top:16px;">
+          <div class="table-header"><div class="table-title">🏆 最暢銷產品 Top Sellers</div><button class="btn btn-ghost btn-sm" onclick="showPage('products')">睇全部</button></div>
+          <table><thead><tr><th>產品</th><th>分類</th><th>歷史銷量</th><th>價錢</th><th>庫存</th></tr></thead>
+          <tbody id="dashboard-topsellers"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="page-products" style="display:none;">
+      <div class="header">
+        <div class="page-title">產品管理 Products <span style="font-size:0.85rem;color:var(--muted);font-weight:400;" id="products-count"></span></div>
+        <div class="header-actions">
+          <input class="search-box" placeholder="搜尋產品..." oninput="filterProducts(this.value)" id="product-search" style="width:180px;">
+          <select class="search-box" style="width:150px;" onchange="filterProductsCat(this.value)" id="cat-filter"><option value="">所有分類</option></select>
+          <button class="btn btn-primary" onclick="openProductModal()">+ 新增產品</button>
+        </div>
+      </div>
+      <div class="tabs" id="product-tabs">
+        <div class="tab active" onclick="filterProductStatus('all',this)">全部</div>
+        <div class="tab" onclick="filterProductStatus('noprice',this)">⚠️ 未填價錢</div>
+        <div class="tab" onclick="filterProductStatus('active',this)">上架中</div>
+        <div class="tab" onclick="filterProductStatus('discount',this)">特價</div>
+        <div class="tab" onclick="filterProductStatus('oos',this)">售罄</div>
+        <div class="tab" onclick="filterProductStatus('inactive',this)">下架</div>
+        <div class="tab" onclick="filterProductStatus('verify',this)">⚠️ 待核實英文名</div>
+      </div>
+      <div class="content" style="padding-top:16px;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>產品名稱</th><th>分類</th><th>正價</th><th>特價</th><th>庫存</th><th>歷史銷量</th><th>狀態</th><th>操作</th></tr></thead>
+            <tbody id="products-table"></tbody>
+          </table>
+          <div class="pagination" id="products-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="page-inventory" style="display:none;">
+      <div class="header">
+        <div class="page-title">庫存管理 Inventory</div>
+        <div class="header-actions">
+          <input class="search-box" placeholder="搜尋..." oninput="filterInventory(this.value)" style="width:160px;">
+          <button class="btn btn-ghost" onclick="toggleLowOnly()" id="low-btn">⚠️ 只顯示售罄</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice">💡 庫存 <strong>-1</strong> = 無限（不追蹤）｜<strong>0</strong> = 售罄，自動顯示缺貨</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>產品</th><th>分類</th><th>庫存</th><th>狀態</th><th>快速更新</th></tr></thead>
+            <tbody id="inventory-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- REPORTS -->
+    <div id="page-reports" style="display:none;">
+      <div class="header">
+        <div class="page-title">報告 Reports</div>
+        <div class="header-actions">
+          <button class="btn btn-gold" onclick="exportWeeklyCSV()">⬇ 匯出週報 CSV</button>
+        </div>
+      </div>
+      <div class="content">
+
+        <!-- FILTERS -->
+        <div class="table-wrap" style="padding:16px;margin-bottom:16px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="form-group" style="margin:0;">
+              <label>日期由 From</label>
+              <input type="date" id="r-date-from" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>日期至 To</label>
+              <input type="date" id="r-date-to" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;">
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('thisweek')">本週</button>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('lastweek')">上週</button>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('thismonth')">本月</button>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('last30')">過去30天</button>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('all')">全部</button>
+            <button class="btn btn-primary btn-sm" onclick="runReports()" style="margin-left:auto;">生成報告</button>
+          </div>
+        </div>
+
+        <!-- SUMMARY STATS -->
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);" id="r-stats">
+          <div class="stat-card"><div class="stat-label">總訂單</div><div class="stat-value blue" id="r-total-orders">—</div></div>
+          <div class="stat-card"><div class="stat-label">總收入</div><div class="stat-value green" id="r-total-revenue">—</div></div>
+          <div class="stat-card"><div class="stat-label">平均訂單</div><div class="stat-value gold" id="r-avg-order">—</div></div>
+          <div class="stat-card"><div class="stat-label">獨立客人</div><div class="stat-value blue" id="r-unique-customers">—</div></div>
+        </div>
+
+        <!-- TABS -->
+        <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;gap:4px;">
+          <button class="r-tab active" onclick="switchRTab('orders',this)">📋 訂單明細</button>
+          <button class="r-tab" onclick="switchRTab('products',this)">📦 按產品</button>
+          <button class="r-tab" onclick="switchRTab('customers',this)">👤 按客人</button>
+          <button class="r-tab" onclick="switchRTab('payment',this)">💷 付款方式</button>
+        </div>
+
+        <!-- TAB CONTENT -->
+        <div id="r-content"></div>
+
+      </div>
+    </div>
+
+    <!-- SETS -->
+    <div id="page-sets" style="display:none;">
+      <div class="header">
+        <div class="page-title">套餐管理 Set Meals</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openSetModal()">+ 新增套餐</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice">💡 套餐會顯示喺你指定嘅分類入面。客人可以互動揀選，揀齊先可以落單。</div>
+        <div id="sets-list"></div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="page-orders" style="display:none;">
+      <div class="header">
+        <div class="page-title">訂單管理 Orders</div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="openOrderModal()">+ 新增訂單</button></div>
+      </div>
+      <div class="content"><div class="kanban" id="orders-kanban"></div></div>
+    </div>
+
+    <!-- FEATURED / BESTSELLERS -->
+    <div id="page-featured" style="display:none;">
+      <div class="header">
+        <div class="page-title">熱賣專區管理 Top Sellers</div>
+        <div class="header-actions">
+          <button class="btn btn-ghost btn-sm" onclick="clearAllFeatured()">清除全部推介</button>
+          <span id="featured-count-label" style="font-size:0.82rem;color:var(--muted);padding:0 8px;"></span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice" id="featured-notice">💡 剔選最多 <strong>10 款</strong>產品作為「本店熱賣」。建議每月更新一次，反映當季貨品。冇剔選時，系統自動用歷史銷量 Top 10。</div>
+
+        <!-- QUICK STATS -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+          <div class="stat-card"><div class="stat-label">已選推介</div><div class="stat-value green" id="feat-count">0</div><div class="stat-sub">/ 10 款上限</div></div>
+          <div class="stat-card"><div class="stat-label">自動補底</div><div class="stat-value blue" id="feat-auto">0</div><div class="stat-sub">歷史銷量補足</div></div>
+          <div class="stat-card"><div class="stat-label">客人見到</div><div class="stat-value gold" id="feat-total">10</div><div class="stat-sub">熱賣專區產品</div></div>
+        </div>
+
+        <!-- SEARCH + FILTER -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <input class="search-box" id="feat-search" placeholder="搜尋產品..." oninput="renderFeaturedTable()" style="flex:1;">
+          <select class="search-box" id="feat-cat-filter" onchange="renderFeaturedTable()" style="width:160px;"><option value="">所有分類</option></select>
+          <select class="search-box" id="feat-show-filter" onchange="renderFeaturedTable()" style="width:140px;">
+            <option value="all">全部產品</option>
+            <option value="featured">已選推介</option>
+            <option value="top">歷史熱賣</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:40px;">推介</th><th>產品名稱</th><th>分類</th><th>歷史銷量</th><th>價錢</th><th>庫存</th></tr></thead>
+            <tbody id="featured-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNER -->
+    <div id="page-banner" style="display:none;">
+      <div class="header">
+        <div class="page-title">本週主打 Banner</div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" onclick="previewBanner()">👁 預覽</button>
+          <button class="btn btn-primary" onclick="saveBanner()">儲存並發佈</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice">🌟 每週週一更新，約 5 分鐘。儲存後客戶網站即時顯示。</div>
+
+        <!-- CONTENT FIELDS -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="table-wrap" style="padding:20px;">
+            <div style="font-size:0.88rem;font-weight:500;margin-bottom:14px;color:var(--text);">🇭🇰 中文內容</div>
+            <div class="form-group"><label>標籤 Tag（15字以內）</label><input type="text" id="b-tag-zh" placeholder="例：🐉 端午限定 · 英國製造 香港味道" maxlength="35"></div>
+            <div class="form-group"><label>主標題（10字以內）</label><input type="text" id="b-title-zh" placeholder="例：鹹肉糭 即買即有" maxlength="16"></div>
+            <div class="form-group"><label>副標題（20字以內）</label><input type="text" id="b-sub-zh" placeholder="例：頂級鮑魚瑤柱糭、五香鹹肉糭，週二截單" maxlength="28"></div>
+            <div class="form-group"><label>按鈕文字</label><input type="text" id="b-btn-zh" placeholder="立即選購" maxlength="10"></div>
+          </div>
+          <div class="table-wrap" style="padding:20px;">
+            <div style="font-size:0.88rem;font-weight:500;margin-bottom:14px;color:var(--text);">🇬🇧 English Content</div>
+            <div class="form-group"><label>Tag</label><input type="text" id="b-tag-en" placeholder="e.g. 🐉 Dragon Boat · Made in UK · HK Taste" maxlength="42"></div>
+            <div class="form-group"><label>Headline</label><input type="text" id="b-title-en" placeholder="e.g. Traditional Zongzi — No Pre-order" maxlength="28"></div>
+            <div class="form-group"><label>Subheading</label><input type="text" id="b-sub-en" placeholder="e.g. Premium Abalone & Five-Spice Zongzi. Order by Tuesday." maxlength="55"></div>
+            <div class="form-group"><label>Button</label><input type="text" id="b-btn-en" placeholder="Order Now" maxlength="12"></div>
+          </div>
+        </div>
+
+        <!-- IMAGE + TEMPLATES -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="table-wrap" style="padding:16px;">
+            <div style="font-size:0.88rem;font-weight:500;margin-bottom:10px;color:var(--text);">🖼 圖片 / Emoji</div>
+            <div class="form-group"><label>圖片連結（留空=用 Emoji）</label><input type="text" id="b-image" placeholder="https://..." oninput="updateBannerPreviewImg()"></div>
+            <div class="form-group"><label>Emoji（無圖片時顯示）</label><input type="text" id="b-emoji" placeholder="🐉" maxlength="4"></div>
+            <div id="b-img-preview" style="margin-top:6px;"></div>
+          </div>
+          <div class="table-wrap" style="padding:16px;">
+            <div style="font-size:0.88rem;font-weight:500;margin-bottom:10px;color:var(--text);">📋 快速範本</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" onclick="loadTemplate('fruit')">🍓 日本水果</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadTemplate('sashimi')">🍣 刺身</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadTemplate('dimsum')">🥟 點心</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadTemplate('sale')">🏷 特價</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadTemplate('meat')">🥩 肉類</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadTemplate('seasonal')">🌸 季節限定</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadTemplate('zongzi')">🐉 糭</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="table-wrap" style="padding:20px;" id="banner-preview-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:0.88rem;font-weight:500;color:var(--text);">👁 預覽 Preview</div>
+            <button class="btn btn-ghost btn-sm" onclick="updateBannerPreview()">刷新</button>
+          </div>
+          <div id="banner-preview-inner" style="background:linear-gradient(135deg,#6B4C8A 0%,#8B3A6B 40%,#C0392B 75%,#E8734A 100%);border-radius:12px;padding:28px 24px;text-align:center;color:white;min-height:100px;display:flex;align-items:center;justify-content:center;">
+            <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;">填入內容後點「預覽」</div>
+          </div>
+          <div style="margin-top:14px;text-align:center;">
+            <button class="btn btn-primary" onclick="saveBanner()" style="min-width:180px;">儲存並發佈到網站</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    
+    <!-- SETTINGS -->
+    <div id="page-settings" style="display:none;">
+      <div class="header">
+        <div class="page-title">網站設定 Site Settings</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="saveSettings()">儲存並發佈</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice">⚙️ 呢度嘅設定會即時同步到客戶訂單表格。包括所有文字、字體、聯絡方式等。</div>
+
+        <!-- FONT -->
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.88rem;font-weight:500;margin-bottom:14px;color:var(--text);">🖋 字體設定 Font</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>主要字體 Main Font</label>
+              <select id="st-font">
+                <option value="'Noto Sans HK', sans-serif">Noto Sans HK（現用，中英文俱佳）</option>
+                <option value="'Noto Serif HK', serif">Noto Serif HK（書法感）</option>
+                <option value="'Source Han Sans HK', sans-serif">Source Han Sans（現代感）</option>
+                <option value="Arial, sans-serif">Arial（簡潔）</option>
+                <option value="Georgia, serif">Georgia（優雅）</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>標題字體 Heading Font</label>
+              <select id="st-heading-font">
+                <option value="'Pacifico', cursive">Pacifico（現用，手寫感）</option>
+                <option value="'Playfair Display', serif">Playfair Display（高端感）</option>
+                <option value="'DM Serif Display', serif">DM Serif（現代衛線）</option>
+                <option value="inherit">與主要字體相同</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SHOP INFO -->
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.88rem;font-weight:500;margin-bottom:14px;color:var(--text);">🏪 店舖資料 Shop Info</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>WhatsApp 號碼（落單用）</label>
+              <input type="text" id="st-whatsapp" placeholder="447700900000">
+            </div>
+            <div class="form-group">
+              <label>Facebook 連結</label>
+              <input type="text" id="st-facebook" placeholder="https://www.facebook.com/jpfruitsuk">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Instagram 連結</label>
+              <input type="text" id="st-instagram" placeholder="https://www.instagram.com/jp_fruit_swlondon">
+            </div>
+            <div class="form-group">
+              <label>WhatsApp 群組連結</label>
+              <input type="text" id="st-wagroup" placeholder="https://chat.whatsapp.com/...">
+            </div>
+          </div>
+        </div>
+
+        <!-- HERO TEXT -->
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.88rem;font-weight:500;margin-bottom:14px;color:var(--text);">🦸 Hero 區域文字</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>🇭🇰 Hero 副標題（中文）</label>
+              <input type="text" id="st-hero-sub-zh" placeholder="精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門">
+            </div>
+            <div class="form-group">
+              <label>🇬🇧 Hero Subheading (EN)</label>
+              <input type="text" id="st-hero-sub-en" placeholder="Premium Japanese fruits, authentic HK flavours & Asian goods">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>🇭🇰 Chip 1 文字</label>
+              <input type="text" id="st-chip1-zh" placeholder="✈️ 日本直送">
+            </div>
+            <div class="form-group">
+              <label>🇬🇧 Chip 1 Text</label>
+              <input type="text" id="st-chip1-en" placeholder="✈️ Direct from Japan">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>🇭🇰 Chip 2 文字</label>
+              <input type="text" id="st-chip2-zh" placeholder="🏠 South London 送貨">
+            </div>
+            <div class="form-group">
+              <label>🇬🇧 Chip 2 Text</label>
+              <input type="text" id="st-chip2-en" placeholder="🏠 South London Delivery">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>🇭🇰 Chip 3 文字</label>
+              <input type="text" id="st-chip3-zh" placeholder="💳 貨到付款">
+            </div>
+            <div class="form-group">
+              <label>🇬🇧 Chip 3 Text</label>
+              <input type="text" id="st-chip3-en" placeholder="💳 Pay on Delivery">
+            </div>
+          </div>
+        </div>
+
+        <!-- DELIVERY INFO TEXT -->
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.88rem;font-weight:500;margin-bottom:14px;color:var(--text);">🚚 送貨資訊文字（底部資訊欄）</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>🇭🇰 送貨安排（中文）</label>
+              <textarea id="st-del-zh" rows="3" placeholder="逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。"></textarea>
+            </div>
+            <div class="form-group">
+              <label>🇬🇧 Delivery Info (EN)</label>
+              <textarea id="st-del-en" rows="3" placeholder="Delivery every Friday. You'll be notified one day in advance..."></textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>🇭🇰 聯絡我們（中文）</label>
+              <textarea id="st-contact-zh" rows="3" placeholder="截單後我們會透過 WhatsApp 確認訂單。營業時間：週一至五 9:30am – 4:00pm"></textarea>
+            </div>
+            <div class="form-group">
+              <label>🇬🇧 Contact Us (EN)</label>
+              <textarea id="st-contact-en" rows="3" placeholder="We'll confirm your order via WhatsApp after cutoff..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDER CUTOFF -->
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.88rem;font-weight:500;margin-bottom:14px;color:var(--text);">⏰ 截單設定</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>截單日 Cutoff Day</label>
+              <select id="st-cutoff-day">
+                <option value="2">週二 Tuesday</option>
+                <option value="1">週一 Monday</option>
+                <option value="3">週三 Wednesday</option>
+                <option value="4">週四 Thursday</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>截單時間 Cutoff Time</label>
+              <input type="time" id="st-cutoff-time" value="13:00">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div id="page-categories" style="display:none;">
+      <div class="header">
+        <div class="page-title">分類設定 Categories</div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="openCategoryModal()">+ 新增分類</button></div>
+      </div>
+      <div class="content">
+        <div class="table-wrap">
+          <table><thead><tr><th>分類</th><th>中文</th><th>產品數</th><th>操作</th></tr></thead>
+          <tbody id="categories-table"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SET MODAL -->
+<div class="modal-overlay" id="set-modal">
+  <div class="modal" style="width:680px;max-height:92vh;">
+    <div class="modal-header">
+      <div class="modal-title" id="set-modal-title">新增套餐</div>
+      <button class="close-btn" onclick="closeModal('set-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Basic info -->
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">套餐名稱 Set Name</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇭🇰 中文名稱</label>
+            <input type="text" id="s-name-zh" placeholder="例：麵包自選套餐">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇬🇧 English Name</label>
+            <input type="text" id="s-name-en" placeholder="e.g. Build-Your-Own Bread Set">
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>所屬分類 Category</label>
+          <select id="s-cat"></select>
+        </div>
+        <div class="form-group">
+          <label>Emoji / 圖示</label>
+          <input type="text" id="s-emoji" placeholder="🎁" maxlength="4">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>套餐價錢 (£)</label>
+          <div class="price-input"><span>£</span><input type="number" id="s-price" step="0.01" placeholder="0.00"></div>
+        </div>
+        <div class="form-group" style="opacity:0;pointer-events:none;"><label>_</label><input></div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">套餐描述 Description（可選）</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇭🇰 中文描述</label>
+            <input type="text" id="s-desc-zh" placeholder="例：自由組合 6 款手工麵包，比單買更著數">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇬🇧 English Description</label>
+            <input type="text" id="s-desc-en" placeholder="e.g. Mix and match 6 artisan breads, better value than buying separately">
+          </div>
+        </div>
+      </div>
+
+      <!-- Groups -->
+      <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:0.88rem;font-weight:500;">選項分組 Option Groups</div>
+          <button class="btn btn-ghost btn-sm" onclick="addGroup()">+ 加分組</button>
+        </div>
+        <div class="notice" style="margin-bottom:12px;font-size:0.78rem;">
+          單組套餐：只加一個分組（例：任選 6 款麵包）<br>
+          多組套餐：加多個分組（例：湯 選1 + 餸 選2）
+        </div>
+        <div id="s-groups"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="s-delete-btn" style="display:none;" onclick="deleteSet()">刪除套餐</button>
+      <button class="btn btn-ghost" onclick="closeModal('set-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveSet()">儲存套餐</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="product-modal-title">新增產品</div>
+      <button class="close-btn" onclick="closeModal('product-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- BILINGUAL NAMES -->
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">產品名稱 Product Name</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇭🇰 中文名稱</label>
+            <input type="text" id="p-name-zh" placeholder="例：豬蝦燒賣 20粒">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇬🇧 English Name</label>
+            <input type="text" id="p-name-en" placeholder="e.g. Siu Mai (Prawn & Pork) 20pcs">
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY + UNIT -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>分類 Category</label>
+          <select id="p-category"></select>
+        </div>
+        <div class="form-group">
+          <label>單位 Unit</label>
+          <input type="text" id="p-unit" placeholder="e.g. 20粒/pack">
+        </div>
+      </div>
+
+      <!-- PRICING -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>正價 Regular Price (£)</label>
+          <div class="price-input"><span>£</span><input type="number" id="p-price" step="0.01" min="0" placeholder="0.00"></div>
+        </div>
+        <div class="form-group">
+          <label>特價 Sale Price（留空=無特價）</label>
+          <div class="price-input"><span>£</span><input type="number" id="p-sale-price" step="0.01" min="0" placeholder="留空=無特價"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>特價期限 Sale Until</label>
+          <input type="date" id="p-sale-until">
+        </div>
+        <div class="form-group">
+          <label>庫存 Stock (-1=無限)</label>
+          <input type="number" id="p-stock" value="-1">
+        </div>
+      </div>
+
+      <!-- BILINGUAL DESCRIPTIONS -->
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">產品描述 Description（可選，顯示喺產品卡片）</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇭🇰 中文描述</label>
+            <textarea id="p-desc-zh" rows="2" placeholder="例：新鮮製造，冷凍保鮮，即煮即食"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>🇬🇧 English Description</label>
+            <textarea id="p-desc-en" rows="2" placeholder="e.g. Freshly made, frozen for freshness, cook from frozen"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMAGE -->
+      <div class="form-group">
+        <label>圖片連結 Image URL（可選）</label>
+        <input type="text" id="p-image" placeholder="https://...">
+      </div>
+
+      <!-- TOGGLES -->
+      <div class="form-group">
+        <div class="toggle">
+          <span style="color:var(--text);font-size:0.85rem;">上架</span>
+          <label class="toggle-switch"><input type="checkbox" id="p-active" checked><span class="slider"></span></label>
+          <span style="color:var(--text);font-size:0.85rem;margin-left:12px;">推介</span>
+          <label class="toggle-switch"><input type="checkbox" id="p-featured"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="p-delete-btn" style="display:none;" onclick="deleteProduct()">刪除</button>
+      <button class="btn btn-ghost" onclick="closeModal('product-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveProduct()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">新增訂單</div>
+      <button class="close-btn" onclick="closeModal('order-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>客人姓名</label><input type="text" id="o-name"></div>
+        <div class="form-group"><label>WhatsApp</label><input type="tel" id="o-phone" placeholder="+44 7xxx xxxxxx"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>地址</label><input type="text" id="o-address"></div>
+        <div class="form-group"><label>郵政編碼</label><input type="text" id="o-postcode" placeholder="e.g. SM1 1AA"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>送貨日期</label><input type="date" id="o-delivery-date"></div>
+        <div class="form-group"><label>負責同事</label>
+          <select id="o-driver"><option>Edmond</option><option>Ronald</option><option>Joe</option><option>Hoi</option><option>TC</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>訂單內容（每行一項）</label><textarea id="o-items" rows="4" placeholder="豬蝦燒賣 x2&#10;珍珠雞 x1"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>總額 (£)</label><div class="price-input"><span>£</span><input type="number" id="o-total" step="0.01"></div></div>
+        <div class="form-group"><label>付款方式</label>
+          <select id="o-payment"><option value="cod">貨到付款 COD</option><option value="transfer">轉數</option><option value="cash">現金</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>備註</label><input type="text" id="o-notes" placeholder="特別要求..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('order-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveOrder()">儲存訂單</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="category-modal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header"><div class="modal-title" id="cat-modal-title">新增分類</div><button class="close-btn" onclick="closeModal('category-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>🇬🇧 English Category Name</label><input type="text" id="c-name" placeholder="e.g. HK Dim Sum"></div>
+      <div class="form-group"><label>🇭🇰 中文分類名稱</label><input type="text" id="c-name-zh" placeholder="e.g. 港式點心"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="cat-delete-btn" style="display:none;margin-right:auto;" onclick="deleteCategoryFromModal()">刪除分類</button>
+      <button class="btn btn-ghost" onclick="closeModal('category-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveCategory()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+const SEED_PRODUCTS = [
+  {id:'p000',nameZh:'四川麻辣牛肉米線',nameEn:'Spicy Mala Tang with sliced beef',name:'Spicy Mala Tang with sliced beef',zh:'四川麻辣牛肉米線',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:64},
+  {id:'p001',nameZh:'新加坡海鮮喇沙湯麵',nameEn:'Singapore Seafood Laksa Ramen',name:'Singapore Seafood Laksa Ramen',zh:'新加坡海鮮喇沙湯麵',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:75},
+  {id:'p002',nameZh:'日式叉燒豬骨湯拉麵',nameEn:'Japanese Tonkotsu Ramen',name:'Japanese Tonkotsu Ramen',zh:'日式叉燒豬骨湯拉麵',cat:'hk-homecook',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:65},
+  {id:'p003',nameZh:'馬拉椰香雞肉白湯拉麵',nameEn:'Malaysiana Chicken Ramen with Cocunut',name:'Malaysiana Chicken Ramen with Cocunut',zh:'馬拉椰香雞肉白湯拉麵',cat:'noodles',price:10.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
+  {id:'p004',nameZh:'港式濃茄牛肉湯麵',nameEn:'HK Style Tomato Beef Noodle Soup',name:'HK Style Tomato Beef Noodle Soup',zh:'港式濃茄牛肉湯麵',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p005',nameZh:'五色素食菠菜烏冬',nameEn:'Five Elements Spinach Veggie Udon',name:'Five Elements Spinach Veggie Udon',zh:'五色素食菠菜烏冬',cat:'others',price:9.9,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p006',nameZh:'菠蘿紅豆包',nameEn:'Red Bean Pineapple Bun',name:'Red Bean Pineapple Bun',zh:'菠蘿紅豆包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p007',nameZh:'Parma Ham芝士火腿包',nameEn:'Cheese and Parma Ham Bun',name:'Cheese and Parma Ham Bun',zh:'Parma Ham芝士火腿包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p008',nameZh:'特濃芝士腸仔包',nameEn:'Double Cheese Sausage Bun',name:'Double Cheese Sausage Bun',zh:'特濃芝士腸仔包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:26},
+  {id:'p009',nameZh:'粟米吞拿魚包',nameEn:'Corn and Tuna Bun 90g',name:'Corn and Tuna Bun 90g',zh:'粟米吞拿魚包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p010',nameZh:'餐蛋包',nameEn:'SPAM Egg Bun',name:'SPAM Egg Bun',zh:'餐蛋包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p011',nameZh:'特濃朱古力包',nameEn:'Double Cocoa Bun',name:'Double Cocoa Bun',zh:'特濃朱古力包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p012',nameZh:'香蔥火腿包',nameEn:'Spring Onion and Ham Bun',name:'Spring Onion and Ham Bun',zh:'香蔥火腿包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21},
+  {id:'p013',nameZh:'Knead n Nap 包羅萬有套餐',nameEn:'Knead n Nap Build-Your-Own Bread Set',name:'Knead n Nap Build-Your-Own Bread Set',zh:'Knead n Nap 包羅萬有套餐',cat:'bread',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:61},
+  {id:'p014',nameZh:'菠蘿叉燒包',nameEn:'Pineapple Cha Siu Bun 100g',name:'Pineapple Cha Siu Bun 100g',zh:'菠蘿叉燒包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:43},
+  {id:'p015',nameZh:'開心果溶岩包',nameEn:'Pistachio Lava Bun 100g',name:'Pistachio Lava Bun 100g',zh:'開心果溶岩包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p016',nameZh:'麻糬肉鬆包',nameEn:'Mochi Pork Floss Bun',name:'Mochi Pork Floss Bun',zh:'麻糬肉鬆包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p017',nameZh:'椰蓉卷',nameEn:'Coconut Shreds Roll',name:'Coconut Shreds Roll',zh:'椰蓉卷',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p018',nameZh:'菠蘿包',nameEn:'Pineapple Bun',name:'Pineapple Bun',zh:'菠蘿包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:22},
+  {id:'p019',nameZh:'斯里蘭卡肉桂卷',nameEn:'Sri Lankan Cinnamon Roll',name:'Sri Lankan Cinnamon Roll',zh:'斯里蘭卡肉桂卷',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p020',nameZh:'紅豆麻糬包',nameEn:'Red Bean Mochi Bun',name:'Red Bean Mochi Bun',zh:'紅豆麻糬包',cat:'bread',price:1.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p021',nameZh:'日本甜王草莓',nameEn:'Amaou Strawberries',name:'Amaou Strawberries',zh:'日本甜王草莓',cat:'fruits',price:35.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p022',nameZh:'靜岡皇冠蜜瓜',nameEn:'Shizuka Crown Melon',name:'Shizuka Crown Melon',zh:'靜岡皇冠蜜瓜',cat:'fruits',price:48.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p023',nameZh:'赤肉蜜瓜',nameEn:'Japan Red Melon',name:'Japan Red Melon',zh:'赤肉蜜瓜',cat:'fruits',price:38.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p024',nameZh:'宮崎太陽之子芒果禮盒 1kg/盒',nameEn:'Miyazaki Sun Mango Gift Box 1kg',name:'Miyazaki Sun Mango Gift Box 1kg',zh:'宮崎太陽之子芒果禮盒 1kg/盒',cat:'fruits',price:38.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0,needsVerify:true},
+  {id:'p025',nameZh:'土岐水蜜桃蘋果',nameEn:'Toki Peach Apple',name:'Toki Peach Apple',zh:'土岐水蜜桃蘋果',cat:'fruits',price:18.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0,needsVerify:true},
+  {id:'p026',nameZh:'紅春香番薯',nameEn:'Beniharuka Sweet Potato',name:'Beniharuka Sweet Potato',zh:'紅春香番薯',cat:'fruits',price:8.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p027',nameZh:'日本祖父江銀杏禮盒 500g',nameEn:'Aichi Gingko Box Set 500g',name:'Aichi Gingko Box Set 500g',zh:'日本祖父江銀杏禮盒 500g',cat:'fruits',price:18.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p028',nameZh:'美味棧 清熱止咳潤肺湯包',nameEn:'Yummy House Herbal Lung Soothing Soup Pack',name:'Yummy House Herbal Lung Soothing Soup Pack',zh:'美味棧 清熱止咳潤肺湯包',cat:'bread',price:2.2,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9,needsVerify:true},
+  {id:'p029',nameZh:'美味棧 羅漢果菜乾湯包',nameEn:'Yummy House Monk Fruit & Dried Veg Soup Pack',name:'Yummy House Monk Fruit & Dried Veg Soup Pack',zh:'美味棧 羅漢果菜乾湯包',cat:'bread',price:2.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8,needsVerify:true},
+  {id:'p030',nameZh:'美味棧 爽脆菜脯粒 70g',nameEn:'Yummy House Crunchy Pickled Radish 70g',name:'Yummy House Crunchy Pickled Radish 70g',zh:'美味棧 爽脆菜脯粒 70g',cat:'snacks',price:1.2,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9,needsVerify:true},
+  {id:'p031',nameZh:'美味棧爽口榨菜',nameEn:'Yummy House Sliced Mustard Tuber 70g x 3',name:'Yummy House Sliced Mustard Tuber 70g x 3',zh:'美味棧爽口榨菜',cat:'snacks',price:2.2,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p032',nameZh:'美味棧秘制雪菜粒',nameEn:'Yummy House Pickled Potherb 70g x 4',name:'Yummy House Pickled Potherb 70g x 4',zh:'美味棧秘制雪菜粒',cat:'snacks',price:2.2,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p033',nameZh:'叄拾士多「夠抽」甜豉油 30',nameEn:'30 Store Sweet Soy Sauce',name:'30 Store Sweet Soy Sauce',zh:'叄拾士多「夠抽」甜豉油 30',cat:'sauces',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p034',nameZh:'叄拾士多「勁蔥」蔥油 30',nameEn:'30 Store Spring Onion Oil',name:'30 Store Spring Onion Oil',zh:'叄拾士多「勁蔥」蔥油 30',cat:'sauces',price:3.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
+  {id:'p035',nameZh:'叄拾士多「辣招」蒜味辣椒醬 30',nameEn:'30 Store Garlic Chili Sauce',name:'30 Store Garlic Chili Sauce',zh:'叄拾士多「辣招」蒜味辣椒醬 30',cat:'sauces',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p036',nameZh:'叄拾士多「蒜爆」蒜油 30',nameEn:'30 Store Garlic Oil',name:'30 Store Garlic Oil',zh:'叄拾士多「蒜爆」蒜油 30',cat:'sauces',price:3.2,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p037',nameZh:'文記 大樽裝魷魚味醬 338g',nameEn:'Man Kee Cuttlefish Sauce 338g',name:'Man Kee Cuttlefish Sauce 338g',zh:'文記 大樽裝魷魚味醬 338g',cat:'frozen-seafood',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p038',nameZh:'文記 秘制 XO 醬 220g',nameEn:'Man Kee XO Sauce 220g',name:'Man Kee XO Sauce 220g',zh:'文記 秘制 XO 醬 220g',cat:'sauces',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p039',nameZh:'文記 大樽裝咖喱醬 365g',nameEn:'Man Kee Curry Sauce 365g',name:'Man Kee Curry Sauce 365g',zh:'文記 大樽裝咖喱醬 365g',cat:'sauces',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
+  {id:'p040',nameZh:'文記 大樽裝辣椒油 340g',nameEn:'Man Kee Chili Oil 340g',name:'Man Kee Chili Oil 340g',zh:'文記 大樽裝辣椒油 340g',cat:'sauces',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p041',nameZh:'冠華齋燒鵝 140g',nameEn:'Guanhua Roast Goose 140g',name:'Guanhua Roast Goose 140g',zh:'冠華齋燒鵝 140g',cat:'snacks',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8,needsVerify:true},
+  {id:'p042',nameZh:'冠華紅燒辣魚柳 70g',nameEn:'Guanhua Spicy Braised Fish Fillet 70g',name:'Guanhua Spicy Braised Fish Fillet 70g',zh:'冠華紅燒辣魚柳 70g',cat:'frozen-seafood',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p043',nameZh:'冠華九製陳皮 110g',nameEn:'Guanhua Nine-Process Dried Tangerine Peel 110g',name:'Guanhua Nine-Process Dried Tangerine Peel 110g',zh:'冠華九製陳皮 110g',cat:'snacks',price:1.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5,needsVerify:true},
+  {id:'p044',nameZh:'冠華法製檸檬薑 50g',nameEn:'Guanhua Lemon Ginger Candy 50g',name:'Guanhua Lemon Ginger Candy 50g',zh:'冠華法製檸檬薑 50g',cat:'snacks',price:1.7,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
+  {id:'p045',nameZh:'冠華菩提金桔 40g',nameEn:'Guanhua Bodhi Kumquat 40g',name:'Guanhua Bodhi Kumquat 40g',zh:'冠華菩提金桔 40g',cat:'snacks',price:2.3,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4,needsVerify:true},
+  {id:'p046',nameZh:'冠華鹹香脆魚皮花生 95g',nameEn:'Guanhua Salted Crispy Fish Skin Peanuts 95g',name:'Guanhua Salted Crispy Fish Skin Peanuts 95g',zh:'冠華鹹香脆魚皮花生 95g',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3,needsVerify:true},
+  {id:'p047',nameZh:'味霸 全天然萬用調味料 250g',nameEn:'Taste Power All-Natural Seasoning 250g',name:'Taste Power All-Natural Seasoning 250g',zh:'味霸 全天然萬用調味料 250g',cat:'sauces',price:7.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p048',nameZh:'YAMAKI 日式昆布鰹魚湯底粉 50包',nameEn:'YAMAKI',name:'YAMAKI',zh:'YAMAKI 日式昆布鰹魚湯底粉 50包',cat:'bread',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21},
+  {id:'p049',nameZh:'悅和大紅浙醋 210ml',nameEn:'Yuet Wo Red Zhejiang Vinegar 210ml',name:'Yuet Wo Red Zhejiang Vinegar 210ml',zh:'悅和大紅浙醋 210ml',cat:'sauces',price:2.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
+  {id:'p050',nameZh:'悅和甜豉油 210ml',nameEn:'Yuet Wo Sweet Soy Sauce 210ml',name:'Yuet Wo Sweet Soy Sauce 210ml',zh:'悅和甜豉油 210ml',cat:'sauces',price:2.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8,needsVerify:true},
+  {id:'p051',nameZh:'KIRIN 午後の紅茶 原味奶茶 500ml',nameEn:'KIRIN',name:'KIRIN',zh:'KIRIN 午後の紅茶 原味奶茶 500ml',cat:'snacks',price:1.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
+  {id:'p052',nameZh:'KIRIN 午後の紅茶 檸檬茶 500ml',nameEn:'KIRIN',name:'KIRIN',zh:'KIRIN 午後の紅茶 檸檬茶 500ml',cat:'snacks',price:1.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p053',nameZh:'伊藤園 無糖綠茶 600ml',nameEn:'Itoen Unsweetened Green Tea 600ml',name:'Itoen Unsweetened Green Tea 600ml',zh:'伊藤園 無糖綠茶 600ml',cat:'snacks',price:1.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3,needsVerify:true},
+  {id:'p054',nameZh:'龍角散 免水潤顆粒粉劑 芒果味 20包',nameEn:'Ryukakusan Mango Throat Soothing Granules 20 Sachets',name:'Ryukakusan Mango Throat Soothing Granules 20 Sachets',zh:'龍角散 免水潤顆粒粉劑 芒果味 20包',cat:'fruits',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p055',nameZh:'龍角散 清涼潤喉糖 原味 88g',nameEn:'Ryukakusan Cool Throat Lozenges Original 88g',name:'Ryukakusan Cool Throat Lozenges Original 88g',zh:'龍角散 清涼潤喉糖 原味 88g',cat:'snacks',price:3.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
+  {id:'p056',nameZh:'牛角 紫菜飯素 20g',nameEn:'Gyukaku Nori Furikake Rice Seasoning 20g',name:'Gyukaku Nori Furikake Rice Seasoning 20g',zh:'牛角 紫菜飯素 20g',cat:'snacks',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20,needsVerify:true},
+  {id:'p057',nameZh:'泰國有機乾米粉 200g',nameEn:'Thai Organic Dried Rice Noodles 200g',name:'Thai Organic Dried Rice Noodles 200g',zh:'泰國有機乾米粉 200g',cat:'noodles',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11,needsVerify:true},
+  {id:'p058',nameZh:'乾河粉',nameEn:'Dried Phad Thai Noodles',name:'Dried Phad Thai Noodles',zh:'乾河粉',cat:'noodles',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10,needsVerify:true},
+  {id:'p059',nameZh:'泰式炒河烹飪套裝',nameEn:'Phad Thai Cooking Kit',name:'Phad Thai Cooking Kit',zh:'泰式炒河烹飪套裝',cat:'noodles',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p060',nameZh:'泰式豉油炒河烹飪套裝',nameEn:'Phad See Ew Cooking Kit',name:'Phad See Ew Cooking Kit',zh:'泰式豉油炒河烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p061',nameZh:'泰式船麵烹飪套裝',nameEn:'Boat Soup Noodle Cooking Kit',name:'Boat Soup Noodle Cooking Kit',zh:'泰式船麵烹飪套裝',cat:'noodles',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p062',nameZh:'泰式沙嗲串燒烹飪套裝',nameEn:'Thai Satay BBQ Cooking Kit',name:'Thai Satay BBQ Cooking Kit',zh:'泰式沙嗲串燒烹飪套裝',cat:'frozen-seafood',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p063',nameZh:'黃咖喱烹飪套裝',nameEn:'Yellow Curry Cooking Kit',name:'Yellow Curry Cooking Kit',zh:'黃咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p064',nameZh:'紅咖喱烹飪套裝',nameEn:'Red Curry Cooking Kit',name:'Red Curry Cooking Kit',zh:'紅咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p065',nameZh:'青咖喱烹飪套裝',nameEn:'Green Curry Cooking Kit',name:'Green Curry Cooking Kit',zh:'青咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p066',nameZh:'瑪莎文咖喱烹飪套裝',nameEn:'Massaman Curry Cooking Kit',name:'Massaman Curry Cooking Kit',zh:'瑪莎文咖喱烹飪套裝',cat:'noodles',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p067',nameZh:'即食黃咖喱',nameEn:'Ready to Eat Yellow Curry',name:'Ready to Eat Yellow Curry',zh:'即食黃咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p068',nameZh:'即食紅咖喱',nameEn:'Ready to Eat Red Curry',name:'Ready to Eat Red Curry',zh:'即食紅咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p069',nameZh:'即食青咖喱',nameEn:'Ready to Eat Green Curry',name:'Ready to Eat Green Curry',zh:'即食青咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p070',nameZh:'即食瑪莎文咖喱',nameEn:'Ready to Eat Massaman Curry',name:'Ready to Eat Massaman Curry',zh:'即食瑪莎文咖喱',cat:'snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3},
+  {id:'p071',nameZh:'Ottogi 泡菜味拉麵 120g x5包',nameEn:'Ottogi',name:'Ottogi',zh:'Ottogi 泡菜味拉麵 120g x5包',cat:'bread',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p072',nameZh:'出前一丁麻油麵 5包裝',nameEn:'Nissin Demae Ramen Sesame Oil 5-Pack',name:'出前一丁麻油麵 5包裝',zh:'出前一丁麻油麵 5包裝',cat:'bread',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7,needsVerify:true},
+  {id:'p073',nameZh:'*NEW* 韓國 Haitai 水梨汁 238ml',nameEn:'*NEW*',name:'*NEW*',zh:'*NEW* 韓國 Haitai 水梨汁 238ml',cat:'snacks',price:1.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12,needsVerify:true},
+  {id:'p074',nameZh:'福字雞汁伊麵 5包',nameEn:'FUKU Instant Noodle X5',name:'FUKU Instant Noodle X5',zh:'福字雞汁伊麵 5包',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p075',nameZh:'福字上湯米粉 5包裝',nameEn:'FUKU Instant Rice Noodle X5',name:'FUKU Instant Rice Noodle X5',zh:'福字上湯米粉 5包裝',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p076',nameZh:'極上靚蝦麵 粗麵 12個裝',nameEn:'Shrimp Roe Noodle 12 PCS Thick',name:'Shrimp Roe Noodle 12 PCS Thick',zh:'極上靚蝦麵 粗麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p077',nameZh:'濃香魚湯芫荽麵 中麵 12個裝',nameEn:'Wing Lok Fish Coriander Noodle',name:'Wing Lok Fish Coriander Noodle',zh:'濃香魚湯芫荽麵 中麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p078',nameZh:'極上菠菜麵 中麵 12個裝',nameEn:'Wing Lok Premium Spinach Noodle',name:'Wing Lok Premium Spinach Noodle',zh:'極上菠菜麵 中麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p079',nameZh:'特濃蝦子麵 粗麵 12個裝',nameEn:'Wing Lok Premium Shrimp Roe Noodle Thick',name:'Wing Lok Premium Shrimp Roe Noodle Thick',zh:'特濃蝦子麵 粗麵 12個裝',cat:'noodles',price:10.8,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p080',nameZh:'新鮮米磨腸粉 400g',nameEn:'Fresh Ground Rice Cheung Fun 400g',name:'Fresh Ground Rice Cheung Fun 400g',zh:'新鮮米磨腸粉 400g',cat:'frozen-seafood',price:2.69,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:36,needsVerify:true},
+  {id:'p081',nameZh:'新鮮米磨蔥花腸粉 400g',nameEn:'Fresh Ground Rice Cheung Fun with Spring Onion 400g',name:'Fresh Ground Rice Cheung Fun with Spring Onion 400g',zh:'新鮮米磨蔥花腸粉 400g',cat:'frozen-seafood',price:2.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:34,needsVerify:true},
+  {id:'p082',nameZh:'新鮮河粉 400g',nameEn:'Fresh Ho Fun Rice Noodles 400g',name:'Fresh Ho Fun Rice Noodles 400g',zh:'新鮮河粉 400g',cat:'noodles',price:2.59,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p083',nameZh:'蝦記金牌蝦子麵 600g',nameEn:'Ha Kee Gold Medal Shrimp Roe Noodles 600g',name:'Ha Kee Gold Medal Shrimp Roe Noodles 600g',zh:'蝦記金牌蝦子麵 600g',cat:'noodles',price:12.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8,needsVerify:true},
+  {id:'p084',nameZh:'牛魔皇 麻辣湯米線 500g',nameEn:'Spicy Mala Soup Rice Noodles 500g',name:'牛魔皇 麻辣湯米線 500g',zh:'牛魔皇 麻辣湯米線 500g',cat:'noodles',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12,needsVerify:true},
+  {id:'p085',nameZh:'夠 Pork 皇 豬骨湯米線 500g',nameEn:'Pork Bone Soup Rice Noodles 500g',name:'夠 Pork 皇 豬骨湯米線 500g',zh:'夠 Pork 皇 豬骨湯米線 500g',cat:'noodles',price:13.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p086',nameZh:'孖寶皇 酸辣湯米線 500g',nameEn:'Hot & Sour Soup Rice Noodles 500g',name:'孖寶皇 酸辣湯米線 500g',zh:'孖寶皇 酸辣湯米線 500g',cat:'noodles',price:15.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11,needsVerify:true},
+  {id:'p087',nameZh:'皇上皇 全部都要米線套餐',nameEn:'Royal Choice All-in-One Rice Noodle Set',name:'Royal Choice All-in-One Rice Noodle Set',zh:'皇上皇 全部都要米線套餐',cat:'noodles',price:18.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18,needsVerify:true},
+  {id:'p088',nameZh:'漢典紅燒牛肉麵',nameEn:'Authentic Taiwanese Beef Noodle Pack',name:'Authentic Taiwanese Beef Noodle Pack',zh:'漢典紅燒牛肉麵',cat:'noodles',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:78},
+  {id:'p089',nameZh:'漢典麻辣牛肉麵',nameEn:'Authentic Taiwanese Beef Noodle Pack Spicy',name:'Authentic Taiwanese Beef Noodle Pack Spicy',zh:'漢典麻辣牛肉麵',cat:'noodles',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
+  {id:'p090',nameZh:'漢典台灣蔥抓餅 600g',nameEn:'Taiwanese Scallion Pancake 600g',name:'漢典台灣蔥抓餅 600g',zh:'漢典台灣蔥抓餅 600g',cat:'noodles',price:4.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14,needsVerify:true},
+  {id:'p091',nameZh:'漢典越式牛肉湯河',nameEn:'Vietnamese Beef Pho Noodle Pack',name:'漢典越式牛肉湯河',zh:'漢典越式牛肉湯河',cat:'others',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:16,needsVerify:true},
+  {id:'p092',nameZh:'漢典台式扣肉刈包 190g',nameEn:'Taiwanese Pork Belly Gua Bao 190g',name:'漢典台式扣肉刈包 190g',zh:'漢典台式扣肉刈包 190g',cat:'bread',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10,needsVerify:true},
+  {id:'p093',nameZh:'香港仔清湯牛腩',nameEn:'Hong Kong Boy Slow Cook Beef Brisket',name:'Hong Kong Boy Slow Cook Beef Brisket',zh:'香港仔清湯牛腩',cat:'hk-homecook',price:12.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:30},
+  {id:'p094',nameZh:'香港仔秘製原味牛丸',nameEn:'Hong Kong Boy Beef Ball',name:'Hong Kong Boy Beef Ball',zh:'香港仔秘製原味牛丸',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p095',nameZh:'香港仔秘製黑椒牛丸',nameEn:'Hong Kong Boy Black Pepper Beef Ball',name:'Hong Kong Boy Black Pepper Beef Ball',zh:'香港仔秘製黑椒牛丸',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:30},
+  {id:'p096',nameZh:'香港仔沙爹牛肉',nameEn:'Hong Kong Boy Satay Beef',name:'Hong Kong Boy Satay Beef',zh:'香港仔沙爹牛肉',cat:'hk-snacks',price:3.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
+  {id:'p097',nameZh:'香港仔秘製麻辣牛丸',nameEn:'Hong Kong Boy Spicy Beef Ball',name:'Hong Kong Boy Spicy Beef Ball',zh:'香港仔秘製麻辣牛丸',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p098',nameZh:'叄拾士多魚肉燒賣 30',nameEn:'Store HK Siu Mai overseas version',name:'Store HK Siu Mai overseas version',zh:'叄拾士多魚肉燒賣 30',cat:'dim-sum',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:41},
+  {id:'p099',nameZh:'家之美食 魚肉燒賣 454g',nameEn:'Home Yummy Fish Siu Mai 454g',name:'Home Yummy Fish Siu Mai 454g',zh:'家之美食 魚肉燒賣 454g',cat:'dim-sum',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:48},
+  {id:'p100',nameZh:'豬蝦燒賣 20粒',nameEn:'Siu Mai Prawn & Pork 20pcs',name:'Siu Mai Prawn & Pork 20pcs',zh:'豬蝦燒賣 20粒',cat:'dim-sum',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:155},
+  {id:'p101',nameZh:'魚肉燒賣 20粒',nameEn:'Fish Siu Mai 20pcs',name:'Fish Siu Mai 20pcs',zh:'魚肉燒賣 20粒',cat:'dim-sum',price:5.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:93},
+  {id:'p102',nameZh:'牛肉燒賣 20粒',nameEn:'Beef Siu Mai 20pcs',name:'Beef Siu Mai 20pcs',zh:'牛肉燒賣 20粒',cat:'dim-sum',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:53},
+  {id:'p103',nameZh:'蝦餃 12粒',nameEn:'Shrimp Dumplings 12pcs',name:'Shrimp Dumplings 12pcs',zh:'蝦餃 12粒',cat:'dim-sum',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:47},
+  {id:'p104',nameZh:'鮮竹捲 10條',nameEn:'Bean Curd Roll 10pcs',name:'Bean Curd Roll 10pcs',zh:'鮮竹捲 10條',cat:'bread',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:87},
+  {id:'p105',nameZh:'珍珠雞 4件',nameEn:'Mini Glutinous Rice 4pcs',name:'Mini Glutinous Rice 4pcs',zh:'珍珠雞 4件',cat:'dim-sum',price:6.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:127},
+  {id:'p106',nameZh:'奶黃包 6個',nameEn:'Custard Bun 6pcs',name:'Custard Bun 6pcs',zh:'奶黃包 6個',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p107',nameZh:'叉燒包 6個',nameEn:'BBQ Pork Bun 6pcs',name:'BBQ Pork Bun 6pcs',zh:'叉燒包 6個',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:102},
+  {id:'p108',nameZh:'雞包 6個',nameEn:'Chicken Bun 6pcs',name:'Chicken Bun 6pcs',zh:'雞包 6個',cat:'bread',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
+  {id:'p109',nameZh:'小籠包 12個',nameEn:'Siu Loong Bao 12pcs',name:'Siu Loong Bao 12pcs',zh:'小籠包 12個',cat:'bread',price:5.29,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:24},
+  {id:'p110',nameZh:'黑金鋼豆沙包',nameEn:'Black Bean Sauce Spare Ribs 410g',name:'Black Bean Sauce Spare Ribs 410g',zh:'黑金鋼豆沙包',cat:'bread',price:5.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p111',nameZh:'豉汁排骨 410g',nameEn:'Black Bean Sauce Spare Ribs 410g',name:'Black Bean Sauce Spare Ribs 410g',zh:'豉汁排骨 410g',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:80},
+  {id:'p112',nameZh:'豉汁鳳爪 410g',nameEn:'Black Bean Sauce Chicken Feet 410g',name:'Black Bean Sauce Chicken Feet 410g',zh:'豉汁鳳爪 410g',cat:'dim-sum',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:75},
+  {id:'p113',nameZh:'黑椒金錢肚 400g',nameEn:'Black Pepper Sauce Beef Tripe 400g',name:'Black Pepper Sauce Beef Tripe 400g',zh:'黑椒金錢肚 400g',cat:'dim-sum',price:7.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p114',nameZh:'南乳豬手 500g',nameEn:'Pork Trotters with Red Bean Curd 500g',name:'Pork Trotters with Red Bean Curd 500g',zh:'南乳豬手 500g',cat:'dim-sum',price:6.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
+  {id:'p115',nameZh:'秘制墨魚丸 200g',nameEn:'Cuttlefish Ball 200g',name:'Cuttlefish Ball 200g',zh:'秘制墨魚丸 200g',cat:'dim-sum',price:7.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:91},
+  {id:'p116',nameZh:'陳皮牛肉丸 200g',nameEn:'Chenpi Beef Ball 200g',name:'Chenpi Beef Ball 200g',zh:'陳皮牛肉丸 200g',cat:'dim-sum',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:57},
+  {id:'p117',nameZh:'豬肉丸 200g',nameEn:'Pork Ball 200g',name:'Pork Ball 200g',zh:'豬肉丸 200g',cat:'dim-sum',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:25},
+  {id:'p118',nameZh:'水晶餃 15粒',nameEn:'Crystal Dumpling 15pcs',name:'Crystal Dumpling 15pcs',zh:'水晶餃 15粒',cat:'dim-sum',price:6.99,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p119',nameZh:'鮮蝦雲吞 12粒',nameEn:'Fresh Prawn Wonton 12pcs',name:'鮮蝦雲吞 12粒',zh:'鮮蝦雲吞 12粒',cat:'dim-sum',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:66,needsVerify:true},
+  {id:'p120',nameZh:'韮菜餃 12粒',nameEn:'Chive Dumplings 12pcs',name:'韮菜餃 12粒',zh:'韮菜餃 12粒',cat:'dim-sum',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:31,needsVerify:true},
+  {id:'p121',nameZh:'鳳城水餃 12粒',nameEn:'Fengcheng Boiled Dumplings 12pcs',name:'鳳城水餃 12粒',zh:'鳳城水餃 12粒',cat:'dim-sum',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:82,needsVerify:true},
+  {id:'p122',nameZh:'四寶丸 16粒',nameEn:'Four Treasure Balls 16pcs',name:'四寶丸 16粒',zh:'四寶丸 16粒',cat:'dim-sum',price:11.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:16,needsVerify:true},
+  {id:'p123',nameZh:'黑松露豬肉丸 12粒',nameEn:'Black Truffle Pork Balls 12pcs',name:'黑松露豬肉丸 12粒',zh:'黑松露豬肉丸 12粒',cat:'dim-sum',price:7.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p124',nameZh:'羊肉餃 12粒',nameEn:'Lamb Dumplings 12pcs',name:'Lamb Dumplings 12pcs',zh:'羊肉餃 12粒',cat:'dim-sum',price:6.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p125',nameZh:'洋蔥牛肉餃 12粒',nameEn:'Onion Beef Dumplings 12pcs',name:'Onion Beef Dumplings 12pcs',zh:'洋蔥牛肉餃 12粒',cat:'dim-sum',price:6.5,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p126',nameZh:'康氏豬肉香菜水餃 410g',nameEn:'Hongs Pork & Coriander Dumplings',name:'Hongs Pork & Coriander Dumplings',zh:'康氏豬肉香菜水餃 410g',cat:'dim-sum',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p127',nameZh:'康氏西洋菜豬肉水餃 410g',nameEn:'Hongs Pork & Watercress Dumplings',name:'Hongs Pork & Watercress Dumplings',zh:'康氏西洋菜豬肉水餃 410g',cat:'dim-sum',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:17},
+  {id:'p128',name:'康氏韭菜豬肉水餃 410g Hong\'s Pork & Chive Leaf Dumplings',zh:'',cat:'dim-sum',price:0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
+  {id:'p129',nameZh:'Bobo 魚皮餃 200g',nameEn:'Bobo Fish Dumplings 200g',name:'Bobo Fish Dumplings 200g',zh:'Bobo 魚皮餃 200g',cat:'hk-snacks',price:5.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:100},
+  {id:'p130',nameZh:'Bobo 小五香魚卷 250g',nameEn:'Bobo Five Spices Fish Rolls 250g',name:'Bobo Five Spices Fish Rolls 250g',zh:'Bobo 小五香魚卷 250g',cat:'bread',price:3.6,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:51},
+  {id:'p131',nameZh:'Bobo 白魚蛋 200g',nameEn:'Bobo White Fish Ball 200g',name:'Bobo White Fish Ball 200g',zh:'Bobo 白魚蛋 200g',cat:'hk-snacks',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:25},
+  {id:'p132',nameZh:'Bobo 墨魚丸 250g',nameEn:'Bobo Cuttlefish Ball 250g',name:'Bobo Cuttlefish Ball 250g',zh:'Bobo 墨魚丸 250g',cat:'dim-sum',price:5.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
+  {id:'p133',nameZh:'Bobo 一品鍋',nameEn:'Mix Combo Hotpot Selection',name:'Mix Combo Hotpot Selection',zh:'Bobo 一品鍋',cat:'hk-snacks',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:29},
+  {id:'p134',nameZh:'BOBO 炸魚腐竹卷 500g',nameEn:'BOBO',name:'BOBO',zh:'BOBO 炸魚腐竹卷 500g',cat:'hk-snacks',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p135',nameZh:'BOBO 娘惹香辣炸魚腐竹卷 250g',nameEn:'BOBO',name:'BOBO',zh:'BOBO 娘惹香辣炸魚腐竹卷 250g',cat:'hk-snacks',price:5.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:8},
+  {id:'p136',nameZh:'BOBO 頂級炸魚雲吞',nameEn:'Premium Fried Fish Wonton 1kg',name:'Premium Fried Fish Wonton 1kg',zh:'BOBO 頂級炸魚雲吞',cat:'hk-snacks',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p137',nameZh:'泰國沙爹魚串零食',nameEn:'Honey Roasted Satay Fish',name:'Honey Roasted Satay Fish',zh:'泰國沙爹魚串零食',cat:'hk-homecook',price:1.59,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p138',nameZh:'叉燒 500g',nameEn:'BBQ Roast Pork 500g',name:'BBQ Roast Pork 500g',zh:'叉燒 500g',cat:'hk-homecook',price:8.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p139',nameZh:'烤鴨 1隻 850g',nameEn:'Roast Duck',name:'Roast Duck',zh:'烤鴨 1隻 850g',cat:'hk-homecook',price:15.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p140',nameZh:'豆腐火腩',nameEn:'Braised Tofu with Roast Pork Belly',name:'Braised Tofu with Roast Pork Belly',zh:'豆腐火腩',cat:'hk-homecook',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:28},
+  {id:'p141',nameZh:'港式咖喱牛腩',nameEn:'Hong Kong Style Curry Beef',name:'Hong Kong Style Curry Beef',zh:'港式咖喱牛腩',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p142',nameZh:'梅菜扣肉',nameEn:'Braised Pork with Preserved Vegetables',name:'Braised Pork with Preserved Vegetables',zh:'梅菜扣肉',cat:'hk-homecook',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:37},
+  {id:'p143',nameZh:'家餸柱侯牛腩',nameEn:'Homey Dish Chu Hou Beef Brisket',name:'Homey Dish Chu Hou Beef Brisket',zh:'家餸柱侯牛腩',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
+  {id:'p144',nameZh:'家餸梅子豬手',nameEn:'Homey Dish Braised Pig Knuckles with Plum',name:'Homey Dish Braised Pig Knuckles with Plum',zh:'家餸梅子豬手',cat:'hk-homecook',price:10.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p145',nameZh:'家餸枝竹羊腩煲',nameEn:'Home-style Lamb Belly & Bean Curd Stick Pot',name:'Home-style Lamb Belly & Bean Curd Stick Pot',zh:'家餸枝竹羊腩煲',cat:'hk-homecook',price:12.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:21,needsVerify:true},
+  {id:'p146',nameZh:'胡椒豬肚雞湯',nameEn:'Pig Stomach Soup with Chicken & White Pepper',name:'Pig Stomach Soup with Chicken & White Pepper',zh:'胡椒豬肚雞湯',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p147',nameZh:'蓮藕章魚煲豬骨',nameEn:'Lotus Root Dried Octopus Pork Soup',name:'Lotus Root Dried Octopus Pork Soup',zh:'蓮藕章魚煲豬骨',cat:'hk-homecook',price:11.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p148',nameZh:'豬腳薑',nameEn:'Pork Knuckles & Ginger Stew',name:'Pork Knuckles & Ginger Stew',zh:'豬腳薑',cat:'hk-homecook',price:14.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:9},
+  {id:'p149',nameZh:'醉雞翼',nameEn:'Drunken Chicken Wings',name:'Drunken Chicken Wings',zh:'醉雞翼',cat:'hk-homecook',price:9.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p150',nameZh:'鮑汁雞腳',nameEn:'Abalone Sauce Chicken Feet',name:'Abalone Sauce Chicken Feet',zh:'鮑汁雞腳',cat:'hk-homecook',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p151',nameZh:'椰汁紫米露',nameEn:'Coconut Purple Rice Dessert',name:'Coconut Purple Rice Dessert',zh:'椰汁紫米露',cat:'hk-homecook',price:7.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
+  {id:'p152',nameZh:'家餸 2餸1湯套餐',nameEn:'Home-style 2 Dishes + 1 Soup Set',name:'Home-style 2 Dishes + 1 Soup Set',zh:'家餸 2餸1湯套餐',cat:'hk-homecook',price:29.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:31,needsVerify:true},
+  {id:'p153',nameZh:'師父港式滷味',nameEn:'HK Lomei (Chicken Gizzards, Hog Uteri, Cuttlefish)',name:'HK Lomei (Chicken Gizzards, Hog Uteri, Cuttlefish)',zh:'師父港式滷味',cat:'hk-snacks',price:10.5,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p154',nameZh:'咖喱魚蛋豬皮',nameEn:'HK Curry Fish Ball & Pork Crunch',name:'HK Curry Fish Ball & Pork Crunch',zh:'咖喱魚蛋豬皮',cat:'hk-snacks',price:12.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p155',nameZh:'香辣涼拌雞腎',nameEn:'Spicy Chicken Gizzard Cold Serve',name:'Spicy Chicken Gizzard Cold Serve',zh:'香辣涼拌雞腎',cat:'hk-snacks',price:10.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p156',nameZh:'香辣牛𦟌冷盤',nameEn:'Spicy Beef Shank Cold Serve',name:'Spicy Beef Shank Cold Serve',zh:'香辣牛𦟌冷盤',cat:'others',price:7.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p157',nameZh:'港式沙爹牛肉',nameEn:'HK Style Satay Beef',name:'HK Style Satay Beef',zh:'港式沙爹牛肉',cat:'hk-snacks',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p158',nameZh:'五香肉丁',nameEn:'Five-Spiced Pork Cubes',name:'Five-Spiced Pork Cubes',zh:'五香肉丁',cat:'hk-homecook',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p159',nameZh:'潮式滷水豬耳 300g',nameEn:'Teochew Braised Pig Ear 300g',name:'潮式滷水豬耳 300g',zh:'潮式滷水豬耳 300g',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6,needsVerify:true},
+  {id:'p160',nameZh:'潮式香滑牛筋',nameEn:'Teochew Braised Beef Tendon',name:'潮式香滑牛筋',zh:'潮式香滑牛筋',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23,needsVerify:true},
+  {id:'p161',nameZh:'潮式五香牛肚 260g',nameEn:'Teochew Five-Spice Beef Tripe 260g',name:'潮式五香牛肚 260g',zh:'潮式五香牛肚 260g',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:36,needsVerify:true},
+  {id:'p162',nameZh:'潮式滷水豬大腸 260g',nameEn:'Teochew Braised Pork Intestine 260g',name:'潮式滷水豬大腸 260g',zh:'潮式滷水豬大腸 260g',cat:'hk-snacks',price:9.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14,needsVerify:true},
+  {id:'p163',nameZh:'潮式秘制牛雜 410g',nameEn:'Teochew Braised Mixed Beef Offal 410g',name:'潮式秘制牛雜 410g',zh:'潮式秘制牛雜 410g',cat:'hk-snacks',price:15.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p164',nameZh:'潮式秘製崩沙腩 290g',nameEn:'Teochew Braised Pork Belly 290g',name:'潮式秘製崩沙腩 290g',zh:'潮式秘製崩沙腩 290g',cat:'hk-snacks',price:11.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13,needsVerify:true},
+  {id:'p165',nameZh:'三文魚刺身大件裝',nameEn:'Large Pack of Salmon Sashimi',name:'Large Pack of Salmon Sashimi',zh:'三文魚刺身大件裝',cat:'sashimi',price:30.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p166',nameZh:'三文魚刺身細件裝',nameEn:'Small Pack of Salmon Sashimi',name:'Small Pack of Salmon Sashimi',zh:'三文魚刺身細件裝',cat:'sashimi',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:38},
+  {id:'p167',nameZh:'藍鰭吞拿魚中拖羅',nameEn:'Bluefin Tuna Chutoro',name:'Bluefin Tuna Chutoro',zh:'藍鰭吞拿魚中拖羅',cat:'sashimi',price:32.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p168',nameZh:'藍鰭吞拿魚大拖羅',nameEn:'Bluefin Tuna Otoro',name:'Bluefin Tuna Otoro',zh:'藍鰭吞拿魚大拖羅',cat:'sashimi',price:48.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p169',nameZh:'油甘魚刺身',nameEn:'Hamachi Yellow Tail Sashimi',name:'Hamachi Yellow Tail Sashimi',zh:'油甘魚刺身',cat:'sashimi',price:18.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p170',nameZh:'加拿大海膽刺身',nameEn:'Canadian Sea Urchin Sashimi',name:'Canadian Sea Urchin Sashimi',zh:'加拿大海膽刺身',cat:'sashimi',price:22.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p171',nameZh:'甜蝦刺身',nameEn:'Sweet Shrimp Sashimi',name:'Sweet Shrimp Sashimi',zh:'甜蝦刺身',cat:'sashimi',price:7.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:32},
+  {id:'p172',nameZh:'帶子刺身',nameEn:'Scallop Sashimi',name:'Scallop Sashimi',zh:'帶子刺身',cat:'sashimi',price:49.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p173',nameZh:'1kg 帶子刺身',nameEn:'Scallop Sashimi 1kg',name:'Scallop Sashimi 1kg',zh:'1kg 帶子刺身',cat:'sashimi',price:49.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p174',nameZh:'北寄貝刺身',nameEn:'Wild Arctic Surfclam',name:'Wild Arctic Surfclam',zh:'北寄貝刺身',cat:'sashimi',price:30.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p175',nameZh:'八爪魚片',nameEn:'Octopus Slices',name:'Octopus Slices',zh:'八爪魚片',cat:'sashimi',price:8.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p176',nameZh:'急凍三文魚籽 200g',nameEn:'Frozen Salmon Roe 200g',name:'Frozen Salmon Roe 200g',zh:'急凍三文魚籽 200g',cat:'sashimi',price:9.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p177',nameZh:'急凍芥辣八爪魚',nameEn:'Frozen Wasabi Octopus',name:'Frozen Wasabi Octopus',zh:'急凍芥辣八爪魚',cat:'frozen-seafood',price:10.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:15},
+  {id:'p178',nameZh:'日本壽司腐皮袋',nameEn:'Inari Age Seasoned Fried Bean Curd',name:'Inari Age Seasoned Fried Bean Curd',zh:'日本壽司腐皮袋',cat:'others',price:9.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p179',nameZh:'蒲燒鰻魚',nameEn:'Broiled Eel',name:'Broiled Eel',zh:'蒲燒鰻魚',cat:'frozen-seafood',price:11.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:26},
+  {id:'p180',nameZh:'阿拉斯加去骨銀鱈魚柳',nameEn:'Alaska Black Cod',name:'Alaska Black Cod',zh:'阿拉斯加去骨銀鱈魚柳',cat:'frozen-seafood',price:22.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:13},
+  {id:'p181',nameZh:'加拿大銀鱈魚原條去頭',nameEn:'Canadian Whole Head-off Black Cod',name:'Canadian Whole Head-off Black Cod',zh:'加拿大銀鱈魚原條去頭',cat:'frozen-seafood',price:38.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p182',nameZh:'愛爾蘭頂級牛小排肉片 200g',nameEn:'Premium Boneless Short Rib Slices 200g',name:'Premium Boneless Short Rib Slices 200g',zh:'愛爾蘭頂級牛小排肉片 200g',cat:'premium-meat',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:40},
+  {id:'p183',nameZh:'愛爾蘭頂級牛小排燒烤肉片 200g',nameEn:'Premium Boneless Short Rib BBQ Slices 200g',name:'Premium Boneless Short Rib BBQ Slices 200g',zh:'愛爾蘭頂級牛小排燒烤肉片 200g',cat:'premium-meat',price:10.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p184',nameZh:'愛爾蘭優質牛小排肉片 250g',nameEn:'Prime Boneless Short Rib Slices 250g',name:'Prime Boneless Short Rib Slices 250g',zh:'愛爾蘭優質牛小排肉片 250g',cat:'premium-meat',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
+  {id:'p185',nameZh:'愛爾蘭高級牛頸脊肉片 200g',nameEn:'Premium Chuck Tail Flap Slices 200g',name:'Premium Chuck Tail Flap Slices 200g',zh:'愛爾蘭高級牛頸脊肉片 200g',cat:'premium-meat',price:11.49,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:20},
+  {id:'p186',nameZh:'愛爾蘭牛仔骨',nameEn:'Irish Asado Beef Ribs',name:'Irish Asado Beef Ribs',zh:'愛爾蘭牛仔骨',cat:'premium-meat',price:22.0,salePrice:null,saleUntil:null,stock:0,unit:'',active:true,featured:false,desc:'',image:'',historicSold:0},
+  {id:'p187',nameZh:'愛爾蘭無骨牛小排',nameEn:'Irish Beef Short Ribs',name:'Irish Beef Short Ribs',zh:'愛爾蘭無骨牛小排',cat:'premium-meat',price:28.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:44},
+  {id:'p188',nameZh:'精選梅花豚肉片 250g',nameEn:'Pork Upper Shoulder Slices 250g',name:'Pork Upper Shoulder Slices 250g',zh:'精選梅花豚肉片 250g',cat:'premium-meat',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:19},
+  {id:'p189',nameZh:'西班牙豬腩肉片 500g',nameEn:'Spanish Pork Belly Slices 500g',name:'Spanish Pork Belly Slices 500g',zh:'西班牙豬腩肉片 500g',cat:'premium-meat',price:11.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p190',nameZh:'伊比利亞梅頭肉片 500g',nameEn:'Iberico Pork Collar Slices 500g',name:'Iberico Pork Collar Slices 500g',zh:'伊比利亞梅頭肉片 500g',cat:'premium-meat',price:16.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p191',nameZh:'Iberico 豬頸肉',nameEn:'Iberico Secreto',name:'Iberico Secreto',zh:'Iberico 豬頸肉',cat:'premium-meat',price:14.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:32},
+  {id:'p192',nameZh:'Iberico 扇子肉',nameEn:'Iberico Abanico',name:'Iberico Abanico',zh:'Iberico 扇子肉',cat:'premium-meat',price:14.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p193',nameZh:'鹿兒島 A3 和牛片 200g',nameEn:'Kagoshima A3 Wagyu Slices 200g',name:'Kagoshima A3 Wagyu Slices 200g',zh:'鹿兒島 A3 和牛片 200g',cat:'premium-meat',price:24.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p194',nameZh:'英國無激素走地豬豬軟骨 400g',nameEn:'Dingley Dell Pork Soft Bone 400g',name:'Dingley Dell Pork Soft Bone 400g',zh:'英國無激素走地豬豬軟骨 400g',cat:'premium-meat',price:7.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:10},
+  {id:'p195',nameZh:'日式雞肉串燒 800g',nameEn:'Chicken Yakitori',name:'Chicken Yakitori',zh:'日式雞肉串燒 800g',cat:'frozen-seafood',price:17.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:18},
+  {id:'p196',nameZh:'急凍魷魚鬚',nameEn:'Frozen Squid Tentacles',name:'Frozen Squid Tentacles',zh:'急凍魷魚鬚',cat:'frozen-seafood',price:12.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p197',nameZh:'急凍阿根廷紅蝦',nameEn:'Argentine Red Shrimp',name:'Argentine Red Shrimp',zh:'急凍阿根廷紅蝦',cat:'frozen-seafood',price:36.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p198',nameZh:'紀文頂級仿蟹柳',nameEn:'Kibun Frozen Imitation Crab Meat Stick',name:'Kibun Frozen Imitation Crab Meat Stick',zh:'紀文頂級仿蟹柳',cat:'bread',price:5.0,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:23},
+  {id:'p199',nameZh:'韓國中華沙律 350g',nameEn:'Korean Chinese Salad 350g',name:'韓國中華沙律 350g',zh:'韓國中華沙律 350g',cat:'others',price:3.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p200',nameZh:'日式章魚小丸子',nameEn:'Takoyaki',name:'Takoyaki',zh:'日式章魚小丸子',cat:'frozen-seafood',price:8.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5},
+  {id:'p201',nameZh:'日式玉子燒',nameEn:'Japanese Rolled Egg Omelet',name:'Japanese Rolled Egg Omelet',zh:'日式玉子燒',cat:'bread',price:6.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:6},
+  {id:'p202',nameZh:'韓國急凍手打烏冬',nameEn:'Korean Frozen Handmade Udon',name:'Korean Frozen Handmade Udon',zh:'韓國急凍手打烏冬',cat:'frozen-seafood',price:4.65,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:85},
+  {id:'p203',nameZh:'日式炸蝦天婦羅 850g',nameEn:'Japanese Style Breaded Prawn 52pcs',name:'Japanese Style Breaded Prawn 52pcs',zh:'日式炸蝦天婦羅 850g',cat:'frozen-seafood',price:9.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:1},
+  {id:'p204',nameZh:'日式章魚丸 400g',nameEn:'Japanese Style Octopus Ball',name:'Japanese Style Octopus Ball',zh:'日式章魚丸 400g',cat:'frozen-seafood',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:1},
+  {id:'p205',nameZh:'五香鹹肉糭',nameEn:'Wu Xiang Five-Spice Zongzi',name:'Wu Xiang Five-Spice Zongzi',zh:'五香鹹肉糭',cat:'dim-sum',price:8.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:35},
+  {id:'p206',nameZh:'頂級鮑魚瑤柱鹹肉糭',nameEn:'Premium Abalone & Dried Scallop Zongzi',name:'Premium Abalone & Dried Scallop Zongzi',zh:'頂級鮑魚瑤柱鹹肉糭',cat:'dim-sum',price:12.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p207',nameZh:'Inaka 雞肉餃子 600g',nameEn:'Inaka',name:'Inaka',zh:'Inaka 雞肉餃子 600g',cat:'others',price:4.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:11},
+  {id:'p208',nameZh:'台灣奇美芝麻包 6個裝',nameEn:'Chimei Sesame Bun',name:'Chimei Sesame Bun',zh:'台灣奇美芝麻包 6個裝',cat:'bread',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:12},
+  {id:'p209',nameZh:'台灣奇美紅豆包 6個裝',nameEn:'Chimei Red Bean Bun',name:'Chimei Red Bean Bun',zh:'台灣奇美紅豆包 6個裝',cat:'bread',price:3.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:14},
+  {id:'p210',nameZh:'Shiseido 資生堂花語蜜潤洗髮露 450ml',nameEn:'Shiseido Aqua Intensive Shampoo 450ml',name:'Shiseido Aqua Intensive Shampoo 450ml',zh:'Shiseido 資生堂花語蜜潤洗髮露 450ml',cat:'personal-care',price:11.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2,needsVerify:true},
+  {id:'p211',nameZh:'50惠 養潤豐盈洗髮露 400ml',nameEn:'50 Megumi Nourishing Volume Shampoo 400ml',name:'50 Megumi Nourishing Volume Shampoo 400ml',zh:'50惠 養潤豐盈洗髮露 400ml',cat:'personal-care',price:10.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3,needsVerify:true},
+  {id:'p212',nameZh:'Lion 獅王 Kirei Kirei 兒童泡泡消毒洗手液 250ml',nameEn:'Lion Kirei Kirei Kids Foaming Hand Soap 250ml',name:'Lion Kirei Kirei Kids Foaming Hand Soap 250ml',zh:'Lion 獅王 Kirei Kirei 兒童泡泡消毒洗手液 250ml',cat:'personal-care',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:3,needsVerify:true},
+  {id:'p213',nameZh:'Lion 獅王 6-12歲兒童牙膏 提子味 60ml',nameEn:'Lion Kids Toothpaste Grape 60ml (Age 6-12)',name:'Lion Kids Toothpaste Grape 60ml (Age 6-12)',zh:'Lion 獅王 6-12歲兒童牙膏 提子味 60ml',cat:'personal-care',price:4.5,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4,needsVerify:true},
+  {id:'p214',nameZh:'HADA LABO 肌研',nameEn:'Hada Labo Premium Hydrating Eye Cream 20g',name:'Hada Labo Premium Hydrating Eye Cream 20g',zh:'HADA LABO 肌研',cat:'personal-care',price:14.99,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:2},
+  {id:'p215',nameZh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 26cm',nameEn:'Unicharm Sofy Ultra Thin Daily Pads 26cm',name:'Unicharm Sofy Ultra Thin Daily Pads 26cm',zh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 26cm',cat:'personal-care',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:7},
+  {id:'p216',nameZh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 21cm',nameEn:'Unicharm Sofy Ultra Thin Daily Pads 21cm',name:'Unicharm Sofy Ultra Thin Daily Pads 21cm',zh:'UNICHARM 蘇菲溫柔護膚極薄護翼 日用 21cm',cat:'personal-care',price:3.8,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:4},
+  {id:'p217',nameZh:'曼秀雷敦藥用薄荷潤唇膏 XD 4g 2支裝',nameEn:'Mentholatum Medicated Mint Lip Balm XD 4g (2-pack)',name:'Mentholatum Medicated Mint Lip Balm XD 4g (2-pack)',zh:'曼秀雷敦藥用薄荷潤唇膏 XD 4g 2支裝',cat:'personal-care',price:1.9,salePrice:null,saleUntil:null,stock:-1,unit:'',active:true,featured:false,desc:'',image:'',historicSold:5}
+];
+
+const SEED_CATEGORIES = [
+  {id:'dim-sum',name:'HK Dim Sum',zh:'港式點心'},
+  {id:'bread',name:'Homemade Bread',zh:'手工麵包'},
+  {id:'noodles',name:'Noodles & Ramen',zh:'麵食湯河'},
+  {id:'hk-homecook',name:'HK Home Cook',zh:'港式家餸'},
+  {id:'hk-snacks',name:'HK Street Snacks',zh:'港式小食滷味'},
+  {id:'frozen-seafood',name:'Frozen Seafood & Sides',zh:'急凍海鮮配料'},
+  {id:'premium-meat',name:'Premium Meat',zh:'優質肉類'},
+  {id:'sashimi',name:'Japanese Sashimi',zh:'日本刺身'},
+  {id:'fruits',name:'Japanese Fruits',zh:'日本水果'},
+  {id:'sauces',name:'Sauces & Condiments',zh:'醬料調味'},
+  {id:'snacks',name:'Snacks & Drinks',zh:'零食飲品'},
+  {id:'personal-care',name:'Personal Care',zh:'個人護理'},
+  {id:'others',name:'Others',zh:'其他'},
+];
+
+const DEFAULT_BANNER = {
+  tagZh:'本週主打 · 日本直送', tagEn:'This Week · Direct from Japan',
+  titleZh:'新鮮直送到你家', titleEn:'Fresh to Your Door',
+  subZh:'精選本週最新到港食材，週二截單，週五送達', subEn:'This week\'s freshest picks — order by Tuesday, delivered Friday',
+  btnZh:'立即選購', btnEn:'Order Now',
+  image:'', emoji:'🍓',
+};
+
+let state = {
+  products: [],
+  orders: [],
+  categories: [],
+  banner: {...DEFAULT_BANNER},
+  sets: [],
+  editingSetId: null,
+  editingCategoryId: null,
+  settings: {...DEFAULT_SETTINGS},
+  editingProductId: null,
+  productStatusFilter: 'all',
+  productSearchQuery: '',
+  productCatFilter: '',
+  showLowOnly: false,
+  inventorySearchQuery: '',
+  currentPage: 1,
+  pageSize: 30,
+};
+
+// ── STORAGE ──────────────────────────────────────────────────
+// ── STORAGE ABSTRACTION ──────────────────────────────────────
+// Works in Claude Artifacts (window.storage) AND local HTML (localStorage)
+const DB_KEY = 'jpfruit-v2';
+
+async function dbGet() {
+  if (typeof window.storage !== 'undefined') {
+    try {
+      const r = await window.storage.get(DB_KEY, true);
+      return r ? JSON.parse(r.value) : null;
+    } catch(e) {}
+  }
+  // Fallback: localStorage
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+async function dbSet(data) {
+  const str = JSON.stringify(data);
+  if (typeof window.storage !== 'undefined') {
+    try { await window.storage.set(DB_KEY, str, true); } catch(e) {}
+  }
+  // Always also save to localStorage as backup
+  try { localStorage.setItem(DB_KEY, str); } catch(e) {}
+}
+
+async function loadData() {
+  setSyncing(true);
+  try {
+    const saved = await dbGet();
+    if (saved) {
+      state.products = saved.products || [];
+      state.orders = saved.orders || [];
+      state.categories = saved.categories || SEED_CATEGORIES;
+      state.banner = saved.banner || {...DEFAULT_BANNER};
+      state.settings = saved.settings || {...DEFAULT_SETTINGS};
+      state.sets = saved.sets || [];
+      // Merge any new seed products not yet saved
+      const existingIds = new Set(state.products.map(p => p.id));
+      for (const sp of SEED_PRODUCTS) {
+        if (!existingIds.has(sp.id)) state.products.push(sp);
+      }
+    } else {
+      // First run — load all seeds
+      state.categories = SEED_CATEGORIES;
+      state.products = SEED_PRODUCTS.map(p => ({...p}));
+      state.sets = [];
+      state.orders = [];
+      state.banner = {...DEFAULT_BANNER};
+      state.settings = {...DEFAULT_SETTINGS};
+      await saveData();
+    }
+  } catch(e) {
+    console.error('loadData error:', e);
+    state.categories = SEED_CATEGORIES;
+    state.products = SEED_PRODUCTS.map(p => ({...p}));
+  }
+  setSyncing(false);
+  renderAll();
+}
+
+async function saveData() {
+  setSyncing(true);
+  try {
+    await dbSet({
+      products: state.products,
+      orders: state.orders,
+      categories: state.categories,
+      banner: state.banner,
+      sets: state.sets,
+      settings: state.settings,
+    });
+  } catch(e) { console.error('saveData error:', e); }
+  setSyncing(false);
+}
+
+function setSyncing(on) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  if (on) { dot.className='sync-dot syncing'; txt.textContent='同步中...'; }
+  else { dot.className='sync-dot'; txt.textContent='已同步 Synced'; }
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function showPage(page) {
+  ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings'].forEach(p => {
+    document.getElementById('page-'+p).style.display = p===page?'block':'none';
+    const el = document.getElementById('nav-'+p);
+    if(el) el.classList.toggle('active', p===page);
+  });
+  if(page==='dashboard') renderDashboard();
+  if(page==='products') renderProducts();
+  if(page==='inventory') renderInventory();
+  if(page==='orders') renderOrders();
+  if(page==='sets') renderSetsPage();
+  if(page==='settings') initSettings();
+  if(page==='reports') initReports();
+  if(page==='featured') renderFeaturedPage();
+  if(page==='banner') renderBannerPage();
+  if(page==='categories') renderCategories();
+}
+
+function renderAll() {
+  renderDashboard();
+  populateCategoryDropdowns();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDashboard() {
+  const total = state.products.length;
+  const noPrice = state.products.filter(p=>!p.price||p.price===0).length;
+  const oos = state.products.filter(p=>p.stock===0).length;
+  const disc = state.products.filter(p=>p.salePrice&&p.active).length;
+  document.getElementById('stat-products').textContent = total;
+  document.getElementById('stat-noprice').textContent = noPrice;
+  document.getElementById('stat-oos').textContent = oos;
+  document.getElementById('stat-discounts').textContent = disc;
+
+  const alertDiv = document.getElementById('dash-alert');
+  if (noPrice > 0) {
+    alertDiv.innerHTML = `<div style="background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:0.82rem;color:var(--gold);">
+      ⚠️ <strong>${noPrice} 款產品</strong>仲未填價錢，記得填好先可以上架俾客人睇！
+      <button class="btn btn-ghost btn-sm" style="margin-left:10px;" onclick="showPage('products');filterProductStatus('noprice',document.querySelector('.tab:nth-child(2)'))">立即填寫</button>
+    </div>`;
+  } else alertDiv.innerHTML='';
+
+  const topSellers = [...state.products].filter(p=>p.historicSold>0).sort((a,b)=>b.historicSold-a.historicSold).slice(0,10);
+  const maxSold = topSellers[0]?.historicSold||1;
+  const tbody = document.getElementById('dashboard-topsellers');
+  tbody.innerHTML = topSellers.map(p => {
+    const cat = state.categories.find(c=>c.id===p.cat);
+    const pct = Math.round(p.historicSold/maxSold*100);
+    const stockDisplay = p.stock===-1?'<span style="color:var(--muted)">∞</span>':p.stock===0?'<span style="color:var(--red)">售罄</span>':`${p.stock}`;
+    const priceDisplay = p.price?`<span style="font-family:var(--mono)">£${p.price.toFixed(2)}</span>`:`<span style="color:var(--gold)">未填</span>`;
+    return `<tr>
+      <td>
+        <div style="font-size:0.85rem;font-weight:500;">${p.nameZh||p.zh||p.name}</div>
+        <div style="font-size:0.72rem;color:var(--muted);">${p.nameEn||''}</div>
+      </td>
+      <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
+      <td>
+        <div class="sold-bar"><div class="sold-fill" style="width:${pct}%"></div></div>
+        <span style="font-family:var(--mono);font-size:0.78rem;color:var(--blue)">${p.historicSold}</span>
+      </td>
+      <td>${priceDisplay}</td>
+      <td>${stockDisplay}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── PRODUCTS ─────────────────────────────────────────────────
+function getFilteredProducts() {
+  let prods = state.products;
+  if (state.productStatusFilter==='noprice') prods = prods.filter(p=>!p.price||p.price===0);
+  else if (state.productStatusFilter==='active') prods = prods.filter(p=>p.active&&p.price>0&&!p.salePrice);
+  else if (state.productStatusFilter==='discount') prods = prods.filter(p=>p.salePrice);
+  else if (state.productStatusFilter==='oos') prods = prods.filter(p=>p.stock===0);
+  else if (state.productStatusFilter==='inactive') prods = prods.filter(p=>!p.active);
+  if (state.productSearchQuery) {
+    const q = state.productSearchQuery.toLowerCase();
+    prods = prods.filter(p=>p.name.toLowerCase().includes(q));
+  }
+  if (state.productCatFilter) prods = prods.filter(p=>p.cat===state.productCatFilter);
+  return prods;
+}
+
+function renderProducts() {
+  const prods = getFilteredProducts();
+  const total = prods.length;
+  const totalPages = Math.ceil(total/state.pageSize);
+  const page = Math.min(state.currentPage, Math.max(1,totalPages));
+  state.currentPage = page;
+  const slice = prods.slice((page-1)*state.pageSize, page*state.pageSize);
+
+  document.getElementById('products-count').textContent = `(${total} 款)`;
+
+  // Group by category for display
+  const tbody = document.getElementById('products-table');
+  if (slice.length===0) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty">沒有符合條件嘅產品</div></td></tr>`;
+    document.getElementById('products-pagination').innerHTML='';
+    return;
+  }
+
+  // Group rows by category
+  let lastCat = null;
+  let html = '';
+  slice.forEach(p => {
+    const cat = state.categories.find(c=>c.id===p.cat);
+    if (cat?.id !== lastCat) {
+      lastCat = cat?.id;
+      html += `<tr><td colspan="8" class="section-divider">${cat?.zh||'其他'} — ${cat?.name||''}</td></tr>`;
+    }
+    const stockDisplay = p.stock===-1?'<span style="color:var(--muted)">∞</span>':p.stock===0?'<span class="badge badge-red">售罄</span>':`<span style="color:${p.stock<=3?'var(--red)':'var(--text)'}">${p.stock}</span>`;
+    const priceDisplay = p.price?`<span style="font-family:var(--mono)">£${p.price.toFixed(2)}</span>`:`<span class="badge badge-gold">未填</span>`;
+    const salePriceDisplay = p.salePrice?`<span style="color:var(--green);font-family:var(--mono)">£${p.salePrice}</span>`:`<span style="color:var(--muted)">—</span>`;
+    const statusBadge = !p.active?'<span class="badge badge-gray">下架</span>':p.stock===0?'<span class="badge badge-red">售罄</span>':'<span class="badge badge-green">上架</span>';
+    html += `<tr>
+      <td>
+        <div style="font-size:0.84rem;max-width:300px;">${p.name}</div>
+        ${p.featured?'<span class="badge badge-gold" style="margin-top:2px;font-size:0.65rem;">推介</span>':''}
+        ${p.historicSold?`<span style="font-size:0.7rem;color:var(--muted)">歷史銷量: ${p.historicSold}</span>`:'<span style="font-size:0.7rem;color:var(--muted)">新產品</span>'}
+      </td>
+      <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
+      <td>${priceDisplay}</td>
+      <td>${salePriceDisplay}</td>
+      <td>${stockDisplay}</td>
+      <td><span style="font-family:var(--mono);font-size:0.78rem;color:var(--blue)">${p.historicSold||0}</span></td>
+      <td>${statusBadge}</td>
+      <td><div class="row-actions"><button class="btn btn-ghost btn-sm" onclick="editProduct('${p.id}')">✏️ 編輯</button></div></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+
+  // Pagination
+  const pg = document.getElementById('products-pagination');
+  if (totalPages<=1) { pg.innerHTML=''; return; }
+  pg.innerHTML = `<span class="page-info">第 ${page}/${totalPages} 頁，共 ${total} 款</span>
+    <button class="btn btn-ghost btn-sm" onclick="changePage(-1)" ${page===1?'disabled':''}>‹ 上頁</button>
+    <button class="btn btn-ghost btn-sm" onclick="changePage(1)" ${page===totalPages?'disabled':''}>下頁 ›</button>`;
+}
+
+function changePage(delta) {
+  state.currentPage += delta;
+  renderProducts();
+}
+
+function filterProductStatus(status, el) {
+  state.productStatusFilter = status;
+  state.currentPage = 1;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderProducts();
+}
+function filterProducts(q) { state.productSearchQuery=q; state.currentPage=1; renderProducts(); }
+function filterProductsCat(v) { state.productCatFilter=v; state.currentPage=1; renderProducts(); }
+
+// ── INVENTORY ────────────────────────────────────────────────
+function renderInventory() {
+  let prods = state.products;
+  if (state.showLowOnly) prods = prods.filter(p=>p.stock===0);
+  if (state.inventorySearchQuery) {
+    const q = state.inventorySearchQuery.toLowerCase();
+    prods = prods.filter(p=>p.name.toLowerCase().includes(q));
+  }
+  const tbody = document.getElementById('inventory-table');
+  tbody.innerHTML = prods.map(p=>{
+    const cat = state.categories.find(c=>c.id===p.cat);
+    const color = p.stock===-1?'var(--green)':p.stock===0?'var(--red)':p.stock<=3?'var(--gold)':'var(--green)';
+    const label = p.stock===-1?'無限':p.stock===0?'售罄':p.stock<=3?'庫存不足':'充足';
+    const pct = p.stock===-1?100:p.stock===0?0:Math.min(100,p.stock/20*100);
+    return `<tr>
+      <td><div style="font-size:0.83rem;max-width:280px;">${p.name}</div><div style="font-size:0.72rem;color:var(--muted)">${p.unit||''}</div></td>
+      <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
+      <td style="font-family:var(--mono);font-size:1rem;color:${color}">${p.stock===-1?'∞':p.stock}</td>
+      <td>
+        <div class="inv-bar"><div class="inv-fill" style="width:${pct}%;background:${color};"></div></div>
+        <span style="font-size:0.72rem;color:${color}">${label}</span>
+      </td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="btn btn-ghost btn-sm" onclick="adjustStock('${p.id}',-1)">−</button>
+          <input type="number" value="${p.stock}" style="width:60px;text-align:center;font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px;color:var(--text);" onchange="setStock('${p.id}',this.value)">
+          <button class="btn btn-ghost btn-sm" onclick="adjustStock('${p.id}',1)">+</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterInventory(q) { state.inventorySearchQuery=q; renderInventory(); }
+function toggleLowOnly() {
+  state.showLowOnly = !state.showLowOnly;
+  document.getElementById('low-btn').textContent = state.showLowOnly?'顯示全部':'⚠️ 只顯示售罄';
+  renderInventory();
+}
+function adjustStock(id, delta) {
+  const p = state.products.find(x=>x.id===id);
+  if (!p||p.stock===-1) return;
+  p.stock = Math.max(0, p.stock+delta);
+  saveData(); renderInventory(); renderDashboard();
+}
+function setStock(id, val) {
+  const p = state.products.find(x=>x.id===id);
+  if (!p) return;
+  p.stock = parseInt(val);
+  saveData(); renderDashboard();
+}
+
+// ── PRODUCT CRUD ─────────────────────────────────────────────
+function openProductModal(id=null) {
+  state.editingProductId = id;
+  const p = id ? state.products.find(x=>x.id===id) : null;
+  document.getElementById('product-modal-title').textContent = p?'編輯產品':'新增產品';
+  document.getElementById('p-delete-btn').style.display = p?'block':'none';
+  populateCategoryDropdowns();
+  if (p) {
+    document.getElementById('p-name-zh').value = p.nameZh||p.zh||p.name||'';
+    document.getElementById('p-name-en').value = p.nameEn||p.name||'';
+    document.getElementById('p-category').value = p.cat||'';
+    document.getElementById('p-unit').value = p.unit||'';
+    document.getElementById('p-price').value = p.price||'';
+    document.getElementById('p-sale-price').value = p.salePrice||'';
+    document.getElementById('p-sale-until').value = p.saleUntil||'';
+    document.getElementById('p-stock').value = p.stock!=null?p.stock:-1;
+    document.getElementById('p-desc-zh').value = p.descZh||p.desc||'';
+    document.getElementById('p-desc-en').value = p.descEn||'';
+    document.getElementById('p-image').value = p.image||'';
+    document.getElementById('p-active').checked = p.active!==false;
+    document.getElementById('p-featured').checked = p.featured||false;
+  } else {
+    ['p-name-zh','p-name-en','p-unit','p-price','p-sale-price','p-sale-until','p-desc-zh','p-desc-en','p-image'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('p-stock').value=-1;
+    document.getElementById('p-active').checked=true;
+    document.getElementById('p-featured').checked=false;
+  }
+  document.getElementById('product-modal').classList.add('open');
+}
+function editProduct(id) { openProductModal(id); }
+function saveProduct() {
+  const nameZh = document.getElementById('p-name-zh').value.trim();
+  const nameEn = document.getElementById('p-name-en').value.trim();
+  if (!nameZh && !nameEn) { alert('請至少填寫中文或英文名稱！'); return; }
+  const salePrice = parseFloat(document.getElementById('p-sale-price').value)||null;
+  const product = {
+    id: state.editingProductId || uid(),
+    nameZh,
+    nameEn,
+    name: nameEn || nameZh,   // fallback for legacy
+    zh: nameZh,               // fallback for legacy
+    cat: document.getElementById('p-category').value,
+    unit: document.getElementById('p-unit').value.trim(),
+    price: parseFloat(document.getElementById('p-price').value)||0,
+    salePrice,
+    saleUntil: document.getElementById('p-sale-until').value||null,
+    stock: parseInt(document.getElementById('p-stock').value),
+    descZh: document.getElementById('p-desc-zh').value.trim(),
+    descEn: document.getElementById('p-desc-en').value.trim(),
+    desc: document.getElementById('p-desc-zh').value.trim(), // fallback
+    image: document.getElementById('p-image').value.trim(),
+    active: document.getElementById('p-active').checked,
+    featured: document.getElementById('p-featured').checked,
+    historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
+    needsVerify: false, // cleared when user manually saves
+  };
+  if (state.editingProductId) state.products = state.products.map(p=>p.id===state.editingProductId?product:p);
+  else state.products.push(product);
+  saveData(); closeModal('product-modal'); renderAll(); renderProducts();
+}
+function deleteProduct() {
+  if (!confirm('確定刪除此產品？')) return;
+  state.products = state.products.filter(p=>p.id!==state.editingProductId);
+  saveData(); closeModal('product-modal'); renderAll(); renderProducts();
+}
+
+// ── ORDERS ───────────────────────────────────────────────────
+function renderOrders() {
+  const cols = [
+    {status:'pending',label:'待確認',color:'var(--gold)'},
+    {status:'confirmed',label:'已確認',color:'var(--blue)'},
+    {status:'delivering',label:'送緊貨',color:'var(--green)'},
+    {status:'delivered',label:'已完成',color:'var(--muted)'},
+  ];
+  document.getElementById('orders-kanban').innerHTML = cols.map(col=>{
+    const orders = state.orders.filter(o=>o.status===col.status);
+    return `<div class="kanban-col">
+      <div class="kanban-header"><span style="color:${col.color}">${col.label}</span><span class="kanban-count">${orders.length}</span></div>
+      <div class="kanban-items">
+        ${orders.length===0?'<div style="text-align:center;color:var(--muted);font-size:0.78rem;padding:20px;">沒有訂單</div>':''}
+        ${orders.map(o=>`<div class="order-card">
+          <div class="order-id">#${o.id.slice(-4).toUpperCase()}</div>
+          <div class="order-name">${o.name}</div>
+          <div class="order-total">£${parseFloat(o.total||0).toFixed(2)}</div>
+          <div class="order-area">${o.postcode} · ${o.driver||'—'}</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.items||''}</div>
+          <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
+            ${col.status!=='delivered'?nextStatusBtn(o):''}
+            <button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function nextStatusBtn(o) {
+  const next={pending:'confirmed',confirmed:'delivering',delivering:'delivered'};
+  const label={pending:'✓ 確認',confirmed:'🚚 出發',delivering:'✅ 送到'};
+  const n=next[o.status]; if(!n) return '';
+  return `<button class="btn btn-primary btn-sm" onclick="advanceOrder('${o.id}','${n}')">${label[o.status]}</button>`;
+}
+function openOrderModal() {
+  ['o-name','o-phone','o-address','o-postcode','o-items','o-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('o-total').value='';
+  document.getElementById('order-modal').classList.add('open');
+}
+function saveOrder() {
+  const order={id:uid(),name:document.getElementById('o-name').value.trim(),phone:document.getElementById('o-phone').value.trim(),
+    address:document.getElementById('o-address').value.trim(),postcode:document.getElementById('o-postcode').value.trim().toUpperCase(),
+    items:document.getElementById('o-items').value.trim(),total:parseFloat(document.getElementById('o-total').value)||0,
+    payment:document.getElementById('o-payment').value,driver:document.getElementById('o-driver').value,
+    deliveryDate:document.getElementById('o-delivery-date').value,notes:document.getElementById('o-notes').value.trim(),
+    status:'pending',createdAt:Date.now()};
+  state.orders.unshift(order); saveData(); closeModal('order-modal'); renderOrders(); renderDashboard();
+}
+function advanceOrder(id,status) {
+  const o=state.orders.find(x=>x.id===id); if(o){o.status=status;saveData();renderOrders();renderDashboard();}
+}
+function cancelOrder(id) {
+  if(!confirm('確定取消？')) return;
+  const o=state.orders.find(x=>x.id===id); if(o){o.status='cancelled';saveData();renderOrders();renderDashboard();}
+}
+
+// ── CATEGORIES ───────────────────────────────────────────────
+function renderCategories() {
+  const tbody = document.getElementById('categories-table');
+  tbody.innerHTML = state.categories.map(c=>{
+    const count = state.products.filter(p=>p.cat===c.id).length;
+    return `<tr>
+      <td>${c.name}</td><td>${c.zh}</td>
+      <td><span class="badge badge-blue">${count} 款</span></td>
+      <td><div class="row-actions"><button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">刪除</button></div></td>
+    </tr>`;
+  }).join('');
+}
+function openCategoryModal() {
+  state.editingCategoryId = null;
+  document.getElementById('c-name').value='';
+  document.getElementById('c-name-zh').value='';
+  document.getElementById('cat-modal-title').textContent='新增分類';
+  document.getElementById('cat-delete-btn').style.display='none';
+  document.getElementById('category-modal').classList.add('open');
+}
+function editCategory(id) {
+  const c = state.categories.find(x=>x.id===id); if(!c) return;
+  state.editingCategoryId = id;
+  document.getElementById('c-name').value = c.name||c.id;
+  document.getElementById('c-name-zh').value = c.zh||c.name;
+  document.getElementById('cat-modal-title').textContent = '編輯分類';
+  document.getElementById('cat-delete-btn').style.display = 'block';
+  document.getElementById('category-modal').classList.add('open');
+}
+function deleteCategoryFromModal() {
+  const id = state.editingCategoryId; if(!id) return;
+  if(state.products.find(p=>p.cat===id)){alert('請先將此分類下嘅產品移走先！');return;}
+  if(!confirm('確定刪除此分類？')) return;
+  state.categories=state.categories.filter(c=>c.id!==id);
+  saveData(); closeModal('category-modal'); renderCategories(); populateCategoryDropdowns();
+}
+function saveCategory() {
+  const name=document.getElementById('c-name').value.trim();
+  const zh=document.getElementById('c-name-zh').value.trim();
+  if(!name) return;
+  if(state.editingCategoryId) {
+    // Edit existing
+    state.categories = state.categories.map(c=>
+      c.id===state.editingCategoryId ? {...c, name, zh} : c
+    );
+  } else {
+    // Add new
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    if(state.categories.find(c=>c.id===id)){alert('此分類 ID 已存在！請用唔同嘅英文名。');return;}
+    state.categories.push({id, name, zh});
+  }
+  saveData(); closeModal('category-modal'); renderCategories(); populateCategoryDropdowns();
+}
+function deleteCategory(id) {
+  if(state.products.find(p=>p.cat===id)){alert('請先將此分類下嘅產品移走先！');return;}
+  if(!confirm('確定刪除？')) return;
+  state.categories=state.categories.filter(c=>c.id!==id);
+  saveData(); renderCategories(); populateCategoryDropdowns();
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function populateCategoryDropdowns() {
+  const opts = state.categories.map(c=>`<option value="${c.id}">${c.zh} ${c.name}</option>`).join('');
+  document.getElementById('p-category').innerHTML = opts;
+  document.getElementById('cat-filter').innerHTML = '<option value="">所有分類</option>'+opts;
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+
+
+
+
+const TEMPLATES = {
+  fruit:    {tagZh:'🍓 本週限定 · 日本直送',tagEn:'This Week Only · Air-freighted from Japan',titleZh:'日本時令水果 新鮮到港',titleEn:'Japanese Seasonal Fruits — Just Arrived',subZh:'嚴選日本當季水果，空運直送，限量發售',subEn:'Hand-picked seasonal fruits, air-freighted. Limited stock.',btnZh:'立即選購',btnEn:'Order Now',emoji:'🍓',image:''},
+  sashimi:  {tagZh:'🍣 本週刺身特選',tagEn:'This Week\'s Sashimi Picks',titleZh:'極鮮刺身 週五送到',titleEn:'Premium Sashimi — Delivered Friday',subZh:'藍鰭吞拿、三文魚、甜蝦，週二截單',subEn:'Bluefin Tuna, Salmon, Sweet Shrimp. Order by Tuesday.',btnZh:'立即選購',btnEn:'Order Now',emoji:'🍣',image:''},
+  dimsum:   {tagZh:'🥟 新品點心上架',tagEn:'New Dim Sum Arrivals',titleZh:'港式點心 家鄉味道',titleEn:'Authentic HK Dim Sum',subZh:'全新品種點心到貨，一次過試晒所有新品',subEn:'New varieties just in — try them all this week.',btnZh:'睇新品',btnEn:'Shop New',emoji:'🥟',image:''},
+  sale:     {tagZh:'🏷 限時特價優惠',tagEn:'Limited Time Offers',titleZh:'本週精選特價',titleEn:'This Week\'s Special Deals',subZh:'多款產品限時折扣，截單前優惠期限',subEn:'Selected products at special prices — this week only.',btnZh:'睇優惠',btnEn:'See Deals',emoji:'🏷️',image:''},
+  meat:     {tagZh:'🥩 優質肉類新到',tagEn:'Premium Meat — New Stock',titleZh:'Iberico 及和牛 新鮮到貨',titleEn:'Iberico & Wagyu — Fresh Stock',subZh:'西班牙黑毛豬、鹿兒島和牛，品質保證',subEn:'Spanish Iberico Pork & Kagoshima Wagyu. Quality guaranteed.',btnZh:'立即選購',btnEn:'Order Now',emoji:'🥩',image:''},
+  seasonal: {tagZh:'🌸 季節限定 · 數量有限',tagEn:'Seasonal Special · Limited Qty',titleZh:'季節限定產品 把握機會',titleEn:'Seasonal Specials — Don\'t Miss Out',subZh:'每年只有此時才有，錯過要等明年',subEn:'Only available this season — once it\'s gone, it\'s gone.',btnZh:'立即選購',btnEn:'Order Now',emoji:'🌸',image:''},
+  zongzi:   {tagZh:'🐉 端午限定 · 英國製造 香港味道',tagEn:'Dragon Boat Festival · Made in UK, HK Taste',titleZh:'鹹肉糭 即買即有',titleEn:'Traditional Zongzi — No Pre-order Needed',subZh:'頂級鮑魚瑤柱糭、五香鹹肉糭，週二截單',subEn:'Premium Abalone & Five-Spice Zongzi. Order by Tuesday.',btnZh:'立即選購',btnEn:'Order Now',emoji:'🐉',image:''},
+};
+
+function renderBannerPage() {
+  const b = state.banner;
+  document.getElementById('b-tag-zh').value = b.tagZh||'';
+  document.getElementById('b-title-zh').value = b.titleZh||'';
+  document.getElementById('b-sub-zh').value = b.subZh||'';
+  document.getElementById('b-btn-zh').value = b.btnZh||'';
+  document.getElementById('b-tag-en').value = b.tagEn||'';
+  document.getElementById('b-title-en').value = b.titleEn||'';
+  document.getElementById('b-sub-en').value = b.subEn||'';
+  document.getElementById('b-btn-en').value = b.btnEn||'';
+  document.getElementById('b-image').value = b.image||'';
+  document.getElementById('b-emoji').value = b.emoji||'🍓';
+  updateBannerPreviewImg();
+  updateBannerPreview();
+}
+
+function loadTemplate(key) {
+  const t = TEMPLATES[key]; if(!t) return;
+  document.getElementById('b-tag-zh').value = t.tagZh;
+  document.getElementById('b-title-zh').value = t.titleZh;
+  document.getElementById('b-sub-zh').value = t.subZh;
+  document.getElementById('b-btn-zh').value = t.btnZh;
+  document.getElementById('b-tag-en').value = t.tagEn;
+  document.getElementById('b-title-en').value = t.titleEn;
+  document.getElementById('b-sub-en').value = t.subEn;
+  document.getElementById('b-btn-en').value = t.btnEn;
+  document.getElementById('b-image').value = t.image;
+  document.getElementById('b-emoji').value = t.emoji;
+  updateBannerPreviewImg();
+  updateBannerPreview();
+}
+
+function updateBannerPreviewImg() {
+  const url = document.getElementById('b-image').value.trim();
+  const box = document.getElementById('b-img-preview');
+  if(url) box.innerHTML = `<img src="${url}" style="height:80px;border-radius:8px;border:1px solid var(--border);" onerror="this.style.display='none'">`;
+  else box.innerHTML='';
+}
+
+function previewBanner() { updateBannerPreview(); document.getElementById('banner-preview-box').style.display='block'; document.getElementById('banner-preview-box').scrollIntoView({behavior:'smooth'}); }
+
+function updateBannerPreview() {
+  const titleZh = document.getElementById('b-title-zh').value || '新鮮直送到你家';
+  const subZh = document.getElementById('b-sub-zh').value || '';
+  const tagZh = document.getElementById('b-tag-zh').value || '';
+  const btnZh = document.getElementById('b-btn-zh').value || '';
+  const img = document.getElementById('b-image').value.trim();
+  const emoji = document.getElementById('b-emoji').value || '🍓';
+  const box = document.getElementById('banner-preview-inner');
+  if(!box) return;
+  box.innerHTML = `
+    <div style="font-size:0.7rem;letter-spacing:2px;color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.35);display:inline-block;padding:3px 14px;border-radius:20px;margin-bottom:12px;background:rgba(255,255,255,0.1);">${tagZh||'本週主打'}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap;">
+      <div style="font-size:3rem;line-height:1;">${img?`<img src="${img}" style="height:70px;border-radius:8px;object-fit:cover;" onerror="this.outerHTML='<span style=font-size:3rem>${emoji}</span>'">`:`${emoji}`}</div>
+      <div style="text-align:left;">
+        <div style="font-family:'Pacifico',cursive;font-size:1.25rem;color:white;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,0.2);">${titleZh}</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.78);margin-top:5px;max-width:280px;">${subZh}</div>
+      </div>
+    </div>
+    ${btnZh?`<div style="display:inline-block;background:rgba(255,255,255,0.2);color:white;padding:6px 20px;border-radius:20px;font-size:0.8rem;margin-top:4px;border:1px solid rgba(255,255,255,0.3);">${btnZh}</div>`:''}
+    <div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:14px;">↑ 客戶網站預覽（中文版）</div>`;
+}
+
+function saveBanner() {
+  state.banner = {
+    tagZh: document.getElementById('b-tag-zh').value.trim(),
+    titleZh: document.getElementById('b-title-zh').value.trim(),
+    subZh: document.getElementById('b-sub-zh').value.trim(),
+    btnZh: document.getElementById('b-btn-zh').value.trim(),
+    tagEn: document.getElementById('b-tag-en').value.trim(),
+    titleEn: document.getElementById('b-title-en').value.trim(),
+    subEn: document.getElementById('b-sub-en').value.trim(),
+    btnEn: document.getElementById('b-btn-en').value.trim(),
+    image: document.getElementById('b-image').value.trim(),
+    emoji: document.getElementById('b-emoji').value.trim()||'🍓',
+  };
+  saveData();
+  updateBannerPreview();
+  document.getElementById('banner-preview-box').style.display='block';
+  alert('Banner 已儲存並發佈！客戶網站即時更新。');
+}
+
+// ── FEATURED / BESTSELLERS ────────────────────────────────────
+function renderFeaturedPage() {
+  populateFeaturedCatFilter();
+  renderFeaturedTable();
+  updateFeaturedStats();
+}
+
+function populateFeaturedCatFilter() {
+  const sel = document.getElementById('feat-cat-filter');
+  sel.innerHTML = '<option value="">所有分類</option>' +
+    state.categories.map(c=>`<option value="${c.id}">${c.zh} ${c.name}</option>`).join('');
+}
+
+function renderFeaturedTable() {
+  const q = (document.getElementById('feat-search')?.value||'').toLowerCase();
+  const cat = document.getElementById('feat-cat-filter')?.value||'';
+  const show = document.getElementById('feat-show-filter')?.value||'all';
+  const featuredCount = state.products.filter(p=>p.featured).length;
+
+  let prods = state.products;
+  if (q) prods = prods.filter(p=>p.name.toLowerCase().includes(q));
+  if (cat) prods = prods.filter(p=>p.cat===cat);
+  if (show==='featured') prods = prods.filter(p=>p.featured);
+  if (show==='top') prods = [...prods].sort((a,b)=>(b.historicSold||0)-(a.historicSold||0)).slice(0,20);
+
+  // Sort: featured first, then by historicSold
+  prods = [...prods].sort((a,b)=>{
+    if(a.featured && !b.featured) return -1;
+    if(!a.featured && b.featured) return 1;
+    return (b.historicSold||0)-(a.historicSold||0);
+  });
+
+  const tbody = document.getElementById('featured-table');
+  if (!prods.length) { tbody.innerHTML=`<tr><td colspan="6"><div class="empty">沒有符合條件嘅產品</div></td></tr>`; return; }
+
+  tbody.innerHTML = prods.map(p=>{
+    const cat = state.categories.find(c=>c.id===p.cat);
+    const atLimit = featuredCount >= 10 && !p.featured;
+    const soldBar = p.historicSold > 0
+      ? `<div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:60px;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+            <div style="width:${Math.min(100,Math.round((p.historicSold||0)/155*100))}%;height:100%;background:var(--blue);border-radius:3px;"></div>
+          </div>
+          <span style="font-family:var(--mono);font-size:0.78rem;color:var(--blue);">${p.historicSold}</span>
+        </div>`
+      : '<span style="color:var(--muted);font-size:0.75rem;">新品</span>';
+    const stockDisplay = p.stock===-1?'<span style="color:var(--muted);">∞</span>':p.stock===0?'<span class="badge badge-red">售罄</span>':`${p.stock}`;
+    const priceDisplay = p.price?`£${p.price.toFixed(2)}`:'<span class="badge badge-gold">未填</span>';
+
+    return `<tr style="${p.featured?'background:rgba(0,200,150,0.04);':''}">
+      <td style="text-align:center;">
+        <label style="cursor:${atLimit?'not-allowed':'pointer'};display:flex;justify-content:center;">
+          <input type="checkbox" ${p.featured?'checked':''} ${atLimit?'disabled':''} onchange="toggleFeatured('${p.id}',this.checked)"
+            style="width:16px;height:16px;cursor:${atLimit?'not-allowed':'pointer'};">
+        </label>
+      </td>
+      <td>
+        <div style="font-size:0.84rem;font-weight:${p.featured?'500':'400'};">${p.name}</div>
+        ${p.featured?'<span class="badge badge-green" style="font-size:0.65rem;">推介中</span>':''}
+      </td>
+      <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
+      <td>${soldBar}</td>
+      <td style="font-family:var(--mono);font-size:0.83rem;">${priceDisplay}</td>
+      <td>${stockDisplay}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleFeatured(id, checked) {
+  const featuredCount = state.products.filter(p=>p.featured).length;
+  if (checked && featuredCount >= 10) {
+    alert('最多只可以選 10 款推介產品！請先取消其他產品再選。');
+    renderFeaturedTable();
+    return;
+  }
+  const p = state.products.find(x=>x.id===id);
+  if (p) { p.featured = checked; saveData(); updateFeaturedStats(); renderFeaturedTable(); }
+}
+
+function updateFeaturedStats() {
+  const featCount = state.products.filter(p=>p.featured).length;
+  const autoCount = Math.max(0, 10 - featCount);
+  document.getElementById('feat-count').textContent = featCount;
+  document.getElementById('feat-auto').textContent = featCount < 10 ? autoCount : 0;
+  document.getElementById('feat-total').textContent = Math.min(10, featCount + (featCount<10?autoCount:0));
+  document.getElementById('feat-count').className = 'stat-value ' + (featCount>=10?'gold':'green');
+}
+
+function clearAllFeatured() {
+  if (!confirm('確定清除所有推介？系統會改用歷史銷量 Top 10。')) return;
+  state.products.forEach(p=>p.featured=false);
+  saveData(); renderFeaturedPage();
+}
+
+
+
+
+// ── SITE SETTINGS ─────────────────────────────────────────────
+const DEFAULT_SETTINGS = {
+  font: "'Noto Sans HK', sans-serif",
+  headingFont: "'Pacifico', cursive",
+  whatsapp: '447700900000',
+  facebook: 'https://www.facebook.com/jpfruitsuk',
+  instagram: 'https://www.instagram.com/jp_fruit_swlondon',
+  wagroup: 'https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK',
+  heroSubZh: '精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門',
+  heroSubEn: 'Premium Japanese fruits, authentic HK flavours & Asian goods — delivered across South London',
+  chip1Zh:'✈️ 日本直送', chip1En:'✈️ Direct from Japan',
+  chip2Zh:'🏠 South London 送貨', chip2En:'🏠 South London Delivery',
+  chip3Zh:'💳 貨到付款', chip3En:'💳 Pay on Delivery',
+  deliveryZh:'逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。',
+  deliveryEn:"Delivery every Friday (Thursday if high volume). You'll be notified of your slot one day in advance. Please ensure someone is home.",
+  contactZh:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
+  contactEn:"We'll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm",
+  cutoffDay: 2,
+  cutoffTime: '13:00',
+};
+
+function initSettings() {
+  const s = state.settings || DEFAULT_SETTINGS;
+  document.getElementById('st-font').value = s.font || DEFAULT_SETTINGS.font;
+  document.getElementById('st-heading-font').value = s.headingFont || DEFAULT_SETTINGS.headingFont;
+  document.getElementById('st-whatsapp').value = s.whatsapp || DEFAULT_SETTINGS.whatsapp;
+  document.getElementById('st-facebook').value = s.facebook || DEFAULT_SETTINGS.facebook;
+  document.getElementById('st-instagram').value = s.instagram || DEFAULT_SETTINGS.instagram;
+  document.getElementById('st-wagroup').value = s.wagroup || DEFAULT_SETTINGS.wagroup;
+  document.getElementById('st-hero-sub-zh').value = s.heroSubZh || DEFAULT_SETTINGS.heroSubZh;
+  document.getElementById('st-hero-sub-en').value = s.heroSubEn || DEFAULT_SETTINGS.heroSubEn;
+  document.getElementById('st-chip1-zh').value = s.chip1Zh || DEFAULT_SETTINGS.chip1Zh;
+  document.getElementById('st-chip1-en').value = s.chip1En || DEFAULT_SETTINGS.chip1En;
+  document.getElementById('st-chip2-zh').value = s.chip2Zh || DEFAULT_SETTINGS.chip2Zh;
+  document.getElementById('st-chip2-en').value = s.chip2En || DEFAULT_SETTINGS.chip2En;
+  document.getElementById('st-chip3-zh').value = s.chip3Zh || DEFAULT_SETTINGS.chip3Zh;
+  document.getElementById('st-chip3-en').value = s.chip3En || DEFAULT_SETTINGS.chip3En;
+  document.getElementById('st-del-zh').value = s.deliveryZh || DEFAULT_SETTINGS.deliveryZh;
+  document.getElementById('st-del-en').value = s.deliveryEn || DEFAULT_SETTINGS.deliveryEn;
+  document.getElementById('st-contact-zh').value = s.contactZh || DEFAULT_SETTINGS.contactZh;
+  document.getElementById('st-contact-en').value = s.contactEn || DEFAULT_SETTINGS.contactEn;
+  document.getElementById('st-cutoff-day').value = s.cutoffDay ?? DEFAULT_SETTINGS.cutoffDay;
+  document.getElementById('st-cutoff-time').value = s.cutoffTime || DEFAULT_SETTINGS.cutoffTime;
+}
+
+function saveSettings() {
+  state.settings = {
+    font: document.getElementById('st-font').value,
+    headingFont: document.getElementById('st-heading-font').value,
+    whatsapp: document.getElementById('st-whatsapp').value.trim(),
+    facebook: document.getElementById('st-facebook').value.trim(),
+    instagram: document.getElementById('st-instagram').value.trim(),
+    wagroup: document.getElementById('st-wagroup').value.trim(),
+    heroSubZh: document.getElementById('st-hero-sub-zh').value.trim(),
+    heroSubEn: document.getElementById('st-hero-sub-en').value.trim(),
+    chip1Zh: document.getElementById('st-chip1-zh').value.trim(),
+    chip1En: document.getElementById('st-chip1-en').value.trim(),
+    chip2Zh: document.getElementById('st-chip2-zh').value.trim(),
+    chip2En: document.getElementById('st-chip2-en').value.trim(),
+    chip3Zh: document.getElementById('st-chip3-zh').value.trim(),
+    chip3En: document.getElementById('st-chip3-en').value.trim(),
+    deliveryZh: document.getElementById('st-del-zh').value.trim(),
+    deliveryEn: document.getElementById('st-del-en').value.trim(),
+    contactZh: document.getElementById('st-contact-zh').value.trim(),
+    contactEn: document.getElementById('st-contact-en').value.trim(),
+    cutoffDay: parseInt(document.getElementById('st-cutoff-day').value),
+    cutoffTime: document.getElementById('st-cutoff-time').value,
+  };
+  saveData();
+  alert('✅ 設定已儲存並發佈！客戶網站會即時更新。');
+}
+
+// ── REPORTS ──────────────────────────────────────────────────
+let currentRTab = 'orders';
+
+function initReports() {
+  // Default: current month
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  document.getElementById('r-date-from').value = `${y}-${String(m+1).padStart(2,'0')}-01`;
+  document.getElementById('r-date-to').value = now.toISOString().slice(0,10);
+  runReports();
+}
+
+function setQuickDate(range) {
+  const now = new Date();
+  const fmt = d => d.toISOString().slice(0,10);
+  let from, to = fmt(now);
+  if (range==='thisweek') {
+    const day = now.getDay()||7;
+    from = fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate()-day+1));
+  } else if (range==='lastweek') {
+    const day = now.getDay()||7;
+    const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate()-day-6);
+    from = fmt(mon);
+    to = fmt(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()+6));
+  } else if (range==='thismonth') {
+    from = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  } else if (range==='last30') {
+    from = fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate()-30));
+  } else {
+    from = '2020-01-01';
+  }
+  document.getElementById('r-date-from').value = from;
+  document.getElementById('r-date-to').value = to;
+  runReports();
+}
+
+function getFilteredOrders() {
+  const from = document.getElementById('r-date-from').value;
+  const to = document.getElementById('r-date-to').value;
+  return state.orders.filter(o => {
+    if (o.status === 'cancelled') return false;
+    const d = o.deliveryDate || o.createdAt;
+    if (!d) return true;
+    const dateStr = typeof d === 'number' ? new Date(d).toISOString().slice(0,10) : String(d).slice(0,10);
+    if (from && dateStr < from) return false;
+    if (to && dateStr > to) return false;
+    return true;
+  });
+}
+
+function runReports() {
+  const orders = getFilteredOrders();
+  const totalRev = orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const avgOrder = orders.length ? totalRev/orders.length : 0;
+  const uniqueCustomers = new Set(orders.map(o=>(o.phone||o.name||'').trim().toLowerCase()).filter(Boolean)).size;
+
+  document.getElementById('r-total-orders').textContent = orders.length;
+  document.getElementById('r-total-revenue').textContent = '£'+totalRev.toFixed(2);
+  document.getElementById('r-avg-order').textContent = '£'+avgOrder.toFixed(2);
+  document.getElementById('r-unique-customers').textContent = uniqueCustomers;
+
+  renderRTab(currentRTab, orders);
+}
+
+function switchRTab(tab, el) {
+  currentRTab = tab;
+  document.querySelectorAll('.r-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  runReports();
+}
+
+function renderRTab(tab, orders) {
+  const el = document.getElementById('r-content');
+  if (!orders.length) { el.innerHTML=`<div class="r-empty">呢個時間段冇訂單記錄</div>`; return; }
+
+  if (tab==='orders') renderOrdersReport(el, orders);
+  else if (tab==='products') renderProductsReport(el, orders);
+  else if (tab==='customers') renderCustomersReport(el, orders);
+  else if (tab==='payment') renderPaymentReport(el, orders);
+}
+
+// ─ ORDERS TAB ─
+function renderOrdersReport(el, orders) {
+  const sorted = [...orders].sort((a,b)=>{
+    const da = a.deliveryDate||new Date(a.createdAt).toISOString().slice(0,10);
+    const db = b.deliveryDate||new Date(b.createdAt).toISOString().slice(0,10);
+    return db.localeCompare(da);
+  });
+  el.innerHTML = `<div class="table-wrap"><table class="r-table">
+    <thead><tr><th>訂單號</th><th>客人</th><th>郵編</th><th>總額</th><th>付款</th><th>送貨員</th><th>送貨日期</th><th>狀態</th></tr></thead>
+    <tbody>${sorted.map(o=>`<tr>
+      <td><span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted)">#${o.id.slice(-4).toUpperCase()}</span></td>
+      <td style="font-weight:500;">${o.name||'—'}</td>
+      <td><span class="cat-chip">${o.postcode||'—'}</span></td>
+      <td style="font-family:var(--mono);color:var(--green);">£${parseFloat(o.total||0).toFixed(2)}</td>
+      <td>${o.payment==='transfer'?'轉數':o.payment==='cash'?'現金':'COD'}</td>
+      <td>${o.driver||'—'}</td>
+      <td style="font-size:0.78rem;">${o.deliveryDate||'—'}</td>
+      <td><span class="badge ${o.status==='delivered'?'badge-green':o.status==='confirmed'?'badge-blue':o.status==='cancelled'?'badge-red':'badge-gold'}">${{pending:'待確認',confirmed:'已確認',delivering:'送緊',delivered:'已完成',cancelled:'取消'}[o.status]||o.status}</span></td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="3" style="padding:10px 12px;font-weight:500;font-size:0.8rem;">合計 ${sorted.length} 單</td>
+      <td style="font-family:var(--mono);font-weight:600;color:var(--green);">£${sorted.reduce((s,o)=>s+parseFloat(o.total||0),0).toFixed(2)}</td>
+      <td colspan="4"></td></tr></tfoot>
+  </table></div>`;
+}
+
+// ─ PRODUCTS TAB ─
+function renderProductsReport(el, orders) {
+  // Parse items text from orders
+  const prodTally = {};
+  orders.forEach(o => {
+    if (!o.items) return;
+    o.items.split('\n').forEach(line => {
+      const m = line.match(/^[•·\-\s]*(.+?)\s*[×x]\s*(\d+)/);
+      if (m) {
+        const name = m[1].trim();
+        const qty = parseInt(m[2])||1;
+        if (!prodTally[name]) prodTally[name]={name,qty:0,revenue:0,orders:0};
+        prodTally[name].qty += qty;
+        prodTally[name].orders += 1;
+      }
+    });
+    // Also handle set items
+    if (o.items.includes('🎁')) {
+      const setM = o.items.match(/🎁\s*(.+?)\s*x1\s*=\s*£([\d.]+)/g)||[];
+      setM.forEach(s=>{
+        const nm = s.match(/🎁\s*(.+?)\s*x1/)?.[1]?.trim();
+        const rev = parseFloat(s.match(/£([\d.]+)/)?.[1])||0;
+        if (nm) {
+          if (!prodTally[nm]) prodTally[nm]={name:nm,qty:0,revenue:0,orders:0};
+          prodTally[nm].qty+=1; prodTally[nm].revenue+=rev; prodTally[nm].orders+=1;
+        }
+      });
+    }
+  });
+
+  const sorted = Object.values(prodTally).sort((a,b)=>b.qty-a.qty);
+  const maxQty = sorted[0]?.qty||1;
+
+  el.innerHTML = sorted.length===0
+    ? `<div class="r-empty">訂單內容格式唔符合自動分析（需要「產品名 x數量」格式）</div>`
+    : `<div class="table-wrap"><table class="r-table">
+    <thead><tr><th>產品名稱</th><th>銷售量</th><th>佔比</th><th>訂單數</th></tr></thead>
+    <tbody>${sorted.map(p=>`<tr>
+      <td>${p.name}</td>
+      <td style="font-family:var(--mono);font-weight:500;">${p.qty}</td>
+      <td><div class="r-bar"><div class="r-bar-fill" style="width:${Math.round(p.qty/maxQty*100)}%"></div></div>${Math.round(p.qty/sorted.reduce((s,x)=>s+x.qty,0)*100)}%</td>
+      <td style="color:var(--muted);">${p.orders} 單</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ─ CUSTOMERS TAB ─
+function renderCustomersReport(el, orders) {
+  const custMap = {};
+  orders.forEach(o => {
+    const key = (o.phone||o.name||'unknown').trim().toLowerCase();
+    if (!custMap[key]) custMap[key]={name:o.name||'—',phone:o.phone||'—',postcode:o.postcode||'—',orders:0,total:0,lastDate:''};
+    custMap[key].orders++;
+    custMap[key].total += parseFloat(o.total||0);
+    const d = o.deliveryDate||'';
+    if (d > custMap[key].lastDate) custMap[key].lastDate = d;
+  });
+  const sorted = Object.values(custMap).sort((a,b)=>b.total-a.total);
+  const maxTotal = sorted[0]?.total||1;
+
+  el.innerHTML = `<div class="table-wrap"><table class="r-table">
+    <thead><tr><th>客人</th><th>WhatsApp</th><th>郵編</th><th>訂單數</th><th>總消費</th><th>最後訂單</th></tr></thead>
+    <tbody>${sorted.map(c=>`<tr>
+      <td style="font-weight:500;">${c.name}</td>
+      <td style="font-size:0.78rem;color:var(--muted);">${c.phone}</td>
+      <td><span class="cat-chip">${c.postcode}</span></td>
+      <td>${c.orders}</td>
+      <td>
+        <div class="r-bar"><div class="r-bar-fill" style="width:${Math.round(c.total/maxTotal*100)}%;background:var(--blue);"></div></div>
+        <span style="font-family:var(--mono);color:var(--green);">£${c.total.toFixed(2)}</span>
+      </td>
+      <td style="font-size:0.78rem;color:var(--muted);">${c.lastDate||'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ─ PAYMENT TAB ─
+function renderPaymentReport(el, orders) {
+  const cash = orders.filter(o=>o.payment==='cash');
+  const transfer = orders.filter(o=>o.payment==='transfer');
+  const cod = orders.filter(o=>!o.payment||o.payment==='cod');
+  const sum = arr => arr.reduce((s,o)=>s+parseFloat(o.total||0),0);
+
+  el.innerHTML = `<div class="table-wrap"><table class="r-table">
+    <thead><tr><th>付款方式</th><th>訂單數</th><th>總金額</th><th>佔比</th></tr></thead>
+    <tbody>
+      ${[['轉數 Bank Transfer',transfer],['現金 Cash',cash],['貨到付款 COD',cod]].map(([label,arr])=>{
+        const pct = orders.length ? Math.round(arr.length/orders.length*100) : 0;
+        return `<tr>
+          <td style="font-weight:500;">${label}</td>
+          <td>${arr.length}</td>
+          <td style="font-family:var(--mono);color:var(--green);">£${sum(arr).toFixed(2)}</td>
+          <td><div class="r-bar"><div class="r-bar-fill" style="width:${pct}%;background:var(--blue);"></div></div>${pct}%</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+    <tfoot><tr>
+      <td style="font-weight:500;padding:10px 12px;">合計</td>
+      <td>${orders.length}</td>
+      <td style="font-family:var(--mono);font-weight:600;color:var(--green);">£${sum(orders).toFixed(2)}</td>
+      <td></td>
+    </tr></tfoot>
+  </table></div>`;
+}
+
+// ─ WEEKLY CSV EXPORT ─
+function exportWeeklyCSV() {
+  const orders = getFilteredOrders();
+  if (!orders.length) { alert('呢個時間段冇訂單，請先揀選日期範圍！'); return; }
+
+  const from = document.getElementById('r-date-from').value;
+  const to = document.getElementById('r-date-to').value;
+
+  // Build CSV matching your April Excel format:
+  // Rows: products as rows (parsed from items text)
+  // Columns: each order as a column
+  // Summary rows: total, payment, driver, date etc.
+
+  const sortedOrders = [...orders].sort((a,b)=>(a.deliveryDate||'').localeCompare(b.deliveryDate||''));
+
+  // Collect all unique product names across orders
+  const allProds = new Set();
+  sortedOrders.forEach(o=>{
+    if(!o.items) return;
+    o.items.split('\n').forEach(line=>{
+      const m = line.match(/^[•·\-\s]*(.+?)\s*[×x]\s*(\d+)/);
+      if(m) allProds.add(m[1].trim());
+    });
+  });
+  const prodList = [...allProds];
+
+  // Build a map: orderId -> {productName -> qty}
+  const orderProdMap = {};
+  sortedOrders.forEach(o=>{
+    orderProdMap[o.id]={};
+    if(!o.items) return;
+    o.items.split('\n').forEach(line=>{
+      const m = line.match(/^[•·\-\s]*(.+?)\s*[×x]\s*(\d+)/);
+      if(m) orderProdMap[o.id][m[1].trim()] = parseInt(m[2])||1;
+    });
+  });
+
+  // CSV header row 1: Order ID
+  const esc = v => `"${String(v||'').replace(/"/g,'""')}"`;
+
+  let rows = [];
+  rows.push(['Order Id','','','','', ...sortedOrders.map(o=>'#'+o.id.slice(-4).toUpperCase())]);
+  rows.push(['客人姓名 Name','','','','', ...sortedOrders.map(o=>o.name||'')]);
+  rows.push(['郵編 Postcode','','','','', ...sortedOrders.map(o=>o.postcode||'')]);
+  rows.push(['']); // blank separator
+
+  // Product rows
+  prodList.forEach(prod=>{
+    rows.push([prod,'','','','', ...sortedOrders.map(o=>orderProdMap[o.id][prod]||'')]);
+  });
+
+  rows.push(['']); // blank separator
+
+  // Summary rows
+  rows.push(['訂單總數 Order Total','','','','', ...sortedOrders.map(o=>'£'+parseFloat(o.total||0).toFixed(2))]);
+  rows.push(['付款方式 Payment','','','','', ...sortedOrders.map(o=>o.payment==='transfer'?'轉數':o.payment==='cash'?'現金':'COD')]);
+  rows.push(['送貨員 Deliver by','','','','', ...sortedOrders.map(o=>o.driver||'')]);
+  rows.push(['送貨日期 Deliver date','','','','', ...sortedOrders.map(o=>o.deliveryDate||'')]);
+  rows.push(['備註 Notes','','','','', ...sortedOrders.map(o=>o.notes||'')]);
+
+  // Convert to CSV
+  const csv = '\uFEFF' + rows.map(r=>r.map(esc).join(',')).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `JP_Fruit_Sales_${from}_to_${to}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── SETS MANAGEMENT ──────────────────────────────────────────
+let editingGroups = []; // temp state while editing modal
+
+function uid3() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+// ─ RENDER SETS PAGE ─
+function renderSetsPage() {
+  const el = document.getElementById('sets-list');
+  if (!state.sets.length) {
+    el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px;">🎁</div><div>仲未有套餐</div><div style="font-size:0.8rem;margin-top:6px;color:var(--muted);">撳右上角「+ 新增套餐」開始</div></div>`;
+    return;
+  }
+  el.innerHTML = state.sets.map(s => {
+    const cat = state.categories.find(c=>c.id===s.cat);
+    const groupSummary = (s.groups||[]).map(g=>`${g.nameZh}（選${g.min}-${g.max}款）`).join(' + ');
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:14px;">
+      <div style="font-size:2rem;line-height:1;flex-shrink:0;">${s.emoji||'🎁'}</div>
+      <div style="flex:1;">
+        <div style="font-weight:500;font-size:0.95rem;margin-bottom:3px;">${s.name}</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px;">${s.desc||''}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="badge badge-blue">${cat?cat.zh:'未分類'}</span>
+          <span class="badge badge-green">£${parseFloat(s.price||0).toFixed(2)}</span>
+          ${(s.groups||[]).map(g=>`<span class="badge badge-gray">${g.nameZh} x${g.min}${g.max>g.min?'-'+g.max:''}</span>`).join('')}
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:6px;">${(s.groups||[]).reduce((t,g)=>t+(g.items||[]).length,0)} 款可選產品</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn btn-ghost btn-sm" onclick="editSet('${s.id}')">✏️ 編輯</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─ OPEN SET MODAL ─
+function openSetModal(id=null) {
+  state.editingSetId = id;
+  const s = id ? state.sets.find(x=>x.id===id) : null;
+  document.getElementById('set-modal-title').textContent = s ? '編輯套餐' : '新增套餐';
+  document.getElementById('s-delete-btn').style.display = s ? 'block' : 'none';
+
+  // populate category dropdown
+  document.getElementById('s-cat').innerHTML = state.categories.map(c=>
+    `<option value="${c.id}">${c.zh} ${c.name}</option>`
+  ).join('');
+
+  if (s) {
+    document.getElementById('s-name-zh').value = s.nameZh||s.name||'';
+    document.getElementById('s-name-en').value = s.nameEn||'';
+    document.getElementById('s-cat').value = s.cat||'';
+    document.getElementById('s-price').value = s.price||'';
+    document.getElementById('s-emoji').value = s.emoji||'🎁';
+    document.getElementById('s-desc-zh').value = s.descZh||s.desc||'';
+    document.getElementById('s-desc-en').value = s.descEn||'';
+    editingGroups = JSON.parse(JSON.stringify(s.groups||[]));
+  } else {
+    ['s-name-zh','s-name-en','s-price','s-desc-zh','s-desc-en'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('s-emoji').value = '🎁';
+    document.getElementById('s-cat').value = state.categories[0]?.id||'';
+    editingGroups = [{id:uid3(),nameZh:'選項',nameEn:'Options',min:1,max:1,allowRepeat:false,items:[]}];
+  }
+  renderGroups();
+  document.getElementById('set-modal').classList.add('open');
+}
+
+function editSet(id) { openSetModal(id); }
+
+// ─ GROUPS UI ─
+function renderGroups() {
+  const el = document.getElementById('s-groups');
+  el.innerHTML = editingGroups.map((g,gi) => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <input type="text" value="${g.nameZh}" onchange="updateGroup(${gi},'nameZh',this.value)"
+          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;width:120px;" placeholder="分組名（中）">
+        <input type="text" value="${g.nameEn}" onchange="updateGroup(${gi},'nameEn',this.value)"
+          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;width:120px;" placeholder="Group name (EN)">
+        <label style="font-size:0.78rem;color:var(--muted);margin:0;">最少</label>
+        <input type="number" value="${g.min}" min="1" onchange="updateGroup(${gi},'min',+this.value)"
+          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:0.82rem;width:56px;text-align:center;">
+        <label style="font-size:0.78rem;color:var(--muted);margin:0;">最多</label>
+        <input type="number" value="${g.max}" min="1" onchange="updateGroup(${gi},'max',+this.value)"
+          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:0.82rem;width:56px;text-align:center;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:0.78rem;color:var(--muted);margin:0;cursor:pointer;">
+          <input type="checkbox" ${g.allowRepeat?'checked':''} onchange="updateGroup(${gi},'allowRepeat',this.checked)"> 可重複選
+        </label>
+        ${editingGroups.length>1?`<button class="btn btn-danger btn-sm" onclick="removeGroup(${gi})" style="margin-left:auto;">✕ 刪分組</button>`:''}
+      </div>
+
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">選擇可選產品（從現有產品揀）：</div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+        <select id="g-cat-${gi}" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--font);font-size:0.78rem;" onchange="filterGroupProducts(${gi})">
+          <option value="">所有分類</option>
+          ${state.categories.map(c=>`<option value="${c.id}">${c.zh}</option>`).join('')}
+        </select>
+        <input type="text" id="g-search-${gi}" placeholder="搜尋產品..."
+          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:0.78rem;flex:1;"
+          oninput="filterGroupProducts(${gi})">
+      </div>
+
+      <div id="g-products-${gi}" style="max-height:160px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:4px;"></div>
+    </div>
+  `).join('');
+
+  editingGroups.forEach((_,gi) => filterGroupProducts(gi));
+}
+
+function filterGroupProducts(gi) {
+  const g = editingGroups[gi];
+  const cat = document.getElementById(`g-cat-${gi}`)?.value||'';
+  const q = (document.getElementById(`g-search-${gi}`)?.value||'').toLowerCase();
+  let prods = state.products;
+  if (cat) prods = prods.filter(p=>p.cat===cat);
+  if (q) prods = prods.filter(p=>p.name.toLowerCase().includes(q));
+  prods = prods.slice(0,40);
+  const el = document.getElementById(`g-products-${gi}`);
+  if (!el) return;
+  const selIds = new Set((g.items||[]).map(i=>i.id));
+  el.innerHTML = prods.map(p=>`
+    <label style="display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;cursor:pointer;border:1px solid ${selIds.has(p.id)?'var(--green)':'var(--border)'};background:${selIds.has(p.id)?'rgba(0,200,150,0.08)':'transparent'};font-size:0.75rem;transition:all 0.1s;">
+      <input type="checkbox" ${selIds.has(p.id)?'checked':''} onchange="toggleGroupItem(${gi},'${p.id}',this.checked)" style="flex-shrink:0;">
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.name}">${p.zh||p.name}</span>
+    </label>
+  `).join('') || '<div style="color:var(--muted);font-size:0.78rem;padding:8px;">冇符合產品</div>';
+}
+
+function toggleGroupItem(gi, pid, checked) {
+  const g = editingGroups[gi];
+  const p = state.products.find(x=>x.id===pid);
+  if (!p) return;
+  if (checked) {
+    if (!g.items.find(i=>i.id===pid)) g.items.push({id:pid,name:p.name,zh:p.zh||p.name});
+  } else {
+    g.items = g.items.filter(i=>i.id!==pid);
+  }
+  filterGroupProducts(gi);
+}
+
+function updateGroup(gi, key, val) {
+  editingGroups[gi][key] = val;
+}
+
+function addGroup() {
+  editingGroups.push({id:uid3(),nameZh:'新分組',nameEn:'New Group',min:1,max:1,allowRepeat:false,items:[]});
+  renderGroups();
+}
+
+function removeGroup(gi) {
+  editingGroups.splice(gi,1);
+  renderGroups();
+}
+
+// ─ SAVE / DELETE ─
+function saveSet() {
+  const name = (document.getElementById('s-name-zh').value||document.getElementById('s-name-en').value).trim();
+  if (!name) { alert('請填寫套餐名稱（中文或英文）！'); return; }
+  if (!editingGroups.length) { alert('請至少加一個分組！'); return; }
+  const hasEmpty = editingGroups.find(g=>!g.items.length);
+  if (hasEmpty) { alert(`「${hasEmpty.nameZh}」分組仲未加任何產品！`); return; }
+
+  const nameZh = document.getElementById('s-name-zh').value.trim();
+  const nameEn = document.getElementById('s-name-en').value.trim();
+  const set = {
+    id: state.editingSetId || uid3(),
+    nameZh,
+    nameEn,
+    name: nameEn||nameZh,
+    cat: document.getElementById('s-cat').value,
+    price: parseFloat(document.getElementById('s-price').value)||0,
+    emoji: document.getElementById('s-emoji').value.trim()||'🎁',
+    descZh: document.getElementById('s-desc-zh').value.trim(),
+    descEn: document.getElementById('s-desc-en').value.trim(),
+    desc: document.getElementById('s-desc-zh').value.trim(),
+    groups: JSON.parse(JSON.stringify(editingGroups)),
+    isSet: true,
+  };
+
+  if (state.editingSetId) {
+    state.sets = state.sets.map(s=>s.id===state.editingSetId?set:s);
+  } else {
+    state.sets.push(set);
+  }
+  saveData();
+  closeModal('set-modal');
+  renderSetsPage();
+}
+
+function deleteSet() {
+  if (!confirm('確定刪除此套餐？')) return;
+  state.sets = state.sets.filter(s=>s.id!==state.editingSetId);
+  saveData();
+  closeModal('set-modal');
+  renderSetsPage();
+}
+
+loadData();
+</script>
+</body>
+</html>
+<!-- REPORTS PLACEHOLDER -->

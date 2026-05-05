@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JP Fruit — Order Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Noto+Sans+HK:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --peach:#F4A97F;--peach-light:#FDE8D8;--peach-mid:#F2C4A0;
+  --plum:#6B4C8A;--plum-light:#EDE6F5;--plum-mid:#9B7AB8;
+  --berry:#C0392B;--berry-light:#FDECEA;
+  --leaf:#3D6B35;--leaf-light:#E8F2E6;
+  --cream:#FFFDF9;--warm-white:#FFFFFF;
+  --ink:#2C1810;--muted:#9A8880;--border:#F0E4DC;
+  --shadow:0 4px 20px rgba(180,100,60,0.10);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans HK',sans-serif;background:var(--cream);color:var(--ink);font-size:14px;line-height:1.6;}
+.topbar{background:linear-gradient(90deg,var(--plum) 0%,var(--berry) 50%,var(--peach) 100%);color:rgba(255,255,255,0.92);text-align:center;padding:8px 16px;font-size:0.78rem;letter-spacing:0.3px;}
+.topbar strong{color:#FFE8D6;}
+nav{background:var(--warm-white);border-bottom:2px solid var(--peach-light);padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(244,169,127,0.12);}
+.logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--green);padding:14px 0;line-height:1.1;}
+.logo small{display:block;font-size:0.6rem;font-family:'Noto Sans HK',sans-serif;font-weight:300;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.lang-switcher{display:flex;background:var(--peach-light);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.lang-btn{padding:5px 14px;cursor:pointer;border:none;background:transparent;font-family:'Noto Sans HK',sans-serif;font-size:0.78rem;color:var(--muted);transition:all 0.15s;}
+.lang-btn.active{background:var(--plum);color:white;}
+.cart-pill{background:var(--green);color:white;border:none;padding:8px 16px;border-radius:24px;font-size:0.82rem;font-family:'Noto Sans HK',sans-serif;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background 0.2s;}
+.cart-pill:hover{background:var(--plum-mid);}
+.cart-badge{background:var(--peach);color:var(--ink);border-radius:50%;width:18px;height:18px;font-size:0.7rem;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.hero{background:linear-gradient(135deg,var(--plum) 0%,#8B3A6B 40%,var(--berry) 75%,#E8734A 100%);padding:44px 24px 56px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:36px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-tag{display:inline-block;border:1px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.9);font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;padding:4px 16px;border-radius:20px;margin-bottom:14px;background:rgba(255,255,255,0.1);}
+.hero h1{font-family:'Pacifico',cursive;color:white;font-size:2rem;line-height:1.3;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.hero h1 em{color:#FFE4B5;font-style:normal;}
+.hero-sub{color:rgba(255,255,255,0.7);font-size:0.85rem;max-width:480px;margin:0 auto 20px;}
+.hero-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+.hero-chip{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:white;padding:5px 14px;border-radius:20px;font-size:0.76rem;}
+.layout{display:grid;grid-template-columns:1fr 340px;gap:0;max-width:1100px;margin:0 auto;padding:28px 24px 80px;}
+@media(max-width:820px){.layout{grid-template-columns:1fr;}.cart-sidebar{display:none;}}
+.products-area{padding-right:28px;}
+@media(max-width:820px){.products-area{padding-right:0;}}
+.search-wrap{position:relative;margin-bottom:18px;}
+.search-input{width:100%;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 16px 10px 40px;font-family:'Noto Sans HK',sans-serif;font-size:0.85rem;color:var(--ink);}
+.search-input:focus{outline:none;border-color:var(--peach);box-shadow:0 0 0 3px var(--peach-light);}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--peach);}
+.cat-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.cat-btn{background:var(--white);border:1px solid var(--border);color:var(--muted);padding:5px 13px;border-radius:20px;font-size:0.76rem;cursor:pointer;transition:all 0.15s;font-family:'Noto Sans HK',sans-serif;}
+.cat-btn:hover{border-color:var(--peach);color:var(--plum);}
+.cat-btn.active{background:var(--plum);border-color:var(--plum);color:white;}
+.best-btn{background:var(--plum-light);border-color:var(--plum-mid);color:var(--plum);font-weight:600;}
+.best-btn.active{background:var(--plum);border-color:var(--plum);color:white;}
+.cat-section{margin-bottom:30px;}
+.cat-header{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;}
+.cat-title{font-family:'Pacifico',cursive;font-size:1.05rem;color:var(--plum);}
+.cat-subtitle{font-size:0.78rem;color:var(--muted);}
+.cat-count{font-size:0.7rem;color:var(--plum);background:var(--plum-light);padding:2px 8px;border-radius:10px;margin-left:auto;font-weight:500;}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;}
+.product-card{background:var(--warm-white);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.2s;position:relative;}
+.product-card:hover{box-shadow:0 8px 24px rgba(244,169,127,0.2);transform:translateY(-3px);border-color:var(--peach-mid);}
+.product-card.oos{opacity:0.55;}
+.product-thumb{height:118px;background:var(--peach-light);display:flex;align-items:center;justify-content:center;font-size:2.6rem;position:relative;border-bottom:1px solid var(--border);}
+.product-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.p-badge{position:absolute;top:7px;left:7px;font-size:0.62rem;padding:2px 7px;border-radius:10px;font-weight:500;}
+.p-badge-sale{background:var(--red);color:white;}
+.p-badge-new{background:var(--leaf);color:white;}
+.p-badge-oos{background:#888;color:white;}
+.product-info{padding:9px 11px 11px;}
+.p-name{font-size:0.81rem;line-height:1.4;font-weight:500;margin-bottom:5px;}
+.p-unit{font-size:0.68rem;color:var(--muted);margin-bottom:7px;}
+.p-price-row{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+.p-price{font-size:0.98rem;font-weight:700;color:var(--plum);}
+.p-price-orig{font-size:0.72rem;color:var(--muted);text-decoration:line-through;}
+.add-btn{background:var(--plum);color:white;border:none;width:28px;height:28px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;}
+.add-btn:hover{background:var(--plum-mid);transform:scale(1.1);}
+.add-btn:disabled{background:var(--border);cursor:not-allowed;color:var(--muted);}
+.qty-control{display:flex;align-items:center;gap:5px;}
+.qty-btn{background:var(--peach-light);border:1px solid var(--peach-mid);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;color:var(--plum);}
+.qty-num{font-weight:700;font-size:0.85rem;min-width:18px;text-align:center;color:var(--plum);}
+.cart-sidebar{position:sticky;top:70px;align-self:start;}
+.cart-box{background:var(--warm-white);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+.cart-head{padding:14px 18px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--plum-light),var(--peach-light));}
+.cart-head-title{font-weight:600;font-size:0.88rem;color:var(--plum);}
+.cart-empty-msg{padding:28px 18px;text-align:center;color:var(--muted);font-size:0.82rem;line-height:1.8;}
+.cart-items-list{max-height:280px;overflow-y:auto;padding:6px 0;}
+.cart-item-row{padding:9px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.cart-item-row:last-child{border-bottom:none;}
+.ci-name{flex:1;font-size:0.78rem;line-height:1.3;}
+.ci-qty{display:flex;align-items:center;gap:5px;}
+.ci-qbtn{background:var(--peach-light);border:1px solid var(--border);width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:0.78rem;display:flex;align-items:center;justify-content:center;color:var(--plum);}
+.ci-qnum{font-size:0.8rem;font-weight:600;min-width:16px;text-align:center;color:var(--plum);}
+.ci-price{font-size:0.8rem;font-weight:600;color:var(--plum);min-width:44px;text-align:right;}
+.cart-summary{padding:12px 18px;border-top:1.5px solid var(--border);background:var(--peach-light);}
+.summary-row{display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;color:var(--muted);}
+.summary-total{font-weight:600;font-size:0.92rem;color:var(--plum);border-top:1px solid var(--border);padding-top:8px;margin-top:3px;}
+.min-warning{background:#FFF0E8;border:1px solid var(--peach);border-radius:8px;padding:8px 12px;font-size:0.74rem;color:#8B4020;margin:0 16px 10px;}
+.checkout-form{padding:14px 18px 18px;}
+.cf-group{margin-bottom:9px;}
+.cf-label{font-size:0.7rem;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;display:block;}
+.cf-input{width:100%;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:'Noto Sans HK',sans-serif;font-size:0.82rem;color:var(--ink);}
+.cf-input:focus{outline:none;border-color:var(--plum);box-shadow:0 0 0 2px var(--plum-light);}
+.cf-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#25D366;color:white;border:none;padding:11px;border-radius:10px;font-size:0.88rem;font-family:'Noto Sans HK',sans-serif;font-weight:500;cursor:pointer;margin-top:10px;transition:background 0.2s;}
+.whatsapp-btn:hover{background:#1ebd58;}
+.whatsapp-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+.mobile-cart-overlay{display:none;position:fixed;inset:0;background:rgba(44,24,16,0.55);z-index:200;}
+.mobile-cart-overlay.open{display:block;}
+.mobile-cart-panel{position:fixed;bottom:0;left:0;right:0;background:var(--warm-white);border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;z-index:201;transform:translateY(100%);transition:transform 0.3s ease;}
+.mobile-cart-overlay.open .mobile-cart-panel{transform:translateY(0);}
+.mobile-handle{text-align:center;padding:10px;cursor:pointer;}
+.mobile-handle div{width:36px;height:4px;background:var(--peach-mid);border-radius:2px;margin:0 auto;}
+.info-section{background:linear-gradient(135deg,var(--plum-light) 0%,var(--peach-light) 100%);border-top:1.5px solid var(--border);padding:32px 24px;}
+.info-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:640px){.info-inner{grid-template-columns:1fr;}}
+.info-card{background:var(--warm-white);border:1.5px solid var(--border);border-radius:14px;padding:16px;}
+.info-icon{font-size:1.6rem;margin-bottom:7px;}
+.info-card h3{font-size:0.86rem;font-weight:600;margin-bottom:5px;color:var(--plum);}
+.info-card p{font-size:0.76rem;color:var(--muted);line-height:1.7;}
+.min-table{width:100%;font-size:0.73rem;border-collapse:collapse;margin-top:6px;}
+.min-table td{padding:3px 0;color:var(--muted);}
+.min-table td:last-child{text-align:right;color:var(--plum);font-weight:600;}
+.social-bar{background:var(--plum);padding:20px 24px;text-align:center;}
+.social-bar p{color:rgba(255,255,255,0.45);font-size:0.72rem;margin-bottom:10px;}
+.social-links{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.social-link{color:rgba(255,255,255,0.7);font-size:0.76rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);padding:5px 14px;border-radius:20px;text-decoration:none;transition:all 0.15s;}
+.social-link:hover{background:rgba(255,255,255,0.15);color:white;}
+.loading-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.loading-spinner{width:30px;height:30px;border:3px solid var(--peach-light);border-top-color:var(--plum);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.no-products{text-align:center;padding:30px;color:var(--muted);font-size:0.82rem;}
+
+/* SET MEAL CARDS */
+.set-card{background:var(--warm-white);border:2px solid var(--plum-mid);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.set-card-header{background:linear-gradient(135deg,var(--plum) 0%,#8B3A6B 60%,var(--berry) 100%);padding:12px 16px;color:white;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.set-card-name{font-size:0.92rem;font-weight:600;}
+.set-card-desc{font-size:0.72rem;color:rgba(255,255,255,0.72);margin-top:2px;}
+.set-card-price{font-size:1.1rem;font-weight:700;color:#FFE4B5;white-space:nowrap;}
+.set-rule-bar{background:var(--plum-light);padding:6px 16px;font-size:0.72rem;color:var(--plum);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.set-rule-chip{background:var(--plum);color:white;padding:1px 8px;border-radius:8px;font-size:0.66rem;font-weight:600;}
+.set-body{padding:14px 16px;}
+.set-group-title{font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px;margin-top:12px;display:flex;align-items:center;gap:8px;}
+.set-group-title:first-child{margin-top:0;}
+.set-group-badge{background:var(--plum-light);color:var(--plum);padding:1px 8px;border-radius:8px;font-size:0.66rem;font-weight:600;text-transform:none;letter-spacing:0;}
+.set-item-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;margin-bottom:4px;cursor:pointer;border:1.5px solid var(--border);transition:all 0.15s;user-select:none;}
+.set-item-row:hover{border-color:var(--plum-mid);background:var(--plum-light);}
+.set-item-row.s-selected{border-color:var(--plum);background:var(--plum-light);}
+.set-item-row.s-disabled{opacity:0.38;cursor:not-allowed;}
+.set-item-left{display:flex;align-items:center;gap:8px;}
+.set-item-name{font-size:0.8rem;line-height:1.3;}
+.set-item-name.s-sel{color:var(--plum);font-weight:500;}
+.set-qty-tag{background:var(--plum);color:white;font-size:0.62rem;padding:1px 6px;border-radius:6px;margin-left:4px;font-weight:600;}
+.set-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.68rem;transition:all 0.15s;flex-shrink:0;color:transparent;}
+.s-selected .set-check{background:var(--plum);border-color:var(--plum);color:white;}
+.set-progress{margin:12px 0 5px;}
+.set-prog-bar{background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
+.set-prog-fill{height:100%;border-radius:4px;background:var(--plum);transition:width 0.3s;}
+.set-prog-fill.sp-done{background:var(--leaf);}
+.set-prog-label{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted);margin-top:4px;}
+.set-footer{padding:0 16px 14px;}
+.set-add-btn{width:100%;background:var(--plum);color:white;border:none;padding:10px;border-radius:10px;font-size:0.86rem;font-family:'Noto Sans HK',sans-serif;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.set-add-btn:hover:not(:disabled){background:var(--plum-mid);}
+.set-add-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+.set-add-btn.s-ready{background:var(--leaf);}
+.set-add-btn.s-ready:hover{background:#4E8A42;}
+.set-preview{background:var(--plum-light);border:1px solid var(--plum-mid);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:0.74rem;color:var(--plum);display:none;}
+.set-preview.show{display:block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--plum);color:white;padding:9px 20px;border-radius:24px;font-size:0.8rem;opacity:0;transition:all 0.25s;z-index:500;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="topbar" id="topbar-el"></div>
+
+<nav>
+  <div class="logo"><img src="/mnt/user-data/uploads/Logo_new.png" onerror="this.style.display='none'" style="height:44px;width:44px;object-fit:contain;"><div><div style="font-family:'Pacifico',cursive;font-size:1.4rem;color:var(--plum);line-height:1;">JP Fruit</div><small id="logo-sub" style="font-size:0.58rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:300;"></small></div></div>
+  <div class="nav-right">
+    <div class="lang-switcher">
+      <button class="lang-btn active" id="btn-zh" onclick="setLang('zh')">中文</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="cart-pill" onclick="toggleMobileCart()">
+      🛒 <span id="nav-cart-label"></span> <span class="cart-badge" id="cart-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<div class="hero" id="hero-section">
+  <div class="hero-tag" id="hero-tag"></div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:10px;">
+    <div id="hero-img-wrap" style="font-size:3.5rem;line-height:1;"></div>
+    <div>
+      <h1 id="hero-h1" style="text-align:left;"></h1>
+      <p class="hero-sub" id="hero-sub" style="text-align:left;margin:0;"></p>
+    </div>
+  </div>
+  <div id="hero-btn-wrap" style="margin-bottom:14px;"></div>
+  <div class="hero-chips">
+    <span class="hero-chip" id="chip1"></span>
+    <span class="hero-chip" id="chip2"></span>
+    <span class="hero-chip" id="chip3"></span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="products-area">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="search-input" oninput="searchProducts(this.value)">
+    </div>
+    <div class="cat-nav" id="cat-nav"></div>
+    <div id="products-area">
+      <div class="loading-state"><div class="loading-spinner"></div><span id="loading-text"></span></div>
+    </div>
+  </div>
+  <div class="cart-sidebar">
+    <div class="cart-box">
+      <div class="cart-head">
+        <div class="cart-head-title" id="cart-title"></div>
+        <span style="font-size:0.74rem;color:var(--muted);" id="cart-count-label"></span>
+      </div>
+      <div id="cart-desktop"></div>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-cart-overlay" id="mobile-overlay" onclick="closeMobileCart(event)">
+  <div class="mobile-cart-panel">
+    <div class="mobile-handle" onclick="closeMobileCart()"><div></div></div>
+    <div style="padding:0 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <div style="font-weight:500;" id="mobile-cart-title"></div>
+      <button onclick="closeMobileCart()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <div id="cart-mobile"></div>
+  </div>
+</div>
+
+<div class="info-section">
+  <div class="info-inner">
+    <div class="info-card"><div class="info-icon">🚚</div><h3 id="i1h"></h3><p id="i1p"></p></div>
+    <div class="info-card">
+      <div class="info-icon">💷</div><h3 id="i2h"></h3>
+      <table class="min-table">
+        <tr><td>Sutton SM1-3</td><td>£30</td></tr>
+        <tr><td>Sutton SM4-6</td><td>£40</td></tr>
+        <tr><td id="i2r3"></td><td>£50</td></tr>
+        <tr><td id="i2r4"></td><td>£60</td></tr>
+      </table>
+    </div>
+    <div class="info-card"><div class="info-icon">📱</div><h3 id="i3h"></h3><p id="i3p"></p></div>
+  </div>
+</div>
+
+<div class="social-bar">
+  <p id="footer-p"></p>
+  <div class="social-links">
+    <a class="social-link" href="https://www.facebook.com/jpfruitsuk" target="_blank">📘 Facebook</a>
+    <a class="social-link" href="https://www.instagram.com/jp_fruit_swlondon" target="_blank">📸 Instagram</a>
+    <a class="social-link" href="https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK" target="_blank">💬 WhatsApp</a>
+  </div>
+</div>
+
+<script>
+// ── TRANSLATIONS ──────────────────────────────────────────────
+const TX = {
+  zh: {
+    topbar: '截單時間 <strong>週二 Tuesday 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五 Friday</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; 倒數 <strong id="countdown">--</strong>',
+    logoSub: '日本直送 · South London 送貨',
+    navCart: '購物車',
+    heroTag: '🇯🇵 日本空運直送 · Fresh from Japan',
+    heroH1: '新鮮到你家<br><em>JP Fruit</em>',
+    heroSub: '精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門',
+    chip1:'✈️ 日本直送', chip2:'🏠 South London 送貨', chip3:'💳 貨到付款',
+    searchPh: '搜尋產品...',
+    catAll: '全部', catBest:'🏆 本店熱賣', loading: '載入產品中...',
+    cartTitle: '🛒 購物車',
+    cartEmpty: '購物車係空嘅\n按 + 加入產品',
+    items: ' 項',
+    subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
+    minWarn: (area,diff) => `⚠️ ${area} 最低消費未達，仲差 £${diff}`,
+    cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
+    cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
+    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
+    alertFill:'請填寫晒所有必填資料！',
+    alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}，未達到。\n確定繼續落單？`,
+    oos:'售罄', sale:'特價', newLabel:'NEW',
+    i1h:'送貨安排', i1p:'逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。',
+    i2h:'最低消費',
+    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
+    i2r4:'Tadworth / Purley / Coulsdon',
+    i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
+    footerP:'關注我們 Follow us for updates',
+    waMsg:(name,phone,addr,pc,items,total,notes)=>
+      `🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
+  },
+  en: {
+    topbar: 'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
+    logoSub: 'Fresh from Japan · South London Delivery',
+    navCart: 'Cart',
+    heroTag: '🇯🇵 Air-freighted from Japan',
+    heroH1: 'Fresh to Your Door<br><em>JP Fruit</em>',
+    heroSub: 'Premium Japanese fruits, authentic HK flavours & Asian specialities — delivered across South London',
+    chip1:'✈️ Direct from Japan', chip2:'🏠 South London Delivery', chip3:'💳 Pay on Delivery',
+    searchPh: 'Search products...',
+    catAll: 'All', catBest:'🏆 Top Sellers', loading: 'Loading products...',
+    cartTitle: '🛒 Cart',
+    cartEmpty: 'Your cart is empty\nTap + to add products',
+    items: ' items',
+    subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
+    minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
+    cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
+    cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
+    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
+    alertFill:'Please fill in all required fields!',
+    alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
+    oos:'Sold Out', sale:'Sale', newLabel:'NEW',
+    i1h:'Delivery', i1p:"Delivery every Friday (Thursday if high volume). You'll be notified of your slot one day in advance. Please ensure someone is home to receive.",
+    i2h:'Minimum Order',
+    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
+    i2r4:'Tadworth / Purley / Coulsdon',
+    i3h:'Contact Us', i3p:'We\'ll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm',
+    footerP:'Follow us for updates',
+    waMsg:(name,phone,addr,pc,items,total,notes)=>
+      `🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
+  }
+};
+
+// ── STATE ─────────────────────────────────────────────────────
+let lang = 'zh';
+let products = [], categories = [], sets = [], cart = {}, searchQuery = '', activeCat = 'all';
+let siteSettings = {};
+
+// ── LANGUAGE ──────────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  document.getElementById('btn-zh').classList.toggle('active', l==='zh');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  document.documentElement.lang = l==='zh'?'zh-HK':'en';
+  applyTX();
+  buildCatNav();
+  renderProducts();
+  updateCart();
+  // re-apply banner in new language if available
+  (async()=>{ try{ let d=null; if(typeof window.storage!=='undefined'){try{const r=await window.storage.get('jpfruit-v2',true);if(r)d=JSON.parse(r.value);}catch(e){}} if(!d){try{const raw=localStorage.getItem('jpfruit-v2');d=raw?JSON.parse(raw):null;}catch(e){}} if(d){if(d.banner)applyBanner(d.banner);if(d.settings)applySettings(d.settings);}}catch(e){} })();
+}
+
+function tx(k, ...a) { const v=TX[lang][k]; return typeof v==='function'?v(...a):v; }
+
+function applyTX() {
+  const t = TX[lang];
+  document.getElementById('topbar-el').innerHTML = t.topbar;
+  document.getElementById('logo-sub').textContent = t.logoSub;
+  document.getElementById('nav-cart-label').textContent = t.navCart;
+  document.getElementById('hero-tag').textContent = t.heroTag;
+  document.getElementById('hero-h1').innerHTML = t.heroH1;
+  document.getElementById('hero-sub').textContent = t.heroSub;
+  document.getElementById('chip1').textContent = t.chip1;
+  document.getElementById('chip2').textContent = t.chip2;
+  document.getElementById('chip3').textContent = t.chip3;
+  document.getElementById('search-input').placeholder = t.searchPh;
+  document.getElementById('loading-text').textContent = t.loading;
+  document.getElementById('cart-title').textContent = t.cartTitle;
+  document.getElementById('mobile-cart-title').textContent = t.cartTitle;
+  document.getElementById('i1h').textContent = t.i1h;
+  document.getElementById('i1p').textContent = t.i1p;
+  document.getElementById('i2h').textContent = t.i2h;
+  document.getElementById('i2r3').textContent = t.i2r3;
+  document.getElementById('i2r4').textContent = t.i2r4;
+  document.getElementById('i3h').textContent = t.i3h;
+  document.getElementById('i3p').textContent = t.i3p;
+  document.getElementById('footer-p').textContent = t.footerP;
+  updateCountdown();
+}
+
+// ── DATA ──────────────────────────────────────────────────────
+async function loadProducts() {
+  // Storage abstraction: Claude Artifact + local HTML fallback
+  async function getDB() {
+    if (typeof window.storage !== 'undefined') {
+      try { const r = await window.storage.get('jpfruit-v2',true); if(r) return JSON.parse(r.value); } catch(e) {}
+    }
+    try { const raw = localStorage.getItem('jpfruit-v2'); return raw ? JSON.parse(raw) : null; } catch(e) { return null; }
+  }
+  try {
+    const data = await getDB();
+    if (data) {
+      products = (data.products||[]).filter(p=>p.active!==false && p.price>0 && p.stock!==0);
+      sets = data.sets||[];
+      categories = data.categories||[];
+      if (data.banner) applyBanner(data.banner);
+      if (data.settings) { siteSettings = data.settings; applySettings(data.settings); }
+    } else {
+      document.getElementById('products-area').innerHTML =
+        `<div class="loading-state" style="padding:60px 20px;">⚠️ ${lang==='zh'?'請先喺 CMS 設定產品':'Please set up products in the CMS first'}</div>`;
+      return;
+    }
+  } catch(e) {
+    document.getElementById('products-area').innerHTML =
+      `<div class="loading-state">⚠️ ${lang==='zh'?'未能載入產品':'Failed to load products.'}</div>`;
+    return;
+  }
+
