@@ -377,7 +377,6 @@ function applyTX() {
 
 // ── DATA ──────────────────────────────────────────────────────
 async function loadProducts() {
-  // Storage abstraction: Claude Artifact + local HTML fallback
   async function getDB() {
     if (typeof window.storage !== 'undefined') {
       try { const r = await window.storage.get('jpfruit-v2',true); if(r) return JSON.parse(r.value); } catch(e) {}
@@ -402,4 +401,335 @@ async function loadProducts() {
       `<div class="loading-state">⚠️ ${lang==='zh'?'未能載入產品':'Failed to load products.'}</div>`;
     return;
   }
+  buildCatNav();
+  renderProducts();
+}
 
+function applyBanner(b) {
+  const isZh = lang==='zh';
+  const tag=isZh?b.tagZh:b.tagEn, title=isZh?b.titleZh:b.titleEn;
+  const sub=isZh?b.subZh:b.subEn, btn=isZh?b.btnZh:b.btnEn;
+  const tagEl=document.getElementById('hero-tag');
+  const h1El=document.getElementById('hero-h1');
+  const subEl=document.getElementById('hero-sub');
+  const imgEl=document.getElementById('hero-img-wrap');
+  const btnEl=document.getElementById('hero-btn-wrap');
+  if(tagEl) tagEl.textContent=tag||'';
+  if(h1El) h1El.innerHTML=title?`<em>${title}</em>`:'<em>JP Fruit</em>';
+  if(subEl) subEl.textContent=sub||'';
+  if(imgEl){
+    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||'🍓'}</span>'">`;
+    else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||'🍓'}</span>`;
+  }
+  if(btnEl&&btn) btnEl.innerHTML=`<button onclick="document.querySelector('.products-area').scrollIntoView({behavior:'smooth'})" style="background:#B8892A;color:white;border:none;padding:8px 22px;border-radius:22px;font-size:0.85rem;font-family:'Noto Sans HK',sans-serif;cursor:pointer;font-weight:500;">${btn}</button>`;
+}
+
+function applySettings(s) {
+  if(!s) return;
+  if(s.font) document.body.style.fontFamily=s.font;
+  if(s.heroSubZh||s.heroSubEn){ TX.zh.heroSub=s.heroSubZh||TX.zh.heroSub; TX.en.heroSub=s.heroSubEn||TX.en.heroSub; }
+  if(s.chip1Zh){ TX.zh.chip1=s.chip1Zh; TX.en.chip1=s.chip1En||TX.en.chip1; }
+  if(s.chip2Zh){ TX.zh.chip2=s.chip2Zh; TX.en.chip2=s.chip2En||TX.en.chip2; }
+  if(s.chip3Zh){ TX.zh.chip3=s.chip3Zh; TX.en.chip3=s.chip3En||TX.en.chip3; }
+  if(s.deliveryZh){ TX.zh.i1p=s.deliveryZh; TX.en.i1p=s.deliveryEn||TX.en.i1p; }
+  if(s.contactZh){ TX.zh.i3p=s.contactZh; TX.en.i3p=s.contactEn||TX.en.i3p; }
+  if(s.facebook) document.querySelectorAll('a[href*="facebook"]').forEach(el=>el.href=s.facebook);
+  if(s.instagram) document.querySelectorAll('a[href*="instagram"]').forEach(el=>el.href=s.instagram);
+  if(s.wagroup) document.querySelectorAll('a[href*="chat.whatsapp"]').forEach(el=>el.href=s.wagroup);
+  applyTX();
+}
+
+// ── TRANSLATIONS ──────────────────────────────────────────────
+const TX = {
+  zh:{
+    topbar:'截單時間 <strong>週二 Tuesday 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五 Friday</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; 倒數 <strong id="countdown">--</strong>',
+    logoSub:'日本直送 · South London 送貨', navCart:'購物車',
+    heroTag:'🇯🇵 日本空運直送 · Fresh from Japan',
+    heroH1:'新鮮到你家<br><em>JP Fruit</em>',
+    heroSub:'精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門',
+    chip1:'✈️ 日本直送', chip2:'🏠 South London 送貨', chip3:'💳 貨到付款',
+    searchPh:'搜尋產品...', catAll:'全部', catBest:'🏆 本店熱賣', loading:'載入產品中...',
+    cartTitle:'🛒 購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
+    subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
+    minWarn:(area,diff)=>`⚠️ ${area} 最低消費未達，仲差 £${diff}`,
+    cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
+    cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
+    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
+    alertFill:'請填寫晒所有必填資料！',
+    alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}。\n確定繼續落單？`,
+    oos:'售罄', sale:'特價', newLabel:'NEW',
+    i1h:'送貨安排', i1p:'逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。',
+    i2h:'最低消費', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
+    i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
+    footerP:'關注我們 Follow us for updates',
+    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
+  },
+  en:{
+    topbar:'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
+    logoSub:'Fresh from Japan · South London Delivery', navCart:'Cart',
+    heroTag:'🇯🇵 Air-freighted from Japan',
+    heroH1:'Fresh to Your Door<br><em>JP Fruit</em>',
+    heroSub:'Premium Japanese fruits, authentic HK flavours & Asian specialities — delivered across South London',
+    chip1:'✈️ Direct from Japan', chip2:'🏠 South London Delivery', chip3:'💳 Pay on Delivery',
+    searchPh:'Search products...', catAll:'All', catBest:'🏆 Top Sellers', loading:'Loading products...',
+    cartTitle:'🛒 Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
+    subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
+    minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
+    cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
+    cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
+    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
+    alertFill:'Please fill in all required fields!',
+    alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
+    oos:'Sold Out', sale:'Sale', newLabel:'NEW',
+    i1h:'Delivery', i1p:"Delivery every Friday (Thursday if high volume). You'll be notified of your slot one day in advance. Please ensure someone is home.",
+    i2h:'Minimum Order', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
+    i3h:'Contact Us', i3p:"We'll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm",
+    footerP:'Follow us for updates',
+    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
+  }
+};
+
+// ── STATE ──────────────────────────────────────────────────────
+let lang='zh', products=[], categories=[], sets=[], cart={}, searchQuery='', activeCat='all';
+let siteSettings={};
+const setSelections={};
+
+// ── LANGUAGE ──────────────────────────────────────────────────
+function setLang(l){
+  lang=l;
+  document.getElementById('btn-zh').classList.toggle('active',l==='zh');
+  document.getElementById('btn-en').classList.toggle('active',l==='en');
+  document.documentElement.lang=l==='zh'?'zh-HK':'en';
+  applyTX(); buildCatNav(); renderProducts(); updateCart();
+  (async()=>{try{let d=null;if(typeof window.storage!=='undefined'){try{const r=await window.storage.get('jpfruit-v2',true);if(r)d=JSON.parse(r.value);}catch(e){}}if(!d){try{const raw=localStorage.getItem('jpfruit-v2');d=raw?JSON.parse(raw):null;}catch(e){}}if(d){if(d.banner)applyBanner(d.banner);if(d.settings)applySettings(d.settings);}}catch(e){}})();
+}
+function tx(k,...a){const v=TX[lang][k];return typeof v==='function'?v(...a):v;}
+function applyTX(){
+  const t=TX[lang];
+  document.getElementById('topbar-el').innerHTML=t.topbar;
+  document.getElementById('logo-sub').textContent=t.logoSub;
+  document.getElementById('nav-cart-label').textContent=t.navCart;
+  document.getElementById('hero-tag').textContent=t.heroTag;
+  document.getElementById('hero-h1').innerHTML=t.heroH1;
+  document.getElementById('hero-sub').textContent=t.heroSub;
+  document.getElementById('chip1').textContent=t.chip1;
+  document.getElementById('chip2').textContent=t.chip2;
+  document.getElementById('chip3').textContent=t.chip3;
+  document.getElementById('search-input').placeholder=t.searchPh;
+  document.getElementById('cart-title').textContent=t.cartTitle;
+  document.getElementById('mobile-cart-title').textContent=t.cartTitle;
+  document.getElementById('i1h').textContent=t.i1h;
+  document.getElementById('i1p').textContent=t.i1p;
+  document.getElementById('i2h').textContent=t.i2h;
+  document.getElementById('i2r3').textContent=t.i2r3;
+  document.getElementById('i2r4').textContent=t.i2r4;
+  document.getElementById('i3h').textContent=t.i3h;
+  document.getElementById('i3p').textContent=t.i3p;
+  document.getElementById('footer-p').textContent=t.footerP;
+  updateCountdown();
+}
+
+// ── CAT NAV ───────────────────────────────────────────────────
+function catLabel(c){return lang==='zh'?(c.zh||c.name):(c.name||c.zh);}
+function getBestSellers(){
+  const featured=products.filter(p=>p.featured);
+  if(featured.length>=4){
+    const fIds=new Set(featured.map(p=>p.id));
+    const extra=products.filter(p=>!fIds.has(p.id)&&(p.historicSold||0)>0).sort((a,b)=>(b.historicSold||0)-(a.historicSold||0)).slice(0,Math.max(0,10-featured.length));
+    return [...featured.sort((a,b)=>(b.historicSold||0)-(a.historicSold||0)),...extra].slice(0,10);
+  }
+  return products.filter(p=>(p.historicSold||0)>0).sort((a,b)=>(b.historicSold||0)-(a.historicSold||0)).slice(0,10);
+}
+function buildCatNav(){
+  const used=new Set(products.map(p=>p.cat));
+  const valid=categories.filter(c=>used.has(c.id));
+  const hasBest=getBestSellers().length>0;
+  document.getElementById('cat-nav').innerHTML=
+    `<button class="cat-btn${activeCat==='all'?' active':''}" onclick="filterCat('all',this)">${tx('catAll')}</button>`+
+    (hasBest?`<button class="cat-btn best-btn${activeCat==='__best__'?' active':''}" onclick="filterCat('__best__',this)">${tx('catBest')}</button>`:'')+
+    valid.map(c=>`<button class="cat-btn${activeCat===c.id?' active':''}" onclick="filterCat('${c.id}',this)">${catLabel(c)}</button>`).join('');
+}
+
+// ── PRODUCT RENDERING ─────────────────────────────────────────
+const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
+
+function renderProducts(){
+  const area=document.getElementById('products-area');
+  if(activeCat==='__best__'){
+    const best=getBestSellers();
+    area.innerHTML=`<div class="cat-section"><div class="cat-header"><div class="cat-title">${tx('catBest')}</div><div class="cat-count">${best.length}</div></div><div class="product-grid">${best.map(p=>pCard(p)).join('')}</div></div>`;
+    return;
+  }
+  let prods=products;
+  if(activeCat!=='all') prods=prods.filter(p=>p.cat===activeCat);
+  if(searchQuery){const q=searchQuery.toLowerCase();prods=prods.filter(p=>p.name.toLowerCase().includes(q)||(p.nameZh||'').includes(q)||(p.nameEn||'').toLowerCase().includes(q));}
+  if(!prods.length){area.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">${lang==='zh'?'沒有符合條件嘅產品':'No products found'}</div>`;return;}
+  const grouped={};
+  prods.forEach(p=>{if(!grouped[p.cat])grouped[p.cat]=[];grouped[p.cat].push(p);});
+  const sorted=Object.keys(grouped).sort((a,b)=>Math.max(...grouped[b].map(p=>p.historicSold||0))-Math.max(...grouped[a].map(p=>p.historicSold||0)));
+  let bestStrip='';
+  if(activeCat==='all'&&!searchQuery){
+    const best=getBestSellers();
+    if(best.length) bestStrip=`<div class="cat-section" style="border-bottom:2px dashed var(--border);padding-bottom:24px;margin-bottom:8px;"><div class="cat-header"><div class="cat-title" style="color:var(--plum);">${tx('catBest')}</div><button class="cat-count" onclick="filterCat('__best__',document.querySelector('.best-btn'))" style="cursor:pointer;background:var(--plum-light);color:var(--plum);border:none;font-family:inherit;">全部 →</button></div><div class="product-grid">${best.slice(0,5).map(p=>pCard(p)).join('')}</div></div>`;
+  }
+  area.innerHTML=bestStrip+sorted.map(cid=>{
+    const cat=categories.find(c=>c.id===cid);
+    const cprods=grouped[cid].sort((a,b)=>(b.historicSold||0)-(a.historicSold||0));
+    const catSets=sets.filter(s=>s.cat===cid&&s.isSet);
+    const main=lang==='zh'?(cat?.zh||cid):(cat?.name||cid);
+    const sub=lang==='zh'?(cat?.name||''):(cat?.zh||'');
+    return `<div class="cat-section" id="cat-${cid}"><div class="cat-header"><div class="cat-title">${main}</div>${sub?`<div class="cat-subtitle">${sub}</div>`:''}<div class="cat-count">${cprods.length+(catSets.length?` +${catSets.length}套`:'')} </div></div>${catSets.map(s=>renderSetCard(s)).join('')}<div class="product-grid">${cprods.map(p=>pCard(p)).join('')}</div></div>`;
+  }).join('');
+}
+
+function pCard(p){
+  const inCart=cart[p.id]||0, oos=p.stock===0;
+  const img=p.image&&p.image.startsWith('http');
+  const badge=oos?`<div class="p-badge p-badge-oos">${tx('oos')}</div>`:p.salePrice?`<div class="p-badge p-badge-sale">${tx('sale')}</div>`:!(p.historicSold)?`<div class="p-badge p-badge-new">${tx('newLabel')}</div>`:'';
+  const price=p.salePrice?`<div><div class="p-price">£${p.salePrice.toFixed(2)}</div><div class="p-price-orig">£${p.price.toFixed(2)}</div></div>`:`<div class="p-price">£${p.price.toFixed(2)}</div>`;
+  const ctrl=oos?`<button class="add-btn" disabled>✕</button>`:inCart>0?`<div class="qty-control"><button class="qty-btn" onclick="chQty('${p.id}',-1)">−</button><div class="qty-num">${inCart}</div><button class="qty-btn" onclick="chQty('${p.id}',1)">+</button></div>`:`<button class="add-btn" onclick="addCart('${p.id}')">+</button>`;
+  const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name||p.nameZh||p.zh);
+  const pAlt=lang==='zh'?(p.nameEn?`<div class="p-unit" style="font-style:italic;">${p.nameEn}</div>`:''): (p.nameZh||p.zh?`<div class="p-unit">${p.nameZh||p.zh}</div>`:'');
+  const pDesc=lang==='zh'?(p.descZh||p.desc||''):(p.descEn||p.descZh||p.desc||'');
+  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||'🛍️'}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
+}
+
+// ── SET MEAL ──────────────────────────────────────────────────
+function renderSetCard(s){
+  const sid=s.id;
+  if(!setSelections[sid]) setSelections[sid]={};
+  const groups=s.groups||[], isZh=lang==='zh';
+  const setName=isZh?(s.nameZh||s.name):(s.nameEn||s.name||s.nameZh);
+  const setDesc=isZh?(s.descZh||s.desc||''):(s.descEn||s.descZh||s.desc||'');
+  const chips=groups.map(g=>`<span class="set-rule-chip">${isZh?g.nameZh:g.nameEn} x${g.min}${g.max>g.min?'-'+g.max:''}</span>`).join('');
+  return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||'🎁'} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'✅ 加入購物車 🛒':'✅ Add to Cart 🛒'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
+}
+function renderSetGroup(sid,g,gi){
+  const sel=setSelections[sid][gi]||{}, total=Object.values(sel).reduce((a,b)=>a+b,0), isZh=lang==='zh';
+  return `<div class="set-group-title">${isZh?g.nameZh:g.nameEn}<span class="set-group-badge">${total}/${g.max}</span></div>${(g.items||[]).map(item=>{const qty=sel[item.id]||0,atMax=total>=g.max&&!qty;return`<div class="set-item-row${qty?' s-selected':''}${atMax?' s-disabled':''}" onclick="toggleSetItem('${sid}',${gi},'${item.id}')"><span class="set-item-name${qty?' s-sel':''}">${item.zh||item.name}${qty>1?`<span class="set-qty-tag">x${qty}</span>`:''}</span><div class="set-check">${qty?'✓':''}</div></div>`;}).join('')}`;
+}
+function renderSetProgress(sid,s){
+  const groups=s.groups||[],needed=groups.reduce((t,g)=>t+g.min,0),got=groups.reduce((t,g,gi)=>{const sel=setSelections[sid][gi]||{};return t+Object.values(sel).reduce((a,b)=>a+b,0);},0);
+  const pct=Math.min(100,got/needed*100),done=isSetReady(sid,s),isZh=lang==='zh';
+  return `<div class="set-progress"><div class="set-prog-bar"><div class="set-prog-fill${done?' sp-done':''}" style="width:${pct}%"></div></div><div class="set-prog-label"><span>${isZh?'已選':'Selected'} ${got}/${needed}</span><span style="color:${done?'var(--leaf)':'var(--plum)'}">${done?(isZh?'✓ 選齊！':'✓ Complete!'):''}</span></div></div>`;
+}
+function isSetReady(sid,s){return(s.groups||[]).every((g,gi)=>{const sel=setSelections[sid][gi]||{},t=Object.values(sel).reduce((a,b)=>a+b,0);return t>=g.min&&t<=g.max;});}
+function buildSetPreview(sid,s){return(s.groups||[]).map((g,gi)=>{const sel=setSelections[sid][gi]||{};const items=g.items.filter(i=>sel[i.id]).map(i=>(i.zh||i.name)+(sel[i.id]>1?` x${sel[i.id]}`:'')).join('、');return`<strong>${lang==='zh'?g.nameZh:g.nameEn}：</strong>${items}`;}).join('<br>');}
+function toggleSetItem(sid,gi,itemId){
+  const s=sets.find(x=>x.id===sid);if(!s)return;
+  const g=s.groups[gi];if(!setSelections[sid][gi])setSelections[sid][gi]={};
+  const sel=setSelections[sid][gi],total=Object.values(sel).reduce((a,b)=>a+b,0),cur=sel[itemId]||0;
+  if(!cur){if(total>=g.max)return;sel[itemId]=1;}
+  else if(g.allowRepeat&&cur<3&&total<g.max){sel[itemId]++;}
+  else{delete sel[itemId];}
+  const el=document.getElementById(`setcard-${sid}`);if(el)el.outerHTML=renderSetCard(s);
+}
+function addSetToCart(sid){
+  const s=sets.find(x=>x.id===sid);if(!s||!isSetReady(sid,s))return;
+  const summary=(s.groups||[]).map((g,gi)=>{const sel=setSelections[sid][gi]||{};return g.items.filter(i=>sel[i.id]).map(i=>(i.zh||i.name)+(sel[i.id]>1?` x${sel[i.id]}`:'')).join('、');}).join(' + ');
+  const cartKey='set_'+sid+'_'+Date.now();
+  cart[cartKey]={isSet:true,setId:sid,name:s.name,nameZh:s.nameZh||s.name,nameEn:s.nameEn||s.name,price:s.price,summary,qty:1};
+  setSelections[sid]={};
+  const el=document.getElementById(`setcard-${sid}`);if(el)el.outerHTML=renderSetCard(s);
+  updateCart();showToast(lang==='zh'?'套餐已加入購物車 ✓':'Set meal added ✓');
+}
+
+// ── CART ──────────────────────────────────────────────────────
+function addCart(id){cart[id]=(cart[id]||0)+1;updateCart();refreshCard(id);showToast(lang==='zh'?'已加入 ✓':'Added ✓');}
+function chQty(id,d){cart[id]=Math.max(0,(cart[id]||0)+d);if(!cart[id])delete cart[id];updateCart();refreshCard(id);}
+function rmSetItem(id){delete cart[id];updateCart();}
+function refreshCard(id){const p=products.find(x=>x.id===id);if(!p)return;const el=document.getElementById('card-'+id);if(el)el.outerHTML=pCard(p);}
+function getTotal(){return Object.entries(cart).reduce((s,[id,val])=>{if(val&&val.isSet)return s+(val.price||0)*val.qty;const p=products.find(x=>x.id===id);return s+(p?.salePrice||p?.price||0)*val;},0);}
+function getCount(){return Object.values(cart).reduce((a,b)=>a+(b&&b.isSet?b.qty:b),0);}
+function getMin(pc){
+  const c=(pc||'').toUpperCase().replace(/\s/g,'');
+  if(/^SM[123]/.test(c))return{min:30,area:'Sutton SM1-3'};
+  if(/^SM[456]/.test(c))return{min:40,area:'Sutton SM4-6'};
+  if(/^(SM7|KT[1-6]|SW1[89]|SW20|KT1[7-9]|CR0)/.test(c))return{min:50,area:lang==='zh'?'你的地區':'your area'};
+  if(/^(KT20|CR8|CR5)/.test(c))return{min:60,area:lang==='zh'?'你的地區':'your area'};
+  return null;
+}
+function updateCart(){
+  const n=getCount();
+  document.getElementById('cart-count').textContent=n;
+  document.getElementById('cart-count-label').textContent=n+tx('items');
+  renderCart('cart-desktop','');
+  renderCart('cart-mobile','-m');
+}
+function renderCart(cid,sfx){
+  const el=document.getElementById(cid);if(!el)return;
+  const items=Object.entries(cart).map(([id,val])=>({id,val,p:val&&val.isSet?{name:val.name}:products.find(x=>x.id===id)})).filter(x=>x.p);
+  const total=getTotal();
+  if(!items.length){el.innerHTML=`<div class="cart-empty-msg">${tx('cartEmpty').replace('\n','<br>')}</div>${cartForm(sfx)}`;return;}
+  const pc=document.getElementById('cf-post'+sfx)?.value||'';
+  const minI=getMin(pc);
+  const warn=minI&&total<minI.min?`<div class="min-warning">${tx('minWarn',minI.area,(minI.min-total).toFixed(2))}</div>`:'';
+  el.innerHTML=`<div class="cart-items-list">${items.map(({id,val})=>{
+    if(val&&val.isSet)return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="rmSetItem('${id}')">✕</button></div><div class="ci-price">£${parseFloat(val.price||0).toFixed(2)}</div></div>`;
+    const p=products.find(x=>x.id===id);if(!p)return'';const pr=p.salePrice||p.price;
+    const ciName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
+    return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price">£${(pr*val).toFixed(2)}</div></div>`;
+  }).join('')}</div><div class="cart-summary"><div class="summary-row"><span>${tx('subtotal')}</span><span>£${total.toFixed(2)}</span></div><div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div><div class="summary-row summary-total"><span>${tx('total')}</span><span>£${total.toFixed(2)}</span></div></div>${warn}${cartForm(sfx)}`;
+}
+function cartForm(sfx){
+  const has=getCount()>0;
+  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateCart()"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
+}
+function sendWA(sfx){
+  const name=document.getElementById('cf-name'+sfx)?.value?.trim();
+  const phone=document.getElementById('cf-phone'+sfx)?.value?.trim();
+  const addr=document.getElementById('cf-addr'+sfx)?.value?.trim();
+  const pc=document.getElementById('cf-post'+sfx)?.value?.trim();
+  const notes=document.getElementById('cf-notes'+sfx)?.value?.trim();
+  if(!name||!phone||!addr||!pc){alert(tx('alertFill'));return;}
+  const lines=Object.entries(cart).map(([id,val])=>{
+    if(val&&val.isSet)return`• 🎁 ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}\n  (${val.summary})`;
+    const p=products.find(x=>x.id===id);if(!p)return'';const pr=p.salePrice||p.price;
+    return`• ${p.nameZh||p.name} × ${val} = £${(pr*val).toFixed(2)}`;
+  }).filter(Boolean).join('\n');
+  const total=getTotal();
+  const minI=getMin(pc);
+  if(minI&&total<minI.min){if(!confirm(tx('alertMin',minI.min,total.toFixed(2))))return;}
+  const waNum=siteSettings.whatsapp||'447700900000';
+  const msg=tx('waMsg',name,phone,addr,pc.toUpperCase(),lines,total.toFixed(2),notes);
+  window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ── FILTERS ───────────────────────────────────────────────────
+function filterCat(id,el){
+  activeCat=id;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderProducts();
+  if(id!=='all'&&id!=='__best__'){const s=document.getElementById('cat-'+id);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+function searchProducts(q){
+  searchQuery=q;activeCat='all';
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.cat-btn')?.classList.add('active');
+  renderProducts();
+}
+
+// ── MOBILE CART ───────────────────────────────────────────────
+function toggleMobileCart(){document.getElementById('mobile-overlay').classList.toggle('open');renderCart('cart-mobile','-m');}
+function closeMobileCart(e){if(!e||e.target===document.getElementById('mobile-overlay'))document.getElementById('mobile-overlay').classList.remove('open');}
+
+// ── COUNTDOWN ────────────────────────────────────────────────
+function updateCountdown(){
+  const now=new Date(),day=now.getDay();
+  const cutDay=siteSettings.cutoffDay??2, cutTime=siteSettings.cutoffTime||'13:00';
+  const [ch,cm]=cutTime.split(':').map(Number);
+  const d=(cutDay-day+7)%7||7, tgt=new Date(now);
+  tgt.setDate(now.getDate()+d);tgt.setHours(ch,cm,0,0);
+  const diff=tgt-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
+  const el=document.getElementById('countdown');if(el)el.textContent=`${h}hr ${m}min`;
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+
+// ── INIT ──────────────────────────────────────────────────────
+applyTX();updateCart();updateCountdown();setInterval(updateCountdown,60000);loadProducts();
+</script>
+</body>
+</html>
