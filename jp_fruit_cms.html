@@ -211,17 +211,20 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
     <!-- INVENTORY -->
     <div id="page-inventory" style="display:none;">
       <div class="header">
-        <div class="page-title">庫存管理 Inventory</div>
+        <div class="page-title">庫存管理</div>
         <div class="header-actions">
-          <input class="search-box" placeholder="搜尋..." oninput="filterInventory(this.value)" style="width:160px;">
+          <input class="search-box" placeholder="搜尋產品..." oninput="filterInventory(this.value)" style="width:160px;">
+          <select class="search-box" id="inv-cat-filter" onchange="filterInventoryCat(this.value)" style="width:140px;">
+            <option value="">全部分類</option>
+          </select>
           <button class="btn btn-ghost" onclick="toggleLowOnly()" id="low-btn">⚠️ 只顯示售罄</button>
         </div>
       </div>
       <div class="content">
-        <div class="notice">💡 庫存 <strong>-1</strong> = 無限（不追蹤）｜<strong>0</strong> = 售罄，自動顯示缺貨</div>
+        <div class="notice">庫存 <strong>-1</strong> = 無限（唔追蹤）｜<strong>0</strong> = 售罄，自動喺客戶網站顯示缺貨</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>產品</th><th>分類</th><th>庫存</th><th>狀態</th><th>快速更新</th></tr></thead>
+            <thead><tr><th>產品名稱</th><th>分類</th><th>庫存數量</th><th>狀態</th><th>快速更新</th></tr></thead>
             <tbody id="inventory-table"></tbody>
           </table>
         </div>
@@ -1063,6 +1066,7 @@ let state = {
   editingProductId: null,
   productStatusFilter: 'all',
   editingCategoryId: null,
+  inventoryCatFilter: '',
   productSearchQuery: '',
   productCatFilter: '',
   showLowOnly: false,
@@ -1151,6 +1155,7 @@ function showPage(page) {
   if(page==='inventory') renderInventory();
   if(page==='orders') renderOrders();
   if(page==='sets') renderSetsPage();
+  if(page==='inventory') { const s=document.getElementById('inv-cat-filter'); if(s){s.innerHTML='<option value="">全部分類</option>';} renderInventory(); }
   if(page==='reports') initReports();
   if(page==='featured') renderFeaturedPage();
   if(page==='banner') renderBannerPage();
@@ -1308,9 +1313,25 @@ function filterProductsCat(v) { state.productCatFilter=v; state.currentPage=1; r
 function renderInventory() {
   let prods = state.products;
   if (state.showLowOnly) prods = prods.filter(p=>p.stock===0);
+  if (state.inventoryCatFilter) prods = prods.filter(p=>p.cat===state.inventoryCatFilter);
   if (state.inventorySearchQuery) {
     const q = state.inventorySearchQuery.toLowerCase();
-    prods = prods.filter(p=>p.name.toLowerCase().includes(q));
+    prods = prods.filter(p=>
+      (p.nameZh||p.name||'').includes(q) ||
+      (p.nameEn||'').toLowerCase().includes(q) ||
+      (p.name||'').toLowerCase().includes(q)
+    );
+  }
+  // Populate category filter dropdown
+  const catSel = document.getElementById('inv-cat-filter');
+  if (catSel && catSel.options.length <= 1) {
+    state.categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.zh || cat.name;
+      catSel.appendChild(opt);
+    });
+    if (state.inventoryCatFilter) catSel.value = state.inventoryCatFilter;
   }
   const tbody = document.getElementById('inventory-table');
   tbody.innerHTML = prods.map(p=>{
@@ -1319,7 +1340,7 @@ function renderInventory() {
     const label = p.stock===-1?'無限':p.stock===0?'售罄':p.stock<=3?'庫存不足':'充足';
     const pct = p.stock===-1?100:p.stock===0?0:Math.min(100,p.stock/20*100);
     return `<tr>
-      <td><div style="font-size:0.83rem;max-width:280px;">${p.name}</div><div style="font-size:0.72rem;color:var(--muted)">${p.unit||''}</div></td>
+      <td><div style="font-size:0.83rem;font-weight:500;max-width:280px;">${p.nameZh||p.zh||p.name}</div><div style="font-size:0.72rem;color:var(--muted)">${p.nameEn||''} ${p.unit?'· '+p.unit:''}</div></td>
       <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
       <td style="font-family:var(--mono);font-size:1rem;color:${color}">${p.stock===-1?'∞':p.stock}</td>
       <td>
@@ -1702,7 +1723,7 @@ function renderFeaturedTable() {
         </label>
       </td>
       <td>
-        <div style="font-size:0.84rem;font-weight:${p.featured?'500':'400'};">${p.name}</div>
+        <div style="font-size:0.84rem;font-weight:${p.featured?'500':'400'};">${p.nameZh||p.zh||p.name}</div>
         ${p.featured?'<span class="badge badge-green" style="font-size:0.65rem;">推介中</span>':''}
       </td>
       <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
@@ -1885,7 +1906,7 @@ function renderProductsReport(el, orders) {
     : `<div class="table-wrap"><table class="r-table">
     <thead><tr><th>產品名稱</th><th>銷售量</th><th>佔比</th><th>訂單數</th></tr></thead>
     <tbody>${sorted.map(p=>`<tr>
-      <td>${p.name}</td>
+      <td>${p.nameZh||p.zh||p.name}</td>
       <td style="font-family:var(--mono);font-weight:500;">${p.qty}</td>
       <td><div class="r-bar"><div class="r-bar-fill" style="width:${Math.round(p.qty/maxQty*100)}%"></div></div>${Math.round(p.qty/sorted.reduce((s,x)=>s+x.qty,0)*100)}%</td>
       <td style="color:var(--muted);">${p.orders} 單</td>
@@ -2145,7 +2166,7 @@ function filterGroupProducts(gi) {
   el.innerHTML = prods.map(p=>`
     <label style="display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;cursor:pointer;border:1px solid ${selIds.has(p.id)?'var(--green)':'var(--border)'};background:${selIds.has(p.id)?'rgba(0,200,150,0.08)':'transparent'};font-size:0.75rem;transition:all 0.1s;">
       <input type="checkbox" ${selIds.has(p.id)?'checked':''} onchange="toggleGroupItem(${gi},'${p.id}',this.checked)" style="flex-shrink:0;">
-      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.name}">${p.zh||p.name}</span>
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.nameZh||p.zh||p.name}">${p.nameZh||p.zh||p.name}</span>
     </label>
   `).join('') || '<div style="color:var(--muted);font-size:0.78rem;padding:8px;">冇符合產品</div>';
 }
@@ -2319,7 +2340,7 @@ function renderVipCartRows() {
     <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
       <select onchange="vipCartRows[${i}].id=this.value" style="flex:1;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.8rem;">
         <option value="">-- 選擇產品 --</option>
-        ${state.products.filter(p=>p.active!==false&&p.price>0).map(p=>`<option value="${p.id}" ${row.id===p.id?'selected':''}>${p.nameZh||p.name}</option>`).join('')}
+        ${state.products.filter(p=>p.active!==false&&p.price>0).map(p=>`<option value="${p.id}" ${row.id===p.id?'selected':''}>${p.nameZh||p.zh||p.name}</option>`).join('')}
       </select>
       <input type="number" min="1" max="20" value="${row.qty}" onchange="vipCartRows[${i}].qty=parseInt(this.value)||1" style="width:54px;padding:5px 6px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;text-align:center;">
       <button onclick="vipCartRows.splice(${i},1);renderVipCartRows()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;">✕</button>
