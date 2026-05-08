@@ -897,10 +897,10 @@ function renderProducts(){
         const pr=(p.salePrice||p.price||0);
         const img=p.image&&p.image.startsWith('http');
         const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
-        return \`<div class="strip-card" onclick="document.getElementById('cat-\${p.cat}')?.scrollIntoView({behavior:'smooth'})">
-          <div class="strip-thumb">\${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||'🛒'}</div>
-          <div class="strip-info"><div class="strip-name">\${nm}</div><div class="strip-price">£\${pr.toFixed(2)}</div></div>
-        </div>\`;
+        return `<div class="strip-card" onclick="document.getElementById('cat-${p.cat}')?.scrollIntoView({behavior:'smooth'})">
+          <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||'🛒'}</div>
+          <div class="strip-info"><div class="strip-name">${nm}</div><div class="strip-price">£${pr.toFixed(2)}</div></div>
+        </div>`;
       }).join('')}</div>
     </div>`;
   }
