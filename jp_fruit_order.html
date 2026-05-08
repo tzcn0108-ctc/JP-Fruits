@@ -76,8 +76,8 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .hero-food-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:190px;}
 .hfg-card{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:13px 10px;text-align:center;backdrop-filter:blur(12px);transition:all 0.3s;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
 .hfg-card:hover{background:rgba(255,255,255,0.2);transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
-.hfg-card span{font-size:1.9rem;display:block;margin-bottom:5px;}
-.hfg-card small{font-size:0.61rem;color:rgba(255,255,255,0.85);display:block;font-family:'Noto Sans HK',sans-serif;letter-spacing:0.5px;white-space:nowrap;font-weight:500;}
+
+.hfg-card small{font-size:0.72rem;color:rgba(255,255,255,0.9);display:block;font-family:'Noto Sans HK',sans-serif;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;}
 .hfg-1{animation:float-card 5s ease-in-out infinite;}
 .hfg-2{animation:float-card 5s ease-in-out infinite;animation-delay:1.2s;}
 .hfg-3{animation:float-card 5s ease-in-out infinite;animation-delay:2.4s;}
@@ -89,7 +89,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .countdown-bar .cd-num{font-family:'Noto Serif HK',serif;font-size:1rem;color:var(--berry);font-weight:600;}
 
 /* ── MAIN LAYOUT ── */
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;max-width:1100px;margin:0 auto;padding:28px 20px 80px;gap:28px;align-items:start;}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;max-width:1100px;margin:0 auto;padding:16px 20px 80px;gap:28px;align-items:start;}
 .cart-sidebar{display:block;position:sticky;top:72px;align-self:start;max-height:calc(100vh - 90px);overflow-y:auto;}
 @media(max-width:860px){.layout{grid-template-columns:1fr;}.cart-sidebar{display:none;}}
 
@@ -99,17 +99,24 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .search-input{width:100%;background:var(--white);border:2px solid var(--border);border-radius:var(--radius-lg);padding:13px 20px 13px 50px;font-family:'Noto Sans HK',sans-serif;font-size:0.9rem;color:var(--ink);transition:all 0.2s;box-shadow:var(--shadow-sm);}
 .search-input:focus{outline:none;border-color:var(--plum-m);box-shadow:0 0 0 4px var(--plum-l);}
 .search-input::placeholder{color:var(--muted);}
-.search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--plum-m);font-size:1.1rem;}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--plum-m);display:flex;align-items:center;}
 
-/* ── CATEGORY NAV (horizontal scroll pills) ── */
-.cat-nav-wrap{margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-.cat-nav-wrap::-webkit-scrollbar{display:none;}
-.cat-nav{display:flex;gap:8px;padding-bottom:4px;width:max-content;}
-.cat-btn{background:var(--white);border:2px solid var(--border);color:var(--muted);padding:8px 18px;border-radius:24px;font-size:0.78rem;cursor:pointer;transition:all 0.2s;font-family:'Noto Sans HK',sans-serif;white-space:nowrap;font-weight:500;box-shadow:var(--shadow-sm);}
-.cat-btn:hover{border-color:var(--plum-m);color:var(--plum);box-shadow:var(--shadow-md);}
-.cat-btn.active{background:var(--plum);border-color:var(--plum);color:white;box-shadow:0 4px 14px rgba(107,76,138,0.35);}
-.best-btn{border-color:var(--gold);color:var(--gold);}
-.best-btn.active{background:linear-gradient(135deg,var(--gold),#E8881A);border-color:transparent;color:white;}
+/* ── CATEGORY NAV (full width, wrapping) ── */
+.cat-nav-outer{background:var(--white);padding:14px 20px 16px;position:sticky;top:52px;z-index:99;border-bottom:1.5px solid var(--border);box-shadow:0 2px 16px rgba(107,76,138,0.07);}
+.cat-nav-outer-inner{max-width:1100px;margin:0 auto;}
+.search-wrap-inline{position:relative;margin-bottom:14px;}
+.search-wrap-inline .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--plum-m);display:flex;align-items:center;}
+.search-wrap-inline .search-input{width:100%;background:var(--white);border:2px solid var(--border);border-radius:var(--radius-lg);padding:13px 20px 13px 50px;font-family:'Noto Sans HK',sans-serif;font-size:0.9rem;color:var(--ink);transition:all 0.2s;box-shadow:var(--shadow-sm);}
+.search-wrap-inline .search-input:focus{outline:none;border-color:var(--plum-m);box-shadow:0 0 0 4px var(--plum-l);}
+.cat-nav{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:4px;}
+.cat-btn{background:var(--white);border:1.5px solid var(--border);color:var(--ink-2);padding:7px 18px;border-radius:6px;font-size:0.78rem;cursor:pointer;transition:all 0.18s;font-family:'Noto Sans HK',sans-serif;white-space:nowrap;font-weight:500;letter-spacing:0.3px;position:relative;}
+.cat-btn:hover{border-color:var(--plum-m);color:var(--plum);background:var(--plum-l);}
+.cat-btn.active{background:var(--plum);border-color:var(--plum);color:white;box-shadow:0 3px 10px rgba(107,76,138,0.28);}
+.cat-btn.active::after{content:'';position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--plum);}
+.best-btn{border-color:#C9973A;color:#8B6520;background:var(--gold-l);}
+.best-btn:hover{background:#FEF0C0;border-color:#B8882E;}
+.best-btn.active{background:linear-gradient(135deg,#C9973A,#A87520);border-color:transparent;color:white;}
+.best-btn.active::after{border-top-color:#A87520;}
 
 /* ── SECTION HEADER ── */
 .cat-section{margin-bottom:36px;}
@@ -240,9 +247,11 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .cf-input{width:100%;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-family:'Noto Sans HK',sans-serif;font-size:0.83rem;color:var(--ink);transition:all 0.18s;}
 .cf-input:focus{outline:none;border-color:var(--plum-m);box-shadow:0 0 0 3px var(--plum-l);}
 .cf-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;padding:13px;border-radius:12px;font-size:0.9rem;font-family:'Noto Sans HK',sans-serif;font-weight:700;cursor:pointer;margin-top:12px;transition:all 0.2s;box-shadow:0 4px 16px rgba(37,211,102,0.35);}
-.whatsapp-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,0.45);}
-.whatsapp-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;transform:none;}
+.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#25D366;color:white;border:none;padding:13px;border-radius:8px;font-size:0.86rem;font-family:'Noto Sans HK',sans-serif;font-weight:600;cursor:pointer;margin-top:12px;transition:all 0.2s;letter-spacing:0.3px;}
+.whatsapp-btn::before{content:'';display:inline-block;width:18px;height:18px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z'/><path d='M12 0C5.373 0 0 5.373 0 12c0 2.136.562 4.14 1.54 5.875L0 24l6.317-1.514A11.933 11.933 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.8 9.8 0 01-5.001-1.369l-.36-.213-3.728.893.924-3.622-.234-.372A9.786 9.786 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182c5.43 0 9.818 4.388 9.818 9.818 0 5.43-4.388 9.818-9.818 9.818z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-size:contain;flex-shrink:0;}
+.whatsapp-btn:hover{background:#1ebd58;transform:translateY(-1px);}
+.whatsapp-btn:disabled{background:#ccc;color:#999;cursor:not-allowed;transform:none;}
+.whatsapp-btn:disabled::before{opacity:0.4;}
 
 /* ── MOBILE CART ── */
 .mobile-cart-overlay{display:none;position:fixed;inset:0;background:rgba(28,15,8,0.6);z-index:300;backdrop-filter:blur(4px);}
@@ -258,7 +267,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 @media(max-width:640px){.info-inner{grid-template-columns:1fr;}}
 .info-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);transition:all 0.2s;}
 .info-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);}
-.info-icon-wrap{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--plum-l),var(--peach-l));display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:12px;}
+.info-icon-wrap{width:44px;height:44px;border-radius:12px;background:var(--plum-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px;color:var(--plum);}.info-icon-wrap svg{width:22px;height:22px;stroke:var(--plum);}
 .info-card h3{font-size:0.9rem;font-weight:700;margin-bottom:7px;color:var(--plum);}
 .info-card p{font-size:0.77rem;color:var(--muted);line-height:1.8;white-space:pre-line;}
 .min-table{width:100%;font-size:0.75rem;border-collapse:collapse;margin-top:8px;}
@@ -282,6 +291,15 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
 /* ── EMPTY ── */
 .no-products{text-align:center;padding:36px;color:var(--muted);font-size:0.84rem;}
+
+/* ── SCROLL TO TOP / CATEGORIES ── */
+.fab-wrap{position:fixed;bottom:28px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:150;}
+.fab{width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:all 0.2s;font-family:'Noto Sans HK',sans-serif;}
+.fab:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+.fab-top{background:var(--plum);color:white;}
+.fab-cat{background:var(--white);border:1.5px solid var(--border);color:var(--plum);font-size:0.62rem;font-weight:600;letter-spacing:0.5px;width:auto;border-radius:22px;padding:0 14px;height:36px;}
+.fab-cat:hover{background:var(--plum-l);}
+.fab svg{width:18px;height:18px;}
 </style>
 </head>
 <body>
@@ -317,23 +335,23 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
     <div class="hero-left">
       <div class="hero-eyebrow" id="hero-tag">
         <span></span>
-        🥟 港式點心 · 🍣 刺身 · 🥩 凍肉 · 亞洲美食
+        港式點心 · 刺身 · 精選凍肉 · 亞洲美食
       </div>
       <h1 id="hero-h1">新鮮直送<br><em>JP Fruit</em></h1>
       <p class="hero-sub" id="hero-sub">精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門</p>
       <div class="hero-chips">
-        <span class="hero-chip" id="chip1">🥟 港式點心</span>
-        <span class="hero-chip" id="chip2">🍣 新鮮刺身</span>
-        <span class="hero-chip" id="chip3">💳 貨到付款</span>
+        <span class="hero-chip" id="chip1">港式點心</span>
+        <span class="hero-chip" id="chip2">新鮮刺身</span>
+        <span class="hero-chip" id="chip3">貨到付款</span>
       </div>
       <div id="hero-btn-wrap"></div>
     </div>
     <div class="hero-right" id="hero-img-wrap">
       <div class="hero-food-grid">
-        <div class="hfg-card hfg-1"><span>🥟</span><small>港式點心</small></div>
-        <div class="hfg-card hfg-2"><span>🍣</span><small>新鮮刺身</small></div>
-        <div class="hfg-card hfg-3"><span>🥩</span><small>精選凍肉</small></div>
-        <div class="hfg-card hfg-4"><span>🍜</span><small>亞洲麵食</small></div>
+        <div class="hfg-card hfg-1"><small>港式點心</small></div>
+        <div class="hfg-card hfg-2"><small>新鮮刺身</small></div>
+        <div class="hfg-card hfg-3"><small>精選凍肉</small></div>
+        <div class="hfg-card hfg-4"><small>亞洲麵食</small></div>
       </div>
     </div>
   </div>
@@ -346,25 +364,25 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
 <!-- COUNTDOWN -->
 <div class="countdown-bar">
-  ⏰ <span id="countdown-label-text">⏰ 截單倒數：</span>
+  <span id="countdown-label-text">截單倒數：</span>
   <span class="cd-num" id="countdown">--</span>
-  &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 💳 貨到付款
+  &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 貨到付款
 </div>
 
 <!-- MAIN LAYOUT -->
+<!-- CAT NAV - full width above everything -->
+<div class="cat-nav-outer">
+  <div class="cat-nav-outer-inner">
+  <div class="search-wrap-inline">
+    <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+    <input class="search-input" id="search-input" type="text" placeholder="搜尋產品..." oninput="searchProducts(this.value)">
+  </div>
+  <div class="cat-nav" id="cat-nav"></div>
+  </div>
+</div>
+
 <div class="layout">
   <div class="products-area">
-
-    <!-- SEARCH -->
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="search-input" type="text" placeholder="搜尋產品..." oninput="searchProducts(this.value)">
-    </div>
-
-    <!-- CAT NAV -->
-    <div class="cat-nav-wrap">
-      <div class="cat-nav" id="cat-nav"></div>
-    </div>
 
     <!-- PRODUCTS AREA -->
     <div id="products-area">
@@ -380,7 +398,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="cart-sidebar">
     <div class="cart-box">
       <div class="cart-head">
-        <div class="cart-head-title" id="cart-title">🛒 購物車</div>
+        <div class="cart-head-title" id="cart-title">購物車</div>
         <div class="cart-head-count"><span id="cart-count-label">0 項</span></div>
       </div>
       <div id="cart-desktop"></div>
@@ -392,12 +410,12 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 <div class="info-section">
   <div class="info-inner">
     <div class="info-card">
-      <div class="info-icon-wrap">🚚</div>
+      <div class="info-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
       <h3 id="i1h">送貨安排</h3>
       <p id="i1p">逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。</p>
     </div>
     <div class="info-card">
-      <div class="info-icon-wrap">💷</div>
+      <div class="info-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 7c0-1.7 1.3-3 3-3s3 1.3 3 3c0 3-5 3-5 6h5M9 17h6M12 20v-3"/></svg></div>
       <h3 id="i2h">最低消費</h3>
       <table class="min-table">
         <tr><td>Sutton SM1-3</td><td>£30</td></tr>
@@ -407,7 +425,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
       </table>
     </div>
     <div class="info-card">
-      <div class="info-icon-wrap">💬</div>
+      <div class="info-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
       <h3 id="i3h">聯絡我們</h3>
       <p id="i3p">截單後我們會透過 WhatsApp 確認訂單。
 營業時間：週一至五 9:30am – 4:00pm</p>
@@ -420,9 +438,9 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="footer-logo">JP Fruit</div>
   <div class="footer-tagline">新鮮直送 · South London · Since 2022</div>
   <div class="social-links">
-    <a href="https://www.facebook.com/jpfruitsuk" class="social-link" target="_blank">📘 Facebook</a>
-    <a href="https://www.instagram.com/jp_fruit_swlondon" class="social-link" target="_blank">📸 Instagram</a>
-    <a href="https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK" class="social-link" target="_blank">💬 WhatsApp 群組</a>
+    <a href="https://www.facebook.com/jpfruitsuk" class="social-link" target="_blank">Facebook</a>
+    <a href="https://www.instagram.com/jp_fruit_swlondon" class="social-link" target="_blank">Instagram</a>
+    <a href="https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK" class="social-link" target="_blank">WhatsApp 群組</a>
   </div>
   <div style="margin-top:18px;font-size:0.68rem;color:rgba(255,255,255,0.25);" id="footer-p">© 2025 JP Fruit · South London</div>
 </div>
@@ -432,7 +450,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="mobile-cart-panel">
     <div class="mobile-handle"><div></div></div>
     <div class="cart-head">
-      <div class="cart-head-title" id="mobile-cart-title">🛒 購物車</div>
+      <div class="cart-head-title" id="mobile-cart-title">購物車</div>
       <button onclick="toggleMobileCart()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;">✕</button>
     </div>
     <div id="cart-mobile"></div>
@@ -731,8 +749,8 @@ function applyBanner(b) {
   if(h1El) h1El.innerHTML=title?`<em>${title}</em>`:'<em>JP Fruit</em>';
   if(subEl) subEl.textContent=sub||'';
   if(imgEl){
-    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||'🍓'}</span>'">`;
-    else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||'🍓'}</span>`;
+    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||''}</span>'">`;
+    else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||''}</span>`;
   }
   if(btnEl&&btn) btnEl.innerHTML=`<button onclick="document.querySelector('.products-area').scrollIntoView({behavior:'smooth'})" style="background:#B8892A;color:white;border:none;padding:8px 22px;border-radius:22px;font-size:0.85rem;font-family:'Noto Sans HK',sans-serif;cursor:pointer;font-weight:500;">${btn}</button>`;
 }
@@ -757,19 +775,19 @@ function applySettings(s) {
 // ── TRANSLATIONS ──────────────────────────────────────────────
 const TX = {
   zh:{
-    topbar:'截單時間 <strong>週二 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五</strong> &nbsp;·&nbsp; 💳 貨到付款 &nbsp;·&nbsp; ⏰ 倒數 <strong id="countdown">--</strong>',
+    topbar:'截單時間 <strong>週二 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; 倒數 <strong id="countdown">--</strong>',
     logoSub:'亞洲美食 · South London Delivery', navCart:'購物車',
-    heroTag:'🥟 港式點心 · 🍣 刺身 · 🥩 精選凍肉 · 亞洲美食專門',
+    heroTag:'港式點心 · 刺身 · 精選凍肉 · 亞洲美食專門',
     heroH1:'南倫敦嘅<br><em>亞洲廚房</em>',
     heroSub:'港式點心、家鄉菜、刺身、精選凍肉、亞洲零食，南倫敦各區送貨上門',
-    chip1:'🥟 港式點心', chip2:'🍣 新鮮刺身', chip3:'💳 貨到付款',
-    searchPh:'搜尋產品...', catAll:'全部', catBest:'🏆 本店熱賣', loading:'載入產品中...',
-    cartTitle:'🛒 購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
+    chip1:'港式點心', chip2:'新鮮刺身', chip3:'貨到付款',
+    searchPh:'搜尋產品...', catAll:'全部', catBest:'本店熱賣', loading:'載入產品中...',
+    cartTitle:'購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
     subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
     minWarn:(area,diff)=>`⚠️ ${area} 最低消費未達，仲差 £${diff}`,
     cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
     cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
-    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
+    waBtn:'WhatsApp 落單', waBtnOff:'請先加產品入購物車',
     alertFill:'請填寫晒所有必填資料！',
     alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}。\n確定繼續落單？`,
     oos:'售罄', sale:'特價', newLabel:'NEW',
@@ -782,17 +800,17 @@ const TX = {
   en:{
     topbar:'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
     logoSub:'Asian Groceries · South London Delivery', navCart:'Cart',
-    heroTag:'🥟 HK Dim Sum · 🍣 Sashimi · 🥩 Frozen Meats · Asian Groceries',
+    heroTag:'HK Dim Sum · Sashimi · Premium Meats · Asian Groceries',
     heroH1:'South London\'s<br><em>Asian Kitchen</em>',
     heroSub:'Authentic HK dim sum, home-cooked dishes, sashimi, premium meats & Asian groceries — delivered across South London',
-    chip1:'🥟 HK Dim Sum', chip2:'🍣 Fresh Sashimi', chip3:'💳 Pay on Delivery',
-    searchPh:'Search products...', catAll:'All', catBest:'🏆 Top Sellers', loading:'Loading products...',
-    cartTitle:'🛒 Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
+    chip1:'HK Dim Sum', chip2:'Fresh Sashimi', chip3:'Pay on Delivery',
+    searchPh:'Search products...', catAll:'All', catBest:'Top Sellers', loading:'Loading products...',
+    cartTitle:'Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
     subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
     minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
     cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
     cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
-    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
+    waBtn:'Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
     alertFill:'Please fill in all required fields!',
     alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
     oos:'Sold Out', sale:'Sale', newLabel:'NEW',
@@ -866,14 +884,28 @@ function buildCatNav(){
 }
 
 // ── PRODUCT RENDERING ─────────────────────────────────────────
-const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
+const EMOJI={
+  'dim-sum':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3C7 3 3 6.5 3 11c0 2 .8 3.8 2 5.1V19a1 1 0 001 1h12a1 1 0 001-1v-2.9c1.2-1.3 2-3.1 2-5.1 0-4.5-4-8-9-8z"/><path d="M8 11h8M10 8l2 3 2-3"/></svg>',
+  'bread':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11c0-3.3 4-6 9-6s9 2.7 9 6c0 1.5-.7 2.8-1.9 3.8V19a1 1 0 01-1 1H5.9a1 1 0 01-1-1v-4.2C3.7 13.8 3 12.5 3 11z"/></svg>',
+  'noodles':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12c0 3.3 3.6 6 8 6s8-2.7 8-6"/><path d="M4 9c0-3.3 3.6-6 8-6s8 2.7 8 6c0 3.3-3.6 6-8 6S4 12.3 4 9z"/><path d="M12 3v6M8 4.5v5M16 4.5v5"/></svg>',
+  'hk-homecook':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg>',
+  'hk-snacks':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  'frozen-seafood':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 12c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8"/><path d="M16 6l2-2M18 8l2-2M14 8c1 0 1.8.8 1.8 1.8s-.8 1.7-1.8 1.7-1.8-.8-1.8-1.8.8-1.7 1.8-1.7z"/></svg>',
+  'premium-meat':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3L4 9v12h16V9l-8-6z"/><path d="M9 21V12h6v9"/></svg>',
+  'sashimi':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 17c3-5 6-8 10-8 2 0 4 1 6 3M4 17l3-8c2-4 5-6 8-6M4 17l8 0"/></svg>',
+  'fruits':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="14" r="7"/><path d="M12 7V3M9 4c0-1 3-3 3-3s3 2 3 3"/></svg>',
+  'sauces':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3h4v2.5c2 .5 3.5 2.3 3.5 4.5v9a2 2 0 01-2 2h-7a2 2 0 01-2-2V10c0-2.2 1.5-4 3.5-4.5V3z"/></svg>',
+  'snacks':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
+  'personal-care':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  'others':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>',
+};
 
 function renderProducts(){
   const area=document.getElementById('products-area');
   if(activeCat==='__best__'){
     const best=getBestSellers();
     area.innerHTML=`<div class="cat-section">
-      <div class="section-head"><div class="section-icon">🏆</div><div class="section-title">${tx('catBest')}</div><span class="section-count">${best.length} 款</span></div>
+      <div class="section-head"><div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21h8M12 17v4M7 4H4l2 8h12l2-8h-3M7 4a5 5 0 0010 0"/></svg></div><div class="section-title">${tx('catBest')}</div><span class="section-count">${best.length} 款</span></div>
       <div class="product-grid">${best.map(p=>pCard(p)).join('')}</div>
     </div>`;
     return;
@@ -890,7 +922,7 @@ function renderProducts(){
     const best=getBestSellers();
     if(best.length) bestStrip=`<div class="featured-strip">
       <div class="section-head">
-        <div class="section-icon">🏆</div>
+        <div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21h8M12 17v4M7 4H4l2 8h12l2-8h-3M7 4a5 5 0 0010 0"/></svg></div>
         <div class="section-title">${tx('catBest')}</div>
         <button onclick="filterCat('__best__',document.querySelector('.best-btn'))" class="section-count" style="cursor:pointer;border:none;font-family:inherit;background:var(--plum-l);color:var(--plum);">全部 →</button>
       </div>
@@ -898,7 +930,7 @@ function renderProducts(){
         const nm=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
         const pr=(p.salePrice||p.price||0);
         const img=p.image&&p.image.startsWith('http');
-        const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
+        const EMOJI={'dim-sum':'','bread':'','noodles':'','hk-homecook':'','hk-snacks':'','frozen-seafood':'','premium-meat':'','sashimi':'','fruits':'','sauces':'','snacks':'','personal-care':'','others':'';
         return `<div class="strip-card" onclick="document.getElementById('cat-${p.cat}')?.scrollIntoView({behavior:'smooth'})">
           <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||'🛒'}</div>
           <div class="strip-info"><div class="strip-name">${nm}</div><div class="strip-price">£${pr.toFixed(2)}</div></div>
@@ -912,7 +944,7 @@ function renderProducts(){
     const catSets=sets.filter(s=>s.cat===cid&&s.isSet);
     const main=lang==='zh'?(cat?.zh||cid):(cat?.name||cid);
     const sub=lang==='zh'?(cat?.name||''):(cat?.zh||'');
-    const emoji = {'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'}[cid]||'🛒';
+    const emoji = {'dim-sum':'','bread':'','noodles':'','hk-homecook':'','hk-snacks':'','frozen-seafood':'','premium-meat':'','sashimi':'','fruits':'','sauces':'','snacks':'','personal-care':'','others':''[cid]||'🛒';
     return `<div class="cat-section" id="cat-${cid}">
       <div class="section-head">
         <div class="section-icon">${emoji}</div>
@@ -935,7 +967,7 @@ function pCard(p){
   const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name||p.nameZh||p.zh);
   const pAlt=lang==='zh'?(p.nameEn?`<div class="p-unit" style="font-style:italic;">${p.nameEn}</div>`:''): (p.nameZh||p.zh?`<div class="p-unit">${p.nameZh||p.zh}</div>`:'');
   const pDesc=lang==='zh'?(p.descZh||p.desc||''):(p.descEn||p.descZh||p.desc||'');
-  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||'🛍️'}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
+  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||''}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
 }
 
 // ── SET MEAL ──────────────────────────────────────────────────
@@ -946,7 +978,7 @@ function renderSetCard(s){
   const setName=isZh?(s.nameZh||s.name):(s.nameEn||s.name||s.nameZh);
   const setDesc=isZh?(s.descZh||s.desc||''):(s.descEn||s.descZh||s.desc||'');
   const chips=groups.map(g=>`<span class="set-rule-chip">${isZh?g.nameZh:g.nameEn} x${g.min}${g.max>g.min?'-'+g.max:''}</span>`).join('');
-  return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||'🎁'} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'✅ 加入購物車 🛒':'✅ Add to Cart 🛒'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
+  return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||''} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'加入購物車':'Add to Cart'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
 }
 function renderSetGroup(sid,g,gi){
   const sel=setSelections[sid][gi]||{}, total=Object.values(sel).reduce((a,b)=>a+b,0), isZh=lang==='zh';
@@ -1076,7 +1108,31 @@ function updateCountdown(){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 
 // ── INIT ──────────────────────────────────────────────────────
+
+// ── SCROLL BUTTONS ──────────────────────────────────────
+function scrollToTop() {
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function scrollToCategories() {
+  const el = document.getElementById('cat-nav');
+  if (el) el.closest('.cat-nav-outer').scrollIntoView({behavior: 'smooth'});
+}
+// Show/hide FAB on scroll
+window.addEventListener('scroll', () => {
+  const fab = document.getElementById('fab-wrap');
+  if (!fab) return;
+  fab.style.display = window.scrollY > 300 ? 'flex' : 'none';
+}, {passive: true});
+
 applyTX();updateCart();updateCountdown();setInterval(updateCountdown,60000);loadProducts();
 </script>
+
+<!-- FAB Buttons -->
+<div class="fab-wrap" id="fab-wrap" style="display:none;">
+  <button class="fab fab-cat" onclick="scrollToCategories()">分類</button>
+  <button class="fab fab-top" onclick="scrollToTop()" title="返回頂部">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+  </button>
+</div>
 </body>
 </html>
