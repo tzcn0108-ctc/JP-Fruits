@@ -1035,6 +1035,46 @@ function getMin(pc){
   if(/^(KT20|CR8|CR5)/.test(c))return{min:60,area:lang==='zh'?'你的地區':'your area'};
   return null;
 }
+function updateMinWarning(pc, sfx) {
+  // Only update the warning div - don't re-render cart
+  const total = getTotal();
+  const minI = getMin(pc);
+  const warnId = 'min-warn' + sfx;
+  let el = document.getElementById(warnId);
+  if (!el) {
+    // Create warning div if it doesn't exist
+    const form = document.getElementById('cf-post' + sfx)?.closest('.checkout-form');
+    if (form) {
+      el = document.createElement('div');
+      el.id = warnId;
+      form.insertBefore(el, form.querySelector('.whatsapp-btn'));
+    }
+  }
+  if (el) {
+    if (minI && total < minI.min) {
+      const diff = (minI.min - total).toFixed(2);
+      const pct = Math.min(100, total/minI.min*100).toFixed(0);
+      el.innerHTML = `<div class="min-warning">
+        <div class="mw-top">
+          <div>${tx('minWarn', minI.area, diff)}
+            <div class="min-warning-progress"><div class="min-warning-fill" style="width:${pct}%"></div></div>
+          </div>
+          <button class="mw-share-btn" onclick="shareGroupBuy('${minI.area}',${diff})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            ${lang==='zh'?'揪鄰居夾單':'Share with neighbours'}
+          </button>
+        </div>
+      </div>`;
+    } else {
+      el.innerHTML = '';
+    }
+  }
+  // Also update cart count/total display without re-rendering form
+  const n = getCount();
+  document.getElementById('cart-count').textContent = n;
+  document.getElementById('cart-count-label').textContent = n + tx('items');
+}
+
 function updateCart(){
   const n=getCount();
   document.getElementById('cart-count').textContent=n;
@@ -1046,23 +1086,56 @@ function renderCart(cid,sfx){
   const el=document.getElementById(cid);if(!el)return;
   const items=Object.entries(cart).map(([id,val])=>({id,val,p:val&&val.isSet?{name:val.name}:products.find(x=>x.id===id)})).filter(x=>x.p);
   const total=getTotal();
-  if(!items.length){el.innerHTML=`<div class="cart-empty-msg">${tx('cartEmpty').replace('\n','<br>')}</div>${cartForm(sfx)}`;return;}
-  const pc=document.getElementById('cf-post'+sfx)?.value||'';
-  const minI=getMin(pc);
-  const warn=minI&&total<minI.min?`<div class="min-warning">
-    ${tx('minWarn',minI.area,(minI.min-total).toFixed(2))}
-    <div class="min-warning-progress"><div class="min-warning-fill" style="width:${Math.min(100,total/minI.min*100).toFixed(0)}%"></div></div>
-  </div>`:'';
-  el.innerHTML=`<div class="cart-items-list">${items.map(({id,val})=>{
+
+  // Check if checkout form already exists (preserve user input)
+  const formExists = !!document.getElementById('cf-name'+sfx);
+
+  if(!items.length){
+    if(!formExists) el.innerHTML=`<div class="cart-empty-msg">${tx('cartEmpty').replace('
+','<br>')}</div>${cartForm(sfx)}`;
+    else {
+      // Just update items area
+      let itemsEl = el.querySelector('.cart-items-list');
+      if(itemsEl) itemsEl.innerHTML = `<div class="cart-empty-msg" style="padding:16px 20px;">${tx('cartEmpty').replace('
+','<br>')}</div>`;
+      let summaryEl = el.querySelector('.cart-summary');
+      if(summaryEl) summaryEl.style.display = 'none';
+    }
+    return;
+  }
+
+  const itemsHtml = items.map(({id,val})=>{
     if(val&&val.isSet)return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="rmSetItem('${id}')">✕</button></div><div class="ci-price">£${parseFloat(val.price||0).toFixed(2)}</div></div>`;
     const p=products.find(x=>x.id===id);if(!p)return'';const pr=p.salePrice||p.price;
     const ciName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
     return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price">£${(pr*val).toFixed(2)}</div></div>`;
-  }).join('')}</div><div class="cart-summary"><div class="summary-row"><span>${tx('subtotal')}</span><span>£${total.toFixed(2)}</span></div><div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div><div class="summary-row summary-total"><span>${tx('total')}</span><span>£${total.toFixed(2)}</span></div></div>${warn}${cartForm(sfx)}`;
+  }).join('');
+
+  const summaryHtml = `<div class="summary-row"><span>${tx('subtotal')}</span><span>£${total.toFixed(2)}</span></div><div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div><div class="summary-row summary-total"><span>${tx('total')}</span><span>£${total.toFixed(2)}</span></div>`;
+
+  if(formExists){
+    // Surgical update: only replace items and summary, preserve form inputs
+    let itemsEl = el.querySelector('.cart-items-list');
+    if(itemsEl){ itemsEl.innerHTML = itemsHtml; }
+    else { el.insertAdjacentHTML('afterbegin','<div class="cart-items-list">'+itemsHtml+'</div>'); }
+    let summaryEl = el.querySelector('.cart-summary');
+    if(summaryEl){ summaryEl.innerHTML = summaryHtml; summaryEl.style.display=''; }
+    else { el.querySelector('.cart-items-list').insertAdjacentHTML('afterend','<div class="cart-summary">'+summaryHtml+'</div>'); }
+    // Update order bump
+    const bumpItem=getBumpItem();
+    let bumpEl = el.querySelector('.order-bump');
+    if(bumpItem && !bumpEl){
+      const btn = el.querySelector('.whatsapp-btn');
+      if(btn) btn.insertAdjacentHTML('beforebegin',`<div class="order-bump" onclick="addCart('${bumpItem.id}');this.style.display='none'"><div class="ob-label">加購優惠</div><div class="ob-content"><div class="ob-name">${lang==='zh'?(bumpItem.nameZh||bumpItem.name):bumpItem.nameEn||bumpItem.name}</div><div class="ob-price">+£${(bumpItem.salePrice||bumpItem.price).toFixed(2)}</div></div><div class="ob-cta">加入</div></div>`);
+    }
+  } else {
+    // First render: build everything including form
+    el.innerHTML=`<div class="cart-items-list">${itemsHtml}</div><div class="cart-summary">${summaryHtml}</div>${cartForm(sfx)}`;
+  }
 }
 function cartForm(sfx){
   const has=getCount()>0;
-  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateCart()"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
+  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
 }
 function sendWA(sfx){
   const name=document.getElementById('cf-name'+sfx)?.value?.trim();
