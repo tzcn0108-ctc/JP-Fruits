@@ -686,118 +686,8 @@ async function loadSeedData() {
   renderProducts();
 }
 
-// ── TRANSLATIONS ──────────────────────────────────────────────
-const TX = {
-  zh: {
-    topbar: '截單時間 <strong>週二 Tuesday 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五 Friday</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; 倒數 <strong id="countdown">--</strong>',
-    logoSub: '日本直送 · South London 送貨',
-    navCart: '購物車',
-    heroTag: '🇯🇵 日本空運直送 · Fresh from Japan',
-    heroH1: '新鮮到你家<br><em>JP Fruit</em>',
-    heroSub: '精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門',
-    chip1:'🥟 港式點心', chip2:'🍣 新鮮刺身', chip3:'💳 貨到付款',
-    searchPh: '搜尋產品...',
-    catAll: '全部', catBest:'🏆 本店熱賣', loading: '載入產品中...',
-    cartTitle: '🛒 購物車',
-    cartEmpty: '購物車係空嘅\n按 + 加入產品',
-    items: ' 項',
-    subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
-    minWarn: (area,diff) => `⚠️ ${area} 最低消費未達，仲差 £${diff}`,
-    cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
-    cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
-    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
-    alertFill:'請填寫晒所有必填資料！',
-    alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}，未達到。\n確定繼續落單？`,
-    oos:'售罄', sale:'特價', newLabel:'NEW',
-    i1h:'送貨安排', i1p:'逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。',
-    i2h:'最低消費',
-    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
-    i2r4:'Tadworth / Purley / Coulsdon',
-    i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
-    footerP:'關注我們 Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>
-      `🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
-  },
-  en: {
-    topbar: 'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
-    logoSub: 'Fresh from Japan · South London Delivery',
-    navCart: 'Cart',
-    heroTag: '🇯🇵 Air-freighted from Japan',
-    heroH1: 'Fresh to Your Door<br><em>JP Fruit</em>',
-    heroSub: 'Premium Japanese fruits, authentic HK flavours & Asian specialities — delivered across South London',
-    chip1:'🥟 HK Dim Sum', chip2:'🍣 Fresh Sashimi', chip3:'💳 Pay on Delivery',
-    searchPh: 'Search products...',
-    catAll: 'All', catBest:'🏆 Top Sellers', loading: 'Loading products...',
-    cartTitle: '🛒 Cart',
-    cartEmpty: 'Your cart is empty\nTap + to add products',
-    items: ' items',
-    subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
-    minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
-    cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
-    cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
-    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
-    alertFill:'Please fill in all required fields!',
-    alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
-    oos:'Sold Out', sale:'Sale', newLabel:'NEW',
-    i1h:'Delivery', i1p:"Delivery every Friday (Thursday if high volume). You'll be notified of your slot one day in advance. Please ensure someone is home to receive.",
-    i2h:'Minimum Order',
-    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
-    i2r4:'Tadworth / Purley / Coulsdon',
-    i3h:'Contact Us', i3p:'We\'ll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm',
-    footerP:'Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>
-      `🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
-  }
-};
 
-// ── STATE ─────────────────────────────────────────────────────
-let lang = 'zh';
-let products = [], categories = [], sets = [], cart = {}, searchQuery = '', activeCat = 'all';
-let siteSettings = {};
 
-// ── LANGUAGE ──────────────────────────────────────────────────
-function setLang(l) {
-  lang = l;
-  document.getElementById('btn-zh').classList.toggle('active', l==='zh');
-  document.getElementById('btn-en').classList.toggle('active', l==='en');
-  document.documentElement.lang = l==='zh'?'zh-HK':'en';
-  applyTX();
-  buildCatNav();
-  renderProducts();
-  updateCart();
-  // re-apply banner in new language if available
-  (async()=>{ try{ let d=null; if(typeof window.storage!=='undefined'){try{const r=await window.storage.get('jpfruit-v2',true);if(r)d=JSON.parse(r.value);}catch(e){}} if(!d){try{const raw=localStorage.getItem('jpfruit-v2');d=raw?JSON.parse(raw):null;}catch(e){}} if(d){if(d.banner)applyBanner(d.banner);if(d.settings)applySettings(d.settings);}}catch(e){} })();
-}
-
-function tx(k, ...a) { const v=TX[lang][k]; return typeof v==='function'?v(...a):v; }
-
-function applyTX() {
-  const t = TX[lang];
-  document.getElementById('topbar-el').innerHTML = t.topbar;
-  document.getElementById('logo-sub').textContent = t.logoSub;
-  document.getElementById('nav-cart-label').textContent = t.navCart;
-  document.getElementById('hero-tag').textContent = t.heroTag;
-  document.getElementById('hero-h1').innerHTML = t.heroH1;
-  document.getElementById('hero-sub').textContent = t.heroSub;
-  document.getElementById('chip1').textContent = t.chip1;
-  document.getElementById('chip2').textContent = t.chip2;
-  document.getElementById('chip3').textContent = t.chip3;
-  document.getElementById('search-input').placeholder = t.searchPh;
-  document.getElementById('loading-text').textContent = t.loading;
-  document.getElementById('cart-title').textContent = t.cartTitle;
-  document.getElementById('mobile-cart-title').textContent = t.cartTitle;
-  document.getElementById('i1h').textContent = t.i1h;
-  document.getElementById('i1p').textContent = t.i1p;
-  document.getElementById('i2h').textContent = t.i2h;
-  document.getElementById('i2r3').textContent = t.i2r3;
-  document.getElementById('i2r4').textContent = t.i2r4;
-  document.getElementById('i3h').textContent = t.i3h;
-  document.getElementById('i3p').textContent = t.i3p;
-  document.getElementById('footer-p').textContent = t.footerP;
-  updateCountdown();
-}
-
-// ── DATA ──────────────────────────────────────────────────────
 async function loadProducts() {
   async function getDB() {
     if (typeof window.storage !== 'undefined') {
@@ -859,6 +749,8 @@ function applySettings(s) {
   if(s.wagroup) document.querySelectorAll('a[href*="chat.whatsapp"]').forEach(el=>el.href=s.wagroup);
   applyTX();
 }
+
+
 
 // ── TRANSLATIONS ──────────────────────────────────────────────
 const TX = {
