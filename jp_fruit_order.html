@@ -336,7 +336,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
 <nav>
   <div class="logo" href="#">
-    <img src="/mnt/user-data/uploads/Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit">
+    <img src="Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit">
     <div>
       <div class="logo-text">JP Fruit</div>
       <span class="logo-sub" id="logo-sub">亞洲美食 · South London</span>
@@ -1017,9 +1017,9 @@ function renderProducts(){
         const nm=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
         const pr=(p.salePrice||p.price||0);
         const img=p.image&&p.image.startsWith('http');
-        const EMOJI={'dim-sum':'','bread':'','noodles':'','hk-homecook':'','hk-snacks':'','frozen-seafood':'','premium-meat':'','sashimi':'','fruits':'','sauces':'','snacks':'','personal-care':'','others':'';
+        const EMOJI={'dim-sum':'','bread':'','noodles':'','hk-homecook':'','hk-snacks':'','frozen-seafood':'','premium-meat':'','sashimi':'','fruits':'','sauces':'','snacks':'','personal-care':'','others':''};
         return `<div class="strip-card" onclick="document.getElementById('cat-${p.cat}')?.scrollIntoView({behavior:'smooth'})">
-          <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||'🛒'}</div>
+          <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||''}</div>
           <div class="strip-info"><div class="strip-name">${nm}</div><div class="strip-price">£${pr.toFixed(2)}</div></div>
         </div>`;
       }).join('')}</div>
