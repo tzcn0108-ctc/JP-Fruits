@@ -76,58 +76,38 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .hero-food-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:190px;}
 .hfg-card{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:13px 10px;text-align:center;backdrop-filter:blur(12px);transition:all 0.3s;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
 .hfg-card:hover{background:rgba(255,255,255,0.2);transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
-
-.hfg-card small{font-size:0.72rem;color:rgba(255,255,255,0.9);display:block;font-family:'Noto Sans HK',sans-serif;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;}
+.hfg-card span{font-size:1.9rem;display:block;margin-bottom:5px;}
+.hfg-card small{font-size:0.61rem;color:rgba(255,255,255,0.85);display:block;font-family:'Noto Sans HK',sans-serif;letter-spacing:0.5px;white-space:nowrap;font-weight:500;}
 .hfg-1{animation:float-card 5s ease-in-out infinite;}
 .hfg-2{animation:float-card 5s ease-in-out infinite;animation-delay:1.2s;}
 .hfg-3{animation:float-card 5s ease-in-out infinite;animation-delay:2.4s;}
 .hfg-4{animation:float-card 5s ease-in-out infinite;animation-delay:3.6s;}
 @keyframes float-card{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 
-
-/* ── QUALITY PROMISE STRIP ── */
-.quality-strip{background:var(--white);border-bottom:1.5px solid var(--border);padding:0 20px;}
-.quality-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0;}
-.quality-item{display:flex;align-items:center;gap:12px;padding:16px 0;flex:1;}
-.quality-icon{width:38px;height:38px;border-radius:10px;background:var(--plum-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.quality-icon svg{width:18px;height:18px;stroke:var(--plum);}
-.quality-title{font-size:0.82rem;font-weight:600;color:var(--ink);margin-bottom:1px;}
-.quality-sub{font-size:0.7rem;color:var(--muted);line-height:1.4;}
-.quality-divider{width:1px;height:36px;background:var(--border);flex-shrink:0;margin:0 8px;}
-@media(max-width:760px){.quality-divider{display:none;}.quality-inner{flex-wrap:wrap;gap:0;}.quality-item{width:50%;flex:none;border-bottom:1px solid var(--border);}.quality-item:nth-child(odd){padding-right:12px;}.quality-item:nth-child(n+7){border-bottom:none;}}
 /* ── COUNTDOWN BAR ── */
 .countdown-bar{background:linear-gradient(90deg,var(--plum-l),var(--peach-l));border-bottom:1.5px solid var(--border);padding:10px 24px;text-align:center;font-size:0.79rem;color:var(--plum);font-weight:500;}
 .countdown-bar .cd-num{font-family:'Noto Serif HK',serif;font-size:1rem;color:var(--berry);font-weight:600;}
 
 /* ── MAIN LAYOUT ── */
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;max-width:1100px;margin:0 auto;padding:16px 20px 80px;gap:28px;align-items:start;}
-.cart-sidebar{display:block;position:sticky;top:72px;align-self:start;max-height:calc(100vh - 90px);overflow-y:auto;}
+.layout{display:grid;grid-template-columns:1fr 360px;max-width:1100px;margin:0 auto;padding:28px 20px 80px;gap:28px;}
 @media(max-width:860px){.layout{grid-template-columns:1fr;}.cart-sidebar{display:none;}}
 
-.products-area{min-width:0;padding-right:0;}
 /* ── SEARCH BAR ── */
 .search-wrap{position:relative;margin-bottom:20px;}
 .search-input{width:100%;background:var(--white);border:2px solid var(--border);border-radius:var(--radius-lg);padding:13px 20px 13px 50px;font-family:'Noto Sans HK',sans-serif;font-size:0.9rem;color:var(--ink);transition:all 0.2s;box-shadow:var(--shadow-sm);}
 .search-input:focus{outline:none;border-color:var(--plum-m);box-shadow:0 0 0 4px var(--plum-l);}
 .search-input::placeholder{color:var(--muted);}
-.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--plum-m);display:flex;align-items:center;}
+.search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--plum-m);font-size:1.1rem;}
 
-/* ── CATEGORY NAV (full width, wrapping) ── */
-.cat-nav-outer{background:var(--white);padding:14px 20px 16px;position:sticky;top:52px;z-index:99;border-bottom:1.5px solid var(--border);box-shadow:0 2px 16px rgba(107,76,138,0.07);}
-.cat-nav-outer-inner{max-width:1100px;margin:0 auto;}
-.search-wrap-inline{position:relative;margin-bottom:14px;}
-.search-wrap-inline .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--plum-m);display:flex;align-items:center;}
-.search-wrap-inline .search-input{width:100%;background:var(--white);border:2px solid var(--border);border-radius:var(--radius-lg);padding:13px 20px 13px 50px;font-family:'Noto Sans HK',sans-serif;font-size:0.9rem;color:var(--ink);transition:all 0.2s;box-shadow:var(--shadow-sm);}
-.search-wrap-inline .search-input:focus{outline:none;border-color:var(--plum-m);box-shadow:0 0 0 4px var(--plum-l);}
-.cat-nav{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:4px;}
-.cat-btn{background:var(--white);border:1.5px solid var(--border);color:var(--ink-2);padding:7px 18px;border-radius:6px;font-size:0.78rem;cursor:pointer;transition:all 0.18s;font-family:'Noto Sans HK',sans-serif;white-space:nowrap;font-weight:500;letter-spacing:0.3px;position:relative;}
-.cat-btn:hover{border-color:var(--plum-m);color:var(--plum);background:var(--plum-l);}
-.cat-btn.active{background:var(--plum);border-color:var(--plum);color:white;box-shadow:0 3px 10px rgba(107,76,138,0.28);}
-.cat-btn.active::after{content:'';position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--plum);}
-.best-btn{border-color:#C9973A;color:#8B6520;background:var(--gold-l);}
-.best-btn:hover{background:#FEF0C0;border-color:#B8882E;}
-.best-btn.active{background:linear-gradient(135deg,#C9973A,#A87520);border-color:transparent;color:white;}
-.best-btn.active::after{border-top-color:#A87520;}
+/* ── CATEGORY NAV (horizontal scroll pills) ── */
+.cat-nav-wrap{margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.cat-nav-wrap::-webkit-scrollbar{display:none;}
+.cat-nav{display:flex;gap:8px;padding-bottom:4px;width:max-content;}
+.cat-btn{background:var(--white);border:2px solid var(--border);color:var(--muted);padding:8px 18px;border-radius:24px;font-size:0.78rem;cursor:pointer;transition:all 0.2s;font-family:'Noto Sans HK',sans-serif;white-space:nowrap;font-weight:500;box-shadow:var(--shadow-sm);}
+.cat-btn:hover{border-color:var(--plum-m);color:var(--plum);box-shadow:var(--shadow-md);}
+.cat-btn.active{background:var(--plum);border-color:var(--plum);color:white;box-shadow:0 4px 14px rgba(107,76,138,0.35);}
+.best-btn{border-color:var(--gold);color:var(--gold);}
+.best-btn.active{background:linear-gradient(135deg,var(--gold),#E8881A);border-color:transparent;color:white;}
 
 /* ── SECTION HEADER ── */
 .cat-section{margin-bottom:36px;}
@@ -258,11 +238,9 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .cf-input{width:100%;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-family:'Noto Sans HK',sans-serif;font-size:0.83rem;color:var(--ink);transition:all 0.18s;}
 .cf-input:focus{outline:none;border-color:var(--plum-m);box-shadow:0 0 0 3px var(--plum-l);}
 .cf-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#25D366;color:white;border:none;padding:13px;border-radius:8px;font-size:0.86rem;font-family:'Noto Sans HK',sans-serif;font-weight:600;cursor:pointer;margin-top:12px;transition:all 0.2s;letter-spacing:0.3px;}
-.whatsapp-btn::before{content:'';display:inline-block;width:18px;height:18px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z'/><path d='M12 0C5.373 0 0 5.373 0 12c0 2.136.562 4.14 1.54 5.875L0 24l6.317-1.514A11.933 11.933 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.8 9.8 0 01-5.001-1.369l-.36-.213-3.728.893.924-3.622-.234-.372A9.786 9.786 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182c5.43 0 9.818 4.388 9.818 9.818 0 5.43-4.388 9.818-9.818 9.818z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-size:contain;flex-shrink:0;}
-.whatsapp-btn:hover{background:#1ebd58;transform:translateY(-1px);}
-.whatsapp-btn:disabled{background:#ccc;color:#999;cursor:not-allowed;transform:none;}
-.whatsapp-btn:disabled::before{opacity:0.4;}
+.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;padding:13px;border-radius:12px;font-size:0.9rem;font-family:'Noto Sans HK',sans-serif;font-weight:700;cursor:pointer;margin-top:12px;transition:all 0.2s;box-shadow:0 4px 16px rgba(37,211,102,0.35);}
+.whatsapp-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,0.45);}
+.whatsapp-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;transform:none;}
 
 /* ── MOBILE CART ── */
 .mobile-cart-overlay{display:none;position:fixed;inset:0;background:rgba(28,15,8,0.6);z-index:300;backdrop-filter:blur(4px);}
@@ -278,7 +256,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 @media(max-width:640px){.info-inner{grid-template-columns:1fr;}}
 .info-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);transition:all 0.2s;}
 .info-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px);}
-.info-icon-wrap{width:44px;height:44px;border-radius:12px;background:var(--plum-l);display:flex;align-items:center;justify-content:center;margin-bottom:12px;color:var(--plum);}.info-icon-wrap svg{width:22px;height:22px;stroke:var(--plum);}
+.info-icon-wrap{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--plum-l),var(--peach-l));display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:12px;}
 .info-card h3{font-size:0.9rem;font-weight:700;margin-bottom:7px;color:var(--plum);}
 .info-card p{font-size:0.77rem;color:var(--muted);line-height:1.8;white-space:pre-line;}
 .min-table{width:100%;font-size:0.75rem;border-collapse:collapse;margin-top:8px;}
@@ -299,35 +277,43 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .loading-state{text-align:center;padding:70px 20px;color:var(--muted);}
 .loading-spinner{width:36px;height:36px;border:3px solid var(--peach-l);border-top-color:var(--plum);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px;}
 @keyframes spin{to{transform:rotate(360deg);}}
-@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-@keyframes fadeOut{to{opacity:0;transform:translateX(-50%) translateY(-10px);}}
 
 /* ── EMPTY ── */
 .no-products{text-align:center;padding:36px;color:var(--muted);font-size:0.84rem;}
-
-
-
-/* ── GROUP BUY SHARE ── */
-.mw-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.mw-share-btn{display:flex;align-items:center;gap:6px;background:var(--plum);color:white;border:none;padding:7px 12px;border-radius:7px;font-size:0.72rem;font-family:'Noto Sans HK',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
-.mw-share-btn:hover{background:var(--plum-m);transform:translateY(-1px);}
-/* ── ORDER BUMP ── */
-.order-bump{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FEF9EC,#FEF3D0);border:1.5px solid var(--gold);border-radius:10px;padding:10px 12px;margin-bottom:12px;cursor:pointer;transition:all 0.18s;}
-.order-bump:hover{background:#FEF0C0;transform:translateY(-1px);}
-.ob-label{font-size:0.58rem;background:var(--gold);color:white;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;text-transform:uppercase;flex-shrink:0;}
-.ob-content{flex:1;}
-.ob-name{font-size:0.78rem;font-weight:600;color:var(--ink-2);line-height:1.3;}
-.ob-price{font-size:0.78rem;color:var(--plum);font-weight:700;margin-top:2px;}
-.ob-cta{background:var(--gold);color:white;border:none;padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Noto Sans HK',sans-serif;flex-shrink:0;}
-/* ── SCROLL TO TOP / CATEGORIES ── */
-.fab-wrap{position:fixed;bottom:28px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:150;}
-.fab{width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:all 0.2s;font-family:'Noto Sans HK',sans-serif;}
-.fab:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.2);}
-.fab-top{background:var(--plum);color:white;}
-.fab-cat{background:var(--white);border:1.5px solid var(--border);color:var(--plum);font-size:0.62rem;font-weight:600;letter-spacing:0.5px;width:auto;border-radius:22px;padding:0 14px;height:36px;}
-.fab-cat:hover{background:var(--plum-l);}
-.fab svg{width:18px;height:18px;}
 </style>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, set, get, onValue, serverTimestamp } 
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBw9aUAk0SzTGTZnA7S5M-ehFBnRO0dcuo",
+    authDomain: "jp-fruits.firebaseapp.com",
+    databaseURL: "https://jp-fruits-default-rtdb.firebasedatabase.app",
+    projectId: "jp-fruits",
+    storageBucket: "jp-fruits.firebasestorage.app",
+    messagingSenderId: "1029234694754",
+    appId: "1:1029234694754:web:fd7406ac027043219d0f3b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // Expose to global scope for use in main script
+  window._fbDb  = db;
+  window._fbRef = ref;
+  window._fbPush = push;
+  window._fbSet  = set;
+  window._fbGet  = get;
+  window._fbServerTimestamp = serverTimestamp;
+  window._fbOnValue = onValue;
+  window._firebaseReady = true;
+  document.dispatchEvent(new Event('firebaseReady'));
+  // Re-load products from Firebase when ready
+  if (window._reloadFromFirebase) window._reloadFromFirebase();
+</script>
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -336,7 +322,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
 <nav>
   <div class="logo" href="#">
-    <img src="Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit">
+    <img src="/mnt/user-data/uploads/Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit">
     <div>
       <div class="logo-text">JP Fruit</div>
       <span class="logo-sub" id="logo-sub">亞洲美食 · South London</span>
@@ -362,23 +348,23 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
     <div class="hero-left">
       <div class="hero-eyebrow" id="hero-tag">
         <span></span>
-        港式點心 · 刺身 · 精選凍肉 · 亞洲美食
+        🥟 港式點心 · 🍣 刺身 · 🥩 凍肉 · 亞洲美食
       </div>
       <h1 id="hero-h1">新鮮直送<br><em>JP Fruit</em></h1>
       <p class="hero-sub" id="hero-sub">精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門</p>
       <div class="hero-chips">
-        <span class="hero-chip" id="chip1">港式點心</span>
-        <span class="hero-chip" id="chip2">新鮮刺身</span>
-        <span class="hero-chip" id="chip3">貨到付款</span>
+        <span class="hero-chip" id="chip1">✈️ 日本直送</span>
+        <span class="hero-chip" id="chip2">🏠 South London 送貨</span>
+        <span class="hero-chip" id="chip3">💳 貨到付款</span>
       </div>
       <div id="hero-btn-wrap"></div>
     </div>
     <div class="hero-right" id="hero-img-wrap">
       <div class="hero-food-grid">
-        <div class="hfg-card hfg-1"><small>港式點心</small></div>
-        <div class="hfg-card hfg-2"><small>新鮮刺身</small></div>
-        <div class="hfg-card hfg-3"><small>精選凍肉</small></div>
-        <div class="hfg-card hfg-4"><small>亞洲麵食</small></div>
+        <div class="hfg-card hfg-1"><span>🥟</span><small>港式點心</small></div>
+        <div class="hfg-card hfg-2"><span>🍣</span><small>新鮮刺身</small></div>
+        <div class="hfg-card hfg-3"><span>🥩</span><small>精選凍肉</small></div>
+        <div class="hfg-card hfg-4"><span>🍜</span><small>亞洲麵食</small></div>
       </div>
     </div>
   </div>
@@ -389,72 +375,27 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   </div>
 </div>
 
-
-<!-- QUALITY PROMISE STRIP -->
-<div class="quality-strip">
-  <div class="quality-inner">
-    <div class="quality-item">
-      <div class="quality-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      </div>
-      <div>
-        <div class="quality-title" id="q1t">品質保證</div>
-        <div class="quality-sub" id="q1s">每週親自挑選，不合格不出售</div>
-      </div>
-    </div>
-    <div class="quality-divider"></div>
-    <div class="quality-item">
-      <div class="quality-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      </div>
-      <div>
-        <div class="quality-title" id="q2t">每週五送貨</div>
-        <div class="quality-sub" id="q2s">南倫敦各區，提前一天通知時段</div>
-      </div>
-    </div>
-    <div class="quality-divider"></div>
-    <div class="quality-item">
-      <div class="quality-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      </div>
-      <div>
-        <div class="quality-title" id="q3t">一對一客服</div>
-        <div class="quality-sub" id="q3s">WhatsApp 直接溝通，不是機械人</div>
-      </div>
-    </div>
-    <div class="quality-divider"></div>
-    <div class="quality-item">
-      <div class="quality-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
-      </div>
-      <div>
-        <div class="quality-title" id="q4t">貨到付款</div>
-        <div class="quality-sub" id="q4s">收到貨先畀錢，安心購物</div>
-      </div>
-    </div>
-  </div>
-</div>
 <!-- COUNTDOWN -->
 <div class="countdown-bar">
-  <span id="countdown-label-text">截單倒數：</span>
+  ⏰ <span id="countdown-label-text">⏰ 截單倒數：</span>
   <span class="cd-num" id="countdown">--</span>
-  &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 貨到付款
+  &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 💳 貨到付款
 </div>
 
 <!-- MAIN LAYOUT -->
-<!-- CAT NAV - full width above everything -->
-<div class="cat-nav-outer">
-  <div class="cat-nav-outer-inner">
-  <div class="search-wrap-inline">
-    <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-    <input class="search-input" id="search-input" type="text" placeholder="搜尋產品..." oninput="searchProducts(this.value)">
-  </div>
-  <div class="cat-nav" id="cat-nav"></div>
-  </div>
-</div>
-
 <div class="layout">
   <div class="products-area">
+
+    <!-- SEARCH -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-input" type="text" placeholder="搜尋產品..." oninput="searchProducts(this.value)">
+    </div>
+
+    <!-- CAT NAV -->
+    <div class="cat-nav-wrap">
+      <div class="cat-nav" id="cat-nav"></div>
+    </div>
 
     <!-- PRODUCTS AREA -->
     <div id="products-area">
@@ -470,7 +411,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="cart-sidebar">
     <div class="cart-box">
       <div class="cart-head">
-        <div class="cart-head-title" id="cart-title">購物車</div>
+        <div class="cart-head-title" id="cart-title">🛒 購物車</div>
         <div class="cart-head-count"><span id="cart-count-label">0 項</span></div>
       </div>
       <div id="cart-desktop"></div>
@@ -482,12 +423,12 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 <div class="info-section">
   <div class="info-inner">
     <div class="info-card">
-      <div class="info-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+      <div class="info-icon-wrap">🚚</div>
       <h3 id="i1h">送貨安排</h3>
       <p id="i1p">逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。</p>
     </div>
     <div class="info-card">
-      <div class="info-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 7c0-1.7 1.3-3 3-3s3 1.3 3 3c0 3-5 3-5 6h5M9 17h6M12 20v-3"/></svg></div>
+      <div class="info-icon-wrap">💷</div>
       <h3 id="i2h">最低消費</h3>
       <table class="min-table">
         <tr><td>Sutton SM1-3</td><td>£30</td></tr>
@@ -497,7 +438,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
       </table>
     </div>
     <div class="info-card">
-      <div class="info-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <div class="info-icon-wrap">💬</div>
       <h3 id="i3h">聯絡我們</h3>
       <p id="i3p">截單後我們會透過 WhatsApp 確認訂單。
 營業時間：週一至五 9:30am – 4:00pm</p>
@@ -510,9 +451,9 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="footer-logo">JP Fruit</div>
   <div class="footer-tagline">新鮮直送 · South London · Since 2022</div>
   <div class="social-links">
-    <a href="https://www.facebook.com/jpfruitsuk" class="social-link" target="_blank">Facebook</a>
-    <a href="https://www.instagram.com/jp_fruit_swlondon" class="social-link" target="_blank">Instagram</a>
-    <a href="https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK" class="social-link" target="_blank">WhatsApp 群組</a>
+    <a href="https://www.facebook.com/jpfruitsuk" class="social-link" target="_blank">📘 Facebook</a>
+    <a href="https://www.instagram.com/jp_fruit_swlondon" class="social-link" target="_blank">📸 Instagram</a>
+    <a href="https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK" class="social-link" target="_blank">💬 WhatsApp 群組</a>
   </div>
   <div style="margin-top:18px;font-size:0.68rem;color:rgba(255,255,255,0.25);" id="footer-p">© 2025 JP Fruit · South London</div>
 </div>
@@ -522,7 +463,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="mobile-cart-panel">
     <div class="mobile-handle"><div></div></div>
     <div class="cart-head">
-      <div class="cart-head-title" id="mobile-cart-title">購物車</div>
+      <div class="cart-head-title" id="mobile-cart-title">🛒 購物車</div>
       <button onclick="toggleMobileCart()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;">✕</button>
     </div>
     <div id="cart-mobile"></div>
@@ -769,143 +710,146 @@ const SEED_CATEGORIES = [
   {id:'others',name:'Others',zh:'其他'},
 ];
 
-
-const SEED_SETS = [
-  {
-    id:'set001',
-    nameZh:'點心家庭套餐',
-    nameEn:'Dim Sum Family Set',
-    name:'Dim Sum Family Set',
-    cat:'dim-sum',
-    price:28.00,
-    emoji:'',
-    descZh:'精選 4 款港式點心，適合 3-4 人家庭享用',
-    descEn:'4 classic HK dim sum selections, perfect for a family of 3-4',
-    desc:'精選 4 款港式點心，適合 3-4 人家庭享用',
-    isSet:true,
-    groups:[
-      {
-        id:'g001a',
-        nameZh:'燒賣類（選 1）',
-        nameEn:'Siu Mai (Choose 1)',
-        min:1, max:1, allowRepeat:false,
-        items:[
-          {id:'p100', zh:'豬蝦燒賣 20粒', name:'Siu Mai Prawn & Pork 20pcs'},
-          {id:'p101', zh:'魚肉燒賣 20粒', name:'Fish Siu Mai 20pcs'},
-          {id:'p102', zh:'牛肉燒賣 20粒', name:'Beef Siu Mai 20pcs'},
-        ]
-      },
-      {
-        id:'g001b',
-        nameZh:'包點類（選 1）',
-        nameEn:'Buns (Choose 1)',
-        min:1, max:1, allowRepeat:false,
-        items:[
-          {id:'p107', zh:'叉燒包 6個', name:'BBQ Pork Bun 6pcs'},
-          {id:'p108', zh:'雞包 6個', name:'Chicken Bun 6pcs'},
-          {id:'p110', zh:'小籠包 12個', name:'Siu Loong Bao 12pcs'},
-        ]
-      },
-      {
-        id:'g001c',
-        nameZh:'主菜類（選 1）',
-        nameEn:'Main (Choose 1)',
-        min:1, max:1, allowRepeat:false,
-        items:[
-          {id:'p105', zh:'珍珠雞 4件', name:'Mini Glutinous Rice 4pcs'},
-          {id:'p104', zh:'鮮竹捲 10條', name:'Bean Curd Roll 10pcs'},
-          {id:'p111', zh:'豉汁排骨 410g', name:'Black Bean Sauce Spare Ribs 410g'},
-        ]
-      },
-      {
-        id:'g001d',
-        nameZh:'配菜類（選 1）',
-        nameEn:'Side (Choose 1)',
-        min:1, max:1, allowRepeat:false,
-        items:[
-          {id:'p112', zh:'豉汁鳳爪 410g', name:'Black Bean Sauce Chicken Feet 410g'},
-          {id:'p119', zh:'鮮蝦雲吞 12粒', name:'Fresh Prawn Wonton 12pcs'},
-          {id:'p124', zh:'水晶餃 15粒', name:'Crystal Dumplings 15pcs'},
-        ]
-      }
-    ]
-  },
-  {
-    id:'set002',
-    nameZh:'凍肉拼盤套餐',
-    nameEn:'Premium Meat Selection',
-    name:'Premium Meat Selection',
-    cat:'premium-meat',
-    price:32.00,
-    emoji:'',
-    descZh:'精選 3 款優質凍肉，自由配搭',
-    descEn:'Choose 3 premium frozen meat items',
-    desc:'精選 3 款優質凍肉，自由配搭',
-    isSet:true,
-    groups:[
-      {
-        id:'g002a',
-        nameZh:'選擇 3 款肉類',
-        nameEn:'Choose 3 Meat Items',
-        min:3, max:3, allowRepeat:true,
-        items:[
-          {id:'p078', zh:'愛爾蘭頂級牛小排肉片 200g', name:'Premium Boneless Short Rib Slices 200g'},
-          {id:'p079', zh:'愛爾蘭頂級牛小排燒烤肉片 200g', name:'Premium BBQ Short Rib Slices 200g'},
-          {id:'p083', zh:'精選梅花豚肉片 250g', name:'Pork Upper Shoulder Slices 250g'},
-          {id:'p076', zh:'Iberico 豬頸肉', name:'Iberico Secreto'},
-          {id:'p077', zh:'Iberico 扇子肉', name:'Iberico Abanico'},
-          {id:'p085', zh:'日式雞肉串燒 800g', name:'Chicken Yakitori 800g'},
-        ]
-      }
-    ]
-  },
-  {
-    id:'set003',
-    nameZh:'湯麵套餐',
-    nameEn:'Noodle Combo Set',
-    name:'Noodle Combo Set',
-    cat:'noodles',
-    price:18.00,
-    emoji:'',
-    descZh:'選 2 款湯麵，比單買更著數',
-    descEn:'Choose any 2 noodle soups — better value than buying separately',
-    desc:'選 2 款湯麵，比單買更著數',
-    isSet:true,
-    groups:[
-      {
-        id:'g003a',
-        nameZh:'選擇 2 款湯麵',
-        nameEn:'Choose 2 Noodle Soups',
-        min:2, max:2, allowRepeat:true,
-        items:[
-          {id:'p000', zh:'四川麻辣牛肉米線', name:'Spicy Mala Tang with sliced beef'},
-          {id:'p001', zh:'新加坡海鮮喇沙湯麵', name:'Singapore Seafood Laksa Ramen'},
-          {id:'p002', zh:'日式叉燒豬骨湯拉麵', name:'Japanese Tonkotsu Ramen'},
-          {id:'p003', zh:'馬拉椰香雞肉白湯拉麵', name:'Malaysiana Chicken Ramen'},
-          {id:'p004', zh:'港式濃茄牛肉湯麵', name:'HK Style Tomato Beef Noodle'},
-          {id:'p005', zh:'五色素食菠菜烏冬', name:'Five Elements Spinach Veggie Udon'},
-        ]
-      }
-    ]
-  }
-];
-
 async function loadSeedData() {
   // Fallback: load seed data directly into the order form
   products = SEED_PRODUCTS.filter(p => p.active !== false && p.price > 0 && p.stock !== 0);
   categories = SEED_CATEGORIES;
-  sets = SEED_SETS;
+  sets = [];
   buildCatNav();
   renderProducts();
 }
 
+// ── TRANSLATIONS ──────────────────────────────────────────────
+const TX = {
+  zh: {
+    topbar: '截單時間 <strong>週二 Tuesday 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五 Friday</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; 倒數 <strong id="countdown">--</strong>',
+    logoSub: '日本直送 · South London 送貨',
+    navCart: '購物車',
+    heroTag: '🇯🇵 日本空運直送 · Fresh from Japan',
+    heroH1: '新鮮到你家<br><em>JP Fruit</em>',
+    heroSub: '精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門',
+    chip1:'🥟 港式點心', chip2:'🍣 新鮮刺身', chip3:'💳 貨到付款',
+    searchPh: '搜尋產品...',
+    catAll: '全部', catBest:'🏆 本店熱賣', loading: '載入產品中...',
+    cartTitle: '🛒 購物車',
+    cartEmpty: '購物車係空嘅\n按 + 加入產品',
+    items: ' 項',
+    subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
+    minWarn: (area,diff) => `⚠️ ${area} 最低消費未達，仲差 £${diff}`,
+    cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
+    cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
+    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
+    alertFill:'請填寫晒所有必填資料！',
+    alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}，未達到。\n確定繼續落單？`,
+    oos:'售罄', sale:'特價', newLabel:'NEW',
+    i1h:'送貨安排', i1p:'逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。',
+    i2h:'最低消費',
+    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
+    i2r4:'Tadworth / Purley / Coulsdon',
+    i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
+    footerP:'關注我們 Follow us for updates',
+    waMsg:(name,phone,addr,pc,items,total,notes)=>
+      `🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
+  },
+  en: {
+    topbar: 'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
+    logoSub: 'Fresh from Japan · South London Delivery',
+    navCart: 'Cart',
+    heroTag: '🇯🇵 Air-freighted from Japan',
+    heroH1: 'Fresh to Your Door<br><em>JP Fruit</em>',
+    heroSub: 'Premium Japanese fruits, authentic HK flavours & Asian specialities — delivered across South London',
+    chip1:'🥟 HK Dim Sum', chip2:'🍣 Fresh Sashimi', chip3:'💳 Pay on Delivery',
+    searchPh: 'Search products...',
+    catAll: 'All', catBest:'🏆 Top Sellers', loading: 'Loading products...',
+    cartTitle: '🛒 Cart',
+    cartEmpty: 'Your cart is empty\nTap + to add products',
+    items: ' items',
+    subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
+    minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
+    cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
+    cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
+    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
+    alertFill:'Please fill in all required fields!',
+    alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
+    oos:'Sold Out', sale:'Sale', newLabel:'NEW',
+    i1h:'Delivery', i1p:"Delivery every Friday (Thursday if high volume). You'll be notified of your slot one day in advance. Please ensure someone is home to receive.",
+    i2h:'Minimum Order',
+    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
+    i2r4:'Tadworth / Purley / Coulsdon',
+    i3h:'Contact Us', i3p:'We\'ll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm',
+    footerP:'Follow us for updates',
+    waMsg:(name,phone,addr,pc,items,total,notes)=>
+      `🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
+  }
+};
 
+// ── STATE ─────────────────────────────────────────────────────
+let lang = 'zh';
+let products = [], categories = [], sets = [], cart = {}, searchQuery = '', activeCat = 'all';
+let siteSettings = {};
 
+// ── LANGUAGE ──────────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  document.getElementById('btn-zh').classList.toggle('active', l==='zh');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  document.documentElement.lang = l==='zh'?'zh-HK':'en';
+  applyTX();
+  buildCatNav();
+  renderProducts();
+  updateCart();
+  // re-apply banner in new language if available
+  (async()=>{ try{ let d=null; if(typeof window.storage!=='undefined'){try{const r=await window.storage.get('jpfruit-v2',true);if(r)d=JSON.parse(r.value);}catch(e){}} if(!d){try{const raw=localStorage.getItem('jpfruit-v2');d=raw?JSON.parse(raw):null;}catch(e){}} if(d){if(d.banner)applyBanner(d.banner);if(d.settings)applySettings(d.settings);}}catch(e){} })();
+}
+
+function tx(k, ...a) { const v=TX[lang][k]; return typeof v==='function'?v(...a):v; }
+
+function applyTX() {
+  const t = TX[lang];
+  document.getElementById('topbar-el').innerHTML = t.topbar;
+  document.getElementById('logo-sub').textContent = t.logoSub;
+  document.getElementById('nav-cart-label').textContent = t.navCart;
+  document.getElementById('hero-tag').textContent = t.heroTag;
+  document.getElementById('hero-h1').innerHTML = t.heroH1;
+  document.getElementById('hero-sub').textContent = t.heroSub;
+  document.getElementById('chip1').textContent = t.chip1;
+  document.getElementById('chip2').textContent = t.chip2;
+  document.getElementById('chip3').textContent = t.chip3;
+  document.getElementById('search-input').placeholder = t.searchPh;
+  document.getElementById('loading-text').textContent = t.loading;
+  document.getElementById('cart-title').textContent = t.cartTitle;
+  document.getElementById('mobile-cart-title').textContent = t.cartTitle;
+  document.getElementById('i1h').textContent = t.i1h;
+  document.getElementById('i1p').textContent = t.i1p;
+  document.getElementById('i2h').textContent = t.i2h;
+  document.getElementById('i2r3').textContent = t.i2r3;
+  document.getElementById('i2r4').textContent = t.i2r4;
+  document.getElementById('i3h').textContent = t.i3h;
+  document.getElementById('i3p').textContent = t.i3p;
+  document.getElementById('footer-p').textContent = t.footerP;
+  updateCountdown();
+}
+
+// ── DATA ──────────────────────────────────────────────────────
 async function loadProducts() {
   async function getDB() {
+    // 1. Try Firebase catalogue first (most up-to-date)
+    if (window._firebaseReady && window._fbDb) {
+      try {
+        const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue'));
+        if (snap.exists()) {
+          const data = snap.val();
+          // Also save to localStorage as cache
+          try { localStorage.setItem('jpfruit-v2', JSON.stringify(data)); } catch(e) {}
+          return data;
+        }
+      } catch(e) { console.warn('Firebase read failed, using local:', e); }
+    }
+    // 2. Fallback: window.storage (Claude Artifacts)
     if (typeof window.storage !== 'undefined') {
       try { const r = await window.storage.get('jpfruit-v2',true); if(r) return JSON.parse(r.value); } catch(e) {}
     }
+    // 3. Fallback: localStorage cache
     try { const raw = localStorage.getItem('jpfruit-v2'); return raw ? JSON.parse(raw) : null; } catch(e) { return null; }
   }
   try {
@@ -942,8 +886,8 @@ function applyBanner(b) {
   if(h1El) h1El.innerHTML=title?`<em>${title}</em>`:'<em>JP Fruit</em>';
   if(subEl) subEl.textContent=sub||'';
   if(imgEl){
-    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||''}</span>'">`;
-    else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||''}</span>`;
+    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||'🍓'}</span>'">`;
+    else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||'🍓'}</span>`;
   }
   if(btnEl&&btn) btnEl.innerHTML=`<button onclick="document.querySelector('.products-area').scrollIntoView({behavior:'smooth'})" style="background:#B8892A;color:white;border:none;padding:8px 22px;border-radius:22px;font-size:0.85rem;font-family:'Noto Sans HK',sans-serif;cursor:pointer;font-weight:500;">${btn}</button>`;
 }
@@ -963,24 +907,22 @@ function applySettings(s) {
   applyTX();
 }
 
-
-
 // ── TRANSLATIONS ──────────────────────────────────────────────
 const TX = {
   zh:{
-    topbar:'截單時間 <strong>週二 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; 倒數 <strong id="countdown">--</strong>',
+    topbar:'截單時間 <strong>週二 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五</strong> &nbsp;·&nbsp; 💳 貨到付款 &nbsp;·&nbsp; ⏰ 倒數 <strong id="countdown">--</strong>',
     logoSub:'亞洲美食 · South London Delivery', navCart:'購物車',
-    heroTag:'港式點心 · 刺身 · 精選凍肉 · 亞洲美食專門',
+    heroTag:'🥟 港式點心 · 🍣 刺身 · 🥩 精選凍肉 · 亞洲美食專門',
     heroH1:'南倫敦嘅<br><em>亞洲廚房</em>',
     heroSub:'港式點心、家鄉菜、刺身、精選凍肉、亞洲零食，南倫敦各區送貨上門',
-    chip1:'港式點心', chip2:'新鮮刺身', chip3:'貨到付款',
-    searchPh:'搜尋產品...', catAll:'全部', catBest:'本店熱賣', loading:'載入產品中...',
-    cartTitle:'購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
+    chip1:'✈️ 日本直送', chip2:'🏠 South London 送貨', chip3:'💳 貨到付款',
+    searchPh:'搜尋產品...', catAll:'全部', catBest:'🏆 本店熱賣', loading:'載入產品中...',
+    cartTitle:'🛒 購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
     subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
     minWarn:(area,diff)=>`⚠️ ${area} 最低消費未達，仲差 £${diff}`,
     cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
     cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
-    waBtn:'WhatsApp 落單', waBtnOff:'請先加產品入購物車',
+    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
     alertFill:'請填寫晒所有必填資料！',
     alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}。\n確定繼續落單？`,
     oos:'售罄', sale:'特價', newLabel:'NEW',
@@ -988,22 +930,22 @@ const TX = {
     i2h:'最低消費', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
     i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
     footerP:'關注我們 Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>`你好！我想落單 🙂\n\n*JP Fruit 訂單*\n━━━━━━━━━━━━━━━━\n*姓名:* ${name}\n*WhatsApp:* ${phone}\n*送貨地址:* ${addr}, ${pc.toUpperCase()}\n━━━━━━━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━━━━━━━\n*合計: £${total}*${notes?'\n\n*備註:* '+notes:''}\n\n*想查詢的問題:* _____\n\n謝謝！`,
+    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
   },
   en:{
     topbar:'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
     logoSub:'Asian Groceries · South London Delivery', navCart:'Cart',
-    heroTag:'HK Dim Sum · Sashimi · Premium Meats · Asian Groceries',
+    heroTag:'🥟 HK Dim Sum · 🍣 Sashimi · 🥩 Frozen Meats · Asian Groceries',
     heroH1:'South London\'s<br><em>Asian Kitchen</em>',
     heroSub:'Authentic HK dim sum, home-cooked dishes, sashimi, premium meats & Asian groceries — delivered across South London',
-    chip1:'HK Dim Sum', chip2:'Fresh Sashimi', chip3:'Pay on Delivery',
-    searchPh:'Search products...', catAll:'All', catBest:'Top Sellers', loading:'Loading products...',
-    cartTitle:'Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
+    chip1:'✈️ Direct from Japan', chip2:'🏠 South London Delivery', chip3:'💳 Pay on Delivery',
+    searchPh:'Search products...', catAll:'All', catBest:'🏆 Top Sellers', loading:'Loading products...',
+    cartTitle:'🛒 Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
     subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
     minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
     cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
     cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
-    waBtn:'Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
+    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
     alertFill:'Please fill in all required fields!',
     alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
     oos:'Sold Out', sale:'Sale', newLabel:'NEW',
@@ -1011,7 +953,7 @@ const TX = {
     i2h:'Minimum Order', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
     i3h:'Contact Us', i3p:"We'll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm",
     footerP:'Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>`Hi JP Fruit, I'd like to place an order 🙂\n\n*JP Fruit Order*\n━━━━━━━━━━━━━━━━\n*Name:* ${name}\n*WhatsApp:* ${phone}\n*Delivery Address:* ${addr}, ${pc.toUpperCase()}\n━━━━━━━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━━━━━━━\n*Total: £${total}*${notes?'\n\n*Remarks:* '+notes:''}\n\n*Any questions:* _____\n\nThank you!`,
+    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
   }
 };
 
@@ -1052,21 +994,6 @@ function applyTX(){
   document.getElementById('i3h').textContent=t.i3h;
   document.getElementById('i3p').textContent=t.i3p;
   document.getElementById('footer-p').textContent=t.footerP;
-  // Quality strip
-  if(document.getElementById('q1t')){
-    const q = lang==='zh' ? {
-      q1t:'品質保證', q1s:'每週親自挑選，不合格不出售',
-      q2t:'每週五送貨', q2s:'南倫敦各區，提前一天通知時段',
-      q3t:'一對一客服', q3s:'WhatsApp 直接溝通，不是機械人',
-      q4t:'貨到付款', q4s:'收到貨先畀錢，安心購物',
-    } : {
-      q1t:'Quality Assured', q1s:'Personally selected every week',
-      q2t:'Friday Delivery', q2s:'South London wide, slot notified day before',
-      q3t:'Personal Service', q3s:'Direct WhatsApp with our team, not a bot',
-      q4t:'Pay on Delivery', q4s:'Pay when you receive, zero risk',
-    };
-    Object.entries(q).forEach(([id,txt])=>{const el=document.getElementById(id);if(el)el.textContent=txt;});
-  }
   updateCountdown();
 }
 
@@ -1092,28 +1019,14 @@ function buildCatNav(){
 }
 
 // ── PRODUCT RENDERING ─────────────────────────────────────────
-const EMOJI={
-  'dim-sum':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3C7 3 3 6.5 3 11c0 2 .8 3.8 2 5.1V19a1 1 0 001 1h12a1 1 0 001-1v-2.9c1.2-1.3 2-3.1 2-5.1 0-4.5-4-8-9-8z"/><path d="M8 11h8M10 8l2 3 2-3"/></svg>',
-  'bread':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11c0-3.3 4-6 9-6s9 2.7 9 6c0 1.5-.7 2.8-1.9 3.8V19a1 1 0 01-1 1H5.9a1 1 0 01-1-1v-4.2C3.7 13.8 3 12.5 3 11z"/></svg>',
-  'noodles':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12c0 3.3 3.6 6 8 6s8-2.7 8-6"/><path d="M4 9c0-3.3 3.6-6 8-6s8 2.7 8 6c0 3.3-3.6 6-8 6S4 12.3 4 9z"/><path d="M12 3v6M8 4.5v5M16 4.5v5"/></svg>',
-  'hk-homecook':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg>',
-  'hk-snacks':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
-  'frozen-seafood':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 12c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8"/><path d="M16 6l2-2M18 8l2-2M14 8c1 0 1.8.8 1.8 1.8s-.8 1.7-1.8 1.7-1.8-.8-1.8-1.8.8-1.7 1.8-1.7z"/></svg>',
-  'premium-meat':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3L4 9v12h16V9l-8-6z"/><path d="M9 21V12h6v9"/></svg>',
-  'sashimi':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 17c3-5 6-8 10-8 2 0 4 1 6 3M4 17l3-8c2-4 5-6 8-6M4 17l8 0"/></svg>',
-  'fruits':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="14" r="7"/><path d="M12 7V3M9 4c0-1 3-3 3-3s3 2 3 3"/></svg>',
-  'sauces':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3h4v2.5c2 .5 3.5 2.3 3.5 4.5v9a2 2 0 01-2 2h-7a2 2 0 01-2-2V10c0-2.2 1.5-4 3.5-4.5V3z"/></svg>',
-  'snacks':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
-  'personal-care':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-  'others':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>',
-};
+const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
 
 function renderProducts(){
   const area=document.getElementById('products-area');
   if(activeCat==='__best__'){
     const best=getBestSellers();
     area.innerHTML=`<div class="cat-section">
-      <div class="section-head"><div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21h8M12 17v4M7 4H4l2 8h12l2-8h-3M7 4a5 5 0 0010 0"/></svg></div><div class="section-title">${tx('catBest')}</div><span class="section-count">${best.length} 款</span></div>
+      <div class="section-head"><div class="section-icon">🏆</div><div class="section-title">${tx('catBest')}</div><span class="section-count">${best.length} 款</span></div>
       <div class="product-grid">${best.map(p=>pCard(p)).join('')}</div>
     </div>`;
     return;
@@ -1130,7 +1043,7 @@ function renderProducts(){
     const best=getBestSellers();
     if(best.length) bestStrip=`<div class="featured-strip">
       <div class="section-head">
-        <div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21h8M12 17v4M7 4H4l2 8h12l2-8h-3M7 4a5 5 0 0010 0"/></svg></div>
+        <div class="section-icon">🏆</div>
         <div class="section-title">${tx('catBest')}</div>
         <button onclick="filterCat('__best__',document.querySelector('.best-btn'))" class="section-count" style="cursor:pointer;border:none;font-family:inherit;background:var(--plum-l);color:var(--plum);">全部 →</button>
       </div>
@@ -1138,11 +1051,11 @@ function renderProducts(){
         const nm=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
         const pr=(p.salePrice||p.price||0);
         const img=p.image&&p.image.startsWith('http');
-        const EMOJI={'dim-sum':'','bread':'','noodles':'','hk-homecook':'','hk-snacks':'','frozen-seafood':'','premium-meat':'','sashimi':'','fruits':'','sauces':'','snacks':'','personal-care':'','others':''};
-        return `<div class="strip-card" onclick="document.getElementById('cat-${p.cat}')?.scrollIntoView({behavior:'smooth'})">
-          <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||''}</div>
-          <div class="strip-info"><div class="strip-name">${nm}</div><div class="strip-price">£${pr.toFixed(2)}</div></div>
-        </div>`;
+        const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
+        return \`<div class="strip-card" onclick="document.getElementById('cat-\${p.cat}')?.scrollIntoView({behavior:'smooth'})">
+          <div class="strip-thumb">\${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||'🛒'}</div>
+          <div class="strip-info"><div class="strip-name">\${nm}</div><div class="strip-price">£\${pr.toFixed(2)}</div></div>
+        </div>\`;
       }).join('')}</div>
     </div>`;
   }
@@ -1152,7 +1065,7 @@ function renderProducts(){
     const catSets=sets.filter(s=>s.cat===cid&&s.isSet);
     const main=lang==='zh'?(cat?.zh||cid):(cat?.name||cid);
     const sub=lang==='zh'?(cat?.name||''):(cat?.zh||'');
-    const emoji = EMOJI[cid] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
+    const emoji = {'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'}[cid]||'🛒';
     return `<div class="cat-section" id="cat-${cid}">
       <div class="section-head">
         <div class="section-icon">${emoji}</div>
@@ -1175,7 +1088,7 @@ function pCard(p){
   const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name||p.nameZh||p.zh);
   const pAlt=lang==='zh'?(p.nameEn?`<div class="p-unit" style="font-style:italic;">${p.nameEn}</div>`:''): (p.nameZh||p.zh?`<div class="p-unit">${p.nameZh||p.zh}</div>`:'');
   const pDesc=lang==='zh'?(p.descZh||p.desc||''):(p.descEn||p.descZh||p.desc||'');
-  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||''}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
+  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||'🛍️'}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
 }
 
 // ── SET MEAL ──────────────────────────────────────────────────
@@ -1186,7 +1099,7 @@ function renderSetCard(s){
   const setName=isZh?(s.nameZh||s.name):(s.nameEn||s.name||s.nameZh);
   const setDesc=isZh?(s.descZh||s.desc||''):(s.descEn||s.descZh||s.desc||'');
   const chips=groups.map(g=>`<span class="set-rule-chip">${isZh?g.nameZh:g.nameEn} x${g.min}${g.max>g.min?'-'+g.max:''}</span>`).join('');
-  return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||''} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'加入購物車':'Add to Cart'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
+  return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||'🎁'} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'✅ 加入購物車 🛒':'✅ Add to Cart 🛒'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
 }
 function renderSetGroup(sid,g,gi){
   const sel=setSelections[sid][gi]||{}, total=Object.values(sel).reduce((a,b)=>a+b,0), isZh=lang==='zh';
@@ -1247,18 +1160,9 @@ function renderCart(cid,sfx){
   if(!items.length){el.innerHTML=`<div class="cart-empty-msg">${tx('cartEmpty').replace('\n','<br>')}</div>${cartForm(sfx)}`;return;}
   const pc=document.getElementById('cf-post'+sfx)?.value||'';
   const minI=getMin(pc);
-  const diff = minI ? (minI.min - total) : 0;
   const warn=minI&&total<minI.min?`<div class="min-warning">
-    <div class="mw-top">
-      <div>
-        ${tx('minWarn',minI.area,diff.toFixed(2))}
-        <div class="min-warning-progress"><div class="min-warning-fill" style="width:${Math.min(100,total/minI.min*100).toFixed(0)}%"></div></div>
-      </div>
-      <button class="mw-share-btn" onclick="shareGroupBuy('${minI.area}',${diff.toFixed(2)})" title="${lang==='zh'?'一鍵分享夾單':'Share with neighbours'}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        ${lang==='zh'?'揪鄰居夾單':'Share with neighbours'}
-      </button>
-    </div>
+    ${tx('minWarn',minI.area,(minI.min-total).toFixed(2))}
+    <div class="min-warning-progress"><div class="min-warning-fill" style="width:${Math.min(100,total/minI.min*100).toFixed(0)}%"></div></div>
   </div>`:'';
   el.innerHTML=`<div class="cart-items-list">${items.map(({id,val})=>{
     if(val&&val.isSet)return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="rmSetItem('${id}')">✕</button></div><div class="ci-price">£${parseFloat(val.price||0).toFixed(2)}</div></div>`;
@@ -1269,15 +1173,7 @@ function renderCart(cid,sfx){
 }
 function cartForm(sfx){
   const has=getCount()>0;
-  const bumpItem=getBumpItem();
-return`<div class="checkout-form">${bumpItem?`<div class="order-bump" onclick="addCart('${bumpItem.id}');this.style.display='none'">
-  <div class="ob-label">加購優惠</div>
-  <div class="ob-content">
-    <div class="ob-name">${lang==='zh'?(bumpItem.nameZh||bumpItem.name):bumpItem.nameEn||bumpItem.name}</div>
-    <div class="ob-price">+£${(bumpItem.salePrice||bumpItem.price).toFixed(2)} <span style="text-decoration:line-through;color:var(--muted);font-size:0.7rem;">£${bumpItem.price.toFixed(2)}</span></div>
-  </div>
-  <div class="ob-cta">加入</div>
-</div>`:''}<div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateCart()"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><div style="text-align:right;margin-top:4px;"><button type="button" onclick="clearCachedForm()" style="background:none;border:none;font-size:0.68rem;color:var(--muted);cursor:pointer;font-family:inherit;text-decoration:underline;">${lang==='zh'?'清除已儲存資料':'Clear saved info'}</button></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
+  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateCart()"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
 }
 function sendWA(sfx){
   const name=document.getElementById('cf-name'+sfx)?.value?.trim();
@@ -1297,70 +1193,91 @@ function sendWA(sfx){
   const waNum=siteSettings.whatsapp||'447700900000';
   const msg=tx('waMsg',name,phone,addr,pc.toUpperCase(),lines,total.toFixed(2),notes);
 
-  // ── CACHE: save customer info for next visit ──
+  // ── Save order to Firebase ──
+  const orderData = {
+    id: 'ORD-' + Date.now(),
+    status: 'new',
+    customer: { name, phone, address: addr, postcode: pc.toUpperCase() },
+    items: Object.entries(cart).map(([id, val]) => {
+      if (val && val.isSet) return {
+        type: 'set', setId: val.setId,
+        name: val.nameZh || val.name,
+        price: val.price, qty: 1, summary: val.summary
+      };
+      const p = products.find(x => x.id === id);
+      if (!p) return null;
+      return { type: 'product', productId: id,
+        name: p.nameZh || p.name,
+        price: p.salePrice || p.price, qty: val };
+    }).filter(Boolean),
+    total: parseFloat(getTotal().toFixed(2)),
+    notes: notes || '',
+    lang,
+    createdAt: new Date().toISOString(),
+    source: 'web'
+  };
+
+  saveOrderToFirebase(orderData);
+
+  // ── Cache customer info ──
   try {
-    localStorage.setItem('jpfruit-last-name',    name);
-    localStorage.setItem('jpfruit-last-phone',   phone);
-    localStorage.setItem('jpfruit-last-addr',    addr);
+    localStorage.setItem('jpfruit-last-name',     name);
+    localStorage.setItem('jpfruit-last-phone',    phone);
+    localStorage.setItem('jpfruit-last-addr',     addr);
     localStorage.setItem('jpfruit-last-postcode', pc.toUpperCase());
-    localStorage.setItem('jpfruit-last-ts',      Date.now());
-    // Save last cart for potential Magic Link generation
+    localStorage.setItem('jpfruit-last-ts',       Date.now());
     const cartSnapshot = Object.entries(cart)
       .filter(([id,v])=>!v.isSet)
-      .map(([id,qty])=>`${id}:${qty}`)
-      .join(',');
+      .map(([id,qty])=>`${id}:${qty}`).join(',');
     if (cartSnapshot) localStorage.setItem('jpfruit-last-cart', cartSnapshot);
   } catch(e) {}
 
   window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
-// ── FILTERS ───────────────────────────────────────────────────
-
-function getBumpItem() {
-  // Show a sauce/condiment as upsell when cart total > £20
-  const total = getTotal();
-  if (total < 20) return null;
-  const alreadyInCart = Object.keys(cart);
-  const bumps = products.filter(p =>
-    (p.cat === 'sauces' || p.cat === 'hk-snacks') &&
-    p.price < 8 &&
-    p.salePrice &&
-    !alreadyInCart.includes(p.id)
-  );
-  return bumps.sort((a,b) => (b.historicSold||0) - (a.historicSold||0))[0] || null;
-}
-
-
-function shareGroupBuy(area, diff) {
-  const url = window.location.href.split('?')[0];
-  const msgZh = `喂！我喺 JP Fruit 買緊靚港式點心同亞洲食品，仲差 £${diff.toFixed(2)} 先夠 ${area} 免費送貨！有冇街坊想一齊夾單？\n\n落單連結：${url}\n\n截單係每週二 1pm，週五送貨到門口 🙂`;
-  const msgEn = `Hey! I'm ordering from JP Fruit (HK dim sum & Asian groceries). Need £${diff.toFixed(2)} more for free delivery in ${area} — anyone want to join? \n\nOrder here: ${url}\n\nCutoff every Tuesday 1pm, Friday delivery 🙂`;
-  const msg = lang === 'zh' ? msgZh : msgEn;
-  if (navigator.share) {
-    navigator.share({ title: 'JP Fruit 夾單', text: msg, url }).catch(() => copyToClipboard(msg));
-  } else {
-    copyToClipboard(msg);
-    showToast(lang === 'zh' ? '已複製！貼到 WhatsApp 群組分享' : 'Copied! Paste to your WhatsApp group');
-  }
-}
-
-function copyToClipboard(text) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast(lang === 'zh' ? '已複製！貼到 WhatsApp 群組分享' : 'Copied! Paste to your WhatsApp group');
+async function saveOrderToFirebase(orderData) {
+  try {
+    if (!window._firebaseReady || !window._fbDb) {
+      // Firebase not ready — save to localStorage as backup
+      const pending = JSON.parse(localStorage.getItem('jpfruit-pending-orders') || '[]');
+      pending.push(orderData);
+      localStorage.setItem('jpfruit-pending-orders', JSON.stringify(pending));
+      return;
+    }
+    const ordersRef = window._fbRef(window._fbDb, 'orders');
+    const newRef    = window._fbPush(ordersRef);
+    await window._fbSet(newRef, {
+      ...orderData,
+      firebaseId: newRef.key,
     });
-  } else {
-    const el = document.createElement('textarea');
-    el.value = text;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    showToast(lang === 'zh' ? '已複製！' : 'Copied!');
+    console.log('Order saved to Firebase:', newRef.key);
+
+    // Also try to flush any pending orders from localStorage
+    flushPendingOrders();
+  } catch(e) {
+    console.error('Firebase save failed:', e);
+    // Fallback: save locally
+    const pending = JSON.parse(localStorage.getItem('jpfruit-pending-orders') || '[]');
+    pending.push(orderData);
+    localStorage.setItem('jpfruit-pending-orders', JSON.stringify(pending));
   }
 }
 
+async function flushPendingOrders() {
+  try {
+    const pending = JSON.parse(localStorage.getItem('jpfruit-pending-orders') || '[]');
+    if (!pending.length || !window._firebaseReady) return;
+    const ordersRef = window._fbRef(window._fbDb, 'orders');
+    for (const order of pending) {
+      const newRef = window._fbPush(ordersRef);
+      await window._fbSet(newRef, { ...order, firebaseId: newRef.key, syncedAt: new Date().toISOString() });
+    }
+    localStorage.removeItem('jpfruit-pending-orders');
+    console.log(`Flushed ${pending.length} pending orders to Firebase`);
+  } catch(e) { console.error('Flush failed:', e); }
+}
+
+// ── FILTERS ───────────────────────────────────────────────────
 function filterCat(id,el){
   activeCat=id;
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
@@ -1394,187 +1311,10 @@ function updateCountdown(){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 
 // ── INIT ──────────────────────────────────────────────────────
-
-
-// ── VIP MAGIC LINK ────────────────────────────────────────
-
-
-function clearCachedForm() {
-  ['jpfruit-vip-uid','jpfruit-vip-ts','jpfruit-last-name','jpfruit-last-phone',
-   'jpfruit-last-addr','jpfruit-last-postcode','jpfruit-last-ts','jpfruit-last-cart']
-    .forEach(k => localStorage.removeItem(k));
-  ['', '-m'].forEach(sfx => {
-    ['cf-name','cf-phone','cf-addr','cf-post','cf-notes'].forEach(id => {
-      const el = document.getElementById(id + sfx);
-      if (el) el.value = '';
-    });
-  });
-  showToast(lang === 'zh' ? '已清除儲存資料' : 'Saved info cleared');
-}
-
-function restoreCachedForm() {
-  // For non-VIP returning customers: restore last order info
-  const vipUid = localStorage.getItem('jpfruit-vip-uid');
-  if (vipUid) return; // VIP handled by initVipLink
-
-  const ts = parseInt(localStorage.getItem('jpfruit-last-ts') || '0');
-  const AGE_DAYS = 60;
-  if (!ts || Date.now() - ts > AGE_DAYS * 86400000) return; // expired
-
-  const name  = localStorage.getItem('jpfruit-last-name') || '';
-  const phone = localStorage.getItem('jpfruit-last-phone') || '';
-  const addr  = localStorage.getItem('jpfruit-last-addr') || '';
-  const pc    = localStorage.getItem('jpfruit-last-postcode') || '';
-
-  if (!name) return;
-
-  setTimeout(() => {
-    ['', '-m'].forEach(sfx => {
-      const n  = document.getElementById('cf-name'  + sfx);
-      const ph = document.getElementById('cf-phone' + sfx);
-      const a  = document.getElementById('cf-addr'  + sfx);
-      const pcel = document.getElementById('cf-post' + sfx);
-      if (n  && !n.value)  n.value  = name;
-      if (ph && !ph.value) ph.value = phone;
-      if (a  && !a.value)  a.value  = addr;
-      if (pcel && !pcel.value) pcel.value = pc;
-    });
-    updateCart();
-    showToast(lang === 'zh' ? '已自動填入上次資料' : 'Previous details restored');
-  }, 900);
-}
-
-async function initVipLink() {
-  const params = new URLSearchParams(window.location.search);
-  const vipUid = params.get('vip');
-  const cartParam = params.get('cart');
-
-  // ── CACHE: save UID to localStorage when first visited via Magic Link
-  if (vipUid) {
-    localStorage.setItem('jpfruit-vip-uid', vipUid.toUpperCase());
-    localStorage.setItem('jpfruit-vip-ts', Date.now()); // timestamp for expiry
-  }
-
-  // ── CACHE: try to restore UID from localStorage if no URL param
-  const cachedUid = localStorage.getItem('jpfruit-vip-uid');
-  const cachedTs  = parseInt(localStorage.getItem('jpfruit-vip-ts') || '0');
-  const CACHE_DAYS = 90; // remember for 90 days
-  const cacheValid = cachedUid && (Date.now() - cachedTs < CACHE_DAYS * 86400000);
-
-  const activeUid = vipUid?.toUpperCase() || (cacheValid ? cachedUid : null);
-  const isFromCache = !vipUid && !!activeUid;
-
-  if (!activeUid && !cartParam) return;
-
-  // ── Load VIP profile ──
-  const vipResult = getVipProfile(activeUid);
-  const vipData = vipResult instanceof Promise ? await vipResult : vipResult;
-
-  if (vipData) {
-    setTimeout(() => {
-      ['', '-m'].forEach(sfx => {
-        const n  = document.getElementById('cf-name'  + sfx);
-        const ph = document.getElementById('cf-phone' + sfx);
-        const a  = document.getElementById('cf-addr'  + sfx);
-        const pc = document.getElementById('cf-post'  + sfx);
-        if (n)  n.value  = vipData.name     || '';
-        if (ph) ph.value = vipData.phone    || '';
-        if (a)  a.value  = vipData.address  || '';
-        if (pc) pc.value = vipData.postcode || '';
-      });
-      updateCart();
-      if (isFromCache) {
-        // Returning user — subtle reminder, not full greeting
-        showToast(lang === 'zh' ? `歡迎回來，${vipData.name}！資料已自動填好` : `Welcome back, ${vipData.name}!`);
-      } else {
-        showVipGreeting(vipData.name);
-      }
-    }, 800);
-  }
-
-  // ── Pre-load cart from URL param ──
-  if (cartParam) {
-    cartParam.split(',').forEach(item => {
-      const [id, qty] = item.split(':');
-      if (id && qty && products.find(p => p.id === id)) {
-        cart[id] = parseInt(qty) || 1;
-      }
-    });
-    updateCart();
-    setTimeout(() => {
-      showToast(lang === 'zh' ? '上週訂單已自動載入！' : 'Last order pre-loaded!');
-    }, 1200);
-  }
-
-  // ── CACHE: save last order after WA send ──
-  // (handled in sendWA below)
-}
-
-function getVipProfile(uid) {
-  if (!uid) return null;
-  try {
-    // Try window.storage first, then localStorage
-    const tryParse = (raw) => {
-      if (!raw) return null;
-      const data = JSON.parse(raw);
-      const vips = data.vips || {};
-      // Try uppercase, original, and lowercase
-      return vips[uid.toUpperCase()] || vips[uid] || vips[uid.toLowerCase()] || null;
-    };
-    if (typeof window.storage !== 'undefined') {
-      return window.storage.get('jpfruit-v2', true)
-        .then(r => tryParse(r?.value))
-        .catch(() => tryParse(localStorage.getItem('jpfruit-v2')));
-    }
-    return tryParse(localStorage.getItem('jpfruit-v2'));
-  } catch(e) { return null; }
-}
-
-function showVipGreeting(name) {
-  const greet = document.createElement('div');
-  greet.style.cssText = `
-    position:fixed;top:70px;left:50%;transform:translateX(-50%);
-    background:linear-gradient(135deg,var(--plum),#8B3A6B);
-    color:white;padding:12px 24px;border-radius:12px;
-    font-size:0.88rem;font-family:'Noto Sans HK',sans-serif;
-    font-weight:500;z-index:500;box-shadow:0 8px 24px rgba(107,76,138,0.35);
-    text-align:center;animation:slideDown 0.4s ease;
-  `;
-  greet.innerHTML = lang === 'zh'
-    ? `歡迎回來，${name}！<br><span style="font-size:0.75rem;opacity:0.85;">您的資料已自動填好 — 檢查後直接落單即可</span>`
-    : `Welcome back, ${name}!<br><span style="font-size:0.75rem;opacity:0.85;">Your details are pre-filled — just review and order</span>`;
-  document.body.appendChild(greet);
-  setTimeout(() => greet.style.animation = 'fadeOut 0.5s forwards', 3500);
-  setTimeout(() => greet.remove(), 4000);
-}
-
-// ── SCROLL BUTTONS ──────────────────────────────────────
-function scrollToTop() {
-  window.scrollTo({top: 0, behavior: 'smooth'});
-}
-function scrollToCategories() {
-  const el = document.getElementById('cat-nav');
-  if (el) el.closest('.cat-nav-outer').scrollIntoView({behavior: 'smooth'});
-}
-// Show/hide FAB on scroll
-window.addEventListener('scroll', () => {
-  const fab = document.getElementById('fab-wrap');
-  if (!fab) return;
-  fab.style.display = window.scrollY > 300 ? 'flex' : 'none';
-}, {passive: true});
-
-applyTX();updateCart();updateCountdown();setInterval(updateCountdown,60000);loadProducts().then(()=>{
-  initVipLink();
-  restoreCachedForm();
-});
+window._reloadFromFirebase = () => { if(products.length === 0 || products === window._seedProducts) loadProducts(); };
+applyTX();updateCart();updateCountdown();
+// Flush any pending orders when Firebase becomes ready
+document.addEventListener('firebaseReady', () => { flushPendingOrders(); setTimeout(()=>flushPendingOrders(), 2000); });setInterval(updateCountdown,60000);loadProducts();
 </script>
-
-<!-- FAB Buttons -->
-<div class="fab-wrap" id="fab-wrap" style="display:none;">
-  <button class="fab fab-cat" onclick="scrollToCategories()">分類</button>
-  <button class="fab fab-top" onclick="scrollToTop()" title="返回頂部">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
-  </button>
-</div>
 </body>
 </html>
