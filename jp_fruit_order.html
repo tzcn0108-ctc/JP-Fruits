@@ -285,7 +285,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, set, get, onValue, serverTimestamp } 
+  import { getDatabase, ref, push, set, get, onValue, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -300,19 +300,14 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
-
-  // Expose to global scope for use in main script
-  window._fbDb  = db;
-  window._fbRef = ref;
+  window._fbDb   = db;
+  window._fbRef  = ref;
   window._fbPush = push;
   window._fbSet  = set;
   window._fbGet  = get;
-  window._fbServerTimestamp = serverTimestamp;
   window._fbOnValue = onValue;
   window._firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
-  // Re-load products from Firebase when ready
-  if (window._reloadFromFirebase) window._reloadFromFirebase();
 </script>
 </head>
 <body>
@@ -720,136 +715,43 @@ async function loadSeedData() {
 }
 
 // ── TRANSLATIONS ──────────────────────────────────────────────
-const TX = {
-  zh: {
-    topbar: '截單時間 <strong>週二 Tuesday 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五 Friday</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; 倒數 <strong id="countdown">--</strong>',
-    logoSub: '日本直送 · South London 送貨',
-    navCart: '購物車',
-    heroTag: '🇯🇵 日本空運直送 · Fresh from Japan',
-    heroH1: '新鮮到你家<br><em>JP Fruit</em>',
-    heroSub: '精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門',
-    chip1:'🥟 港式點心', chip2:'🍣 新鮮刺身', chip3:'💳 貨到付款',
-    searchPh: '搜尋產品...',
-    catAll: '全部', catBest:'🏆 本店熱賣', loading: '載入產品中...',
-    cartTitle: '🛒 購物車',
-    cartEmpty: '購物車係空嘅\n按 + 加入產品',
-    items: ' 項',
-    subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
-    minWarn: (area,diff) => `⚠️ ${area} 最低消費未達，仲差 £${diff}`,
-    cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
-    cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
-    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
-    alertFill:'請填寫晒所有必填資料！',
-    alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}，未達到。\n確定繼續落單？`,
-    oos:'售罄', sale:'特價', newLabel:'NEW',
-    i1h:'送貨安排', i1p:'逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。',
-    i2h:'最低消費',
-    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
-    i2r4:'Tadworth / Purley / Coulsdon',
-    i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
-    footerP:'關注我們 Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>
-      `🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
-  },
-  en: {
-    topbar: 'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
-    logoSub: 'Fresh from Japan · South London Delivery',
-    navCart: 'Cart',
-    heroTag: '🇯🇵 Air-freighted from Japan',
-    heroH1: 'Fresh to Your Door<br><em>JP Fruit</em>',
-    heroSub: 'Premium Japanese fruits, authentic HK flavours & Asian specialities — delivered across South London',
-    chip1:'🥟 HK Dim Sum', chip2:'🍣 Fresh Sashimi', chip3:'💳 Pay on Delivery',
-    searchPh: 'Search products...',
-    catAll: 'All', catBest:'🏆 Top Sellers', loading: 'Loading products...',
-    cartTitle: '🛒 Cart',
-    cartEmpty: 'Your cart is empty\nTap + to add products',
-    items: ' items',
-    subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
-    minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
-    cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
-    cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
-    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
-    alertFill:'Please fill in all required fields!',
-    alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
-    oos:'Sold Out', sale:'Sale', newLabel:'NEW',
-    i1h:'Delivery', i1p:"Delivery every Friday (Thursday if high volume). You'll be notified of your slot one day in advance. Please ensure someone is home to receive.",
-    i2h:'Minimum Order',
-    i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon',
-    i2r4:'Tadworth / Purley / Coulsdon',
-    i3h:'Contact Us', i3p:'We\'ll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm',
-    footerP:'Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>
-      `🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
-  }
-};
 
-// ── STATE ─────────────────────────────────────────────────────
-let lang = 'zh';
-let products = [], categories = [], sets = [], cart = {}, searchQuery = '', activeCat = 'all';
-let siteSettings = {};
 
-// ── LANGUAGE ──────────────────────────────────────────────────
-function setLang(l) {
-  lang = l;
-  document.getElementById('btn-zh').classList.toggle('active', l==='zh');
-  document.getElementById('btn-en').classList.toggle('active', l==='en');
-  document.documentElement.lang = l==='zh'?'zh-HK':'en';
+
+
+function applySettings(s) {
+  if(!s) return;
+  if(s.font) document.body.style.fontFamily=s.font;
+  if(s.heroSubZh||s.heroSubEn){ TX.zh.heroSub=s.heroSubZh||TX.zh.heroSub; TX.en.heroSub=s.heroSubEn||TX.en.heroSub; }
+  if(s.chip1Zh){ TX.zh.chip1=s.chip1Zh; TX.en.chip1=s.chip1En||TX.en.chip1; }
+  if(s.chip2Zh){ TX.zh.chip2=s.chip2Zh; TX.en.chip2=s.chip2En||TX.en.chip2; }
+  if(s.chip3Zh){ TX.zh.chip3=s.chip3Zh; TX.en.chip3=s.chip3En||TX.en.chip3; }
+  if(s.deliveryZh){ TX.zh.i1p=s.deliveryZh; TX.en.i1p=s.deliveryEn||TX.en.i1p; }
+  if(s.contactZh){ TX.zh.i3p=s.contactZh; TX.en.i3p=s.contactEn||TX.en.i3p; }
+  if(s.facebook) document.querySelectorAll('a[href*="facebook"]').forEach(el=>el.href=s.facebook);
+  if(s.instagram) document.querySelectorAll('a[href*="instagram"]').forEach(el=>el.href=s.instagram);
+  if(s.wagroup) document.querySelectorAll('a[href*="chat.whatsapp"]').forEach(el=>el.href=s.wagroup);
   applyTX();
-  buildCatNav();
-  renderProducts();
-  updateCart();
-  // re-apply banner in new language if available
-  (async()=>{ try{ let d=null; if(typeof window.storage!=='undefined'){try{const r=await window.storage.get('jpfruit-v2',true);if(r)d=JSON.parse(r.value);}catch(e){}} if(!d){try{const raw=localStorage.getItem('jpfruit-v2');d=raw?JSON.parse(raw):null;}catch(e){}} if(d){if(d.banner)applyBanner(d.banner);if(d.settings)applySettings(d.settings);}}catch(e){} })();
 }
 
-function tx(k, ...a) { const v=TX[lang][k]; return typeof v==='function'?v(...a):v; }
-
-function applyTX() {
-  const t = TX[lang];
-  document.getElementById('topbar-el').innerHTML = t.topbar;
-  document.getElementById('logo-sub').textContent = t.logoSub;
-  document.getElementById('nav-cart-label').textContent = t.navCart;
-  document.getElementById('hero-tag').textContent = t.heroTag;
-  document.getElementById('hero-h1').innerHTML = t.heroH1;
-  document.getElementById('hero-sub').textContent = t.heroSub;
-  document.getElementById('chip1').textContent = t.chip1;
-  document.getElementById('chip2').textContent = t.chip2;
-  document.getElementById('chip3').textContent = t.chip3;
-  document.getElementById('search-input').placeholder = t.searchPh;
-  document.getElementById('loading-text').textContent = t.loading;
-  document.getElementById('cart-title').textContent = t.cartTitle;
-  document.getElementById('mobile-cart-title').textContent = t.cartTitle;
-  document.getElementById('i1h').textContent = t.i1h;
-  document.getElementById('i1p').textContent = t.i1p;
-  document.getElementById('i2h').textContent = t.i2h;
-  document.getElementById('i2r3').textContent = t.i2r3;
-  document.getElementById('i2r4').textContent = t.i2r4;
-  document.getElementById('i3h').textContent = t.i3h;
-  document.getElementById('i3p').textContent = t.i3p;
-  document.getElementById('footer-p').textContent = t.footerP;
-  updateCountdown();
-}
-
-// ── DATA ──────────────────────────────────────────────────────
 async function loadProducts() {
   async function getDB() {
-    // 1. Try Firebase catalogue first (most up-to-date)
+    // 1. Firebase catalogue (freshest data)
     if (window._firebaseReady && window._fbDb) {
       try {
         const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue'));
         if (snap.exists()) {
-          const data = snap.val();
-          // Also save to localStorage as cache
-          try { localStorage.setItem('jpfruit-v2', JSON.stringify(data)); } catch(e) {}
-          return data;
+          const d = snap.val();
+          try { localStorage.setItem('jpfruit-v2', JSON.stringify(d)); } catch(e) {}
+          return d;
         }
-      } catch(e) { console.warn('Firebase read failed, using local:', e); }
+      } catch(e) { console.warn('Firebase fallback to local:', e.message); }
     }
-    // 2. Fallback: window.storage (Claude Artifacts)
+    // 2. window.storage (Claude Artifacts)
     if (typeof window.storage !== 'undefined') {
       try { const r = await window.storage.get('jpfruit-v2',true); if(r) return JSON.parse(r.value); } catch(e) {}
     }
-    // 3. Fallback: localStorage cache
+    // 3. localStorage cache
     try { const raw = localStorage.getItem('jpfruit-v2'); return raw ? JSON.parse(raw) : null; } catch(e) { return null; }
   }
   try {
@@ -873,6 +775,7 @@ async function loadProducts() {
   renderProducts();
 }
 
+
 function applyBanner(b) {
   const isZh = lang==='zh';
   const tag=isZh?b.tagZh:b.tagEn, title=isZh?b.titleZh:b.titleEn;
@@ -892,20 +795,6 @@ function applyBanner(b) {
   if(btnEl&&btn) btnEl.innerHTML=`<button onclick="document.querySelector('.products-area').scrollIntoView({behavior:'smooth'})" style="background:#B8892A;color:white;border:none;padding:8px 22px;border-radius:22px;font-size:0.85rem;font-family:'Noto Sans HK',sans-serif;cursor:pointer;font-weight:500;">${btn}</button>`;
 }
 
-function applySettings(s) {
-  if(!s) return;
-  if(s.font) document.body.style.fontFamily=s.font;
-  if(s.heroSubZh||s.heroSubEn){ TX.zh.heroSub=s.heroSubZh||TX.zh.heroSub; TX.en.heroSub=s.heroSubEn||TX.en.heroSub; }
-  if(s.chip1Zh){ TX.zh.chip1=s.chip1Zh; TX.en.chip1=s.chip1En||TX.en.chip1; }
-  if(s.chip2Zh){ TX.zh.chip2=s.chip2Zh; TX.en.chip2=s.chip2En||TX.en.chip2; }
-  if(s.chip3Zh){ TX.zh.chip3=s.chip3Zh; TX.en.chip3=s.chip3En||TX.en.chip3; }
-  if(s.deliveryZh){ TX.zh.i1p=s.deliveryZh; TX.en.i1p=s.deliveryEn||TX.en.i1p; }
-  if(s.contactZh){ TX.zh.i3p=s.contactZh; TX.en.i3p=s.contactEn||TX.en.i3p; }
-  if(s.facebook) document.querySelectorAll('a[href*="facebook"]').forEach(el=>el.href=s.facebook);
-  if(s.instagram) document.querySelectorAll('a[href*="instagram"]').forEach(el=>el.href=s.instagram);
-  if(s.wagroup) document.querySelectorAll('a[href*="chat.whatsapp"]').forEach(el=>el.href=s.wagroup);
-  applyTX();
-}
 
 // ── TRANSLATIONS ──────────────────────────────────────────────
 const TX = {
@@ -1193,88 +1082,47 @@ function sendWA(sfx){
   const waNum=siteSettings.whatsapp||'447700900000';
   const msg=tx('waMsg',name,phone,addr,pc.toUpperCase(),lines,total.toFixed(2),notes);
 
-  // ── Save order to Firebase ──
+  // Save order to Firebase
   const orderData = {
     id: 'ORD-' + Date.now(),
     status: 'new',
-    customer: { name, phone, address: addr, postcode: pc.toUpperCase() },
-    items: Object.entries(cart).map(([id, val]) => {
-      if (val && val.isSet) return {
-        type: 'set', setId: val.setId,
-        name: val.nameZh || val.name,
-        price: val.price, qty: 1, summary: val.summary
-      };
-      const p = products.find(x => x.id === id);
-      if (!p) return null;
-      return { type: 'product', productId: id,
-        name: p.nameZh || p.name,
-        price: p.salePrice || p.price, qty: val };
+    customer: {name, phone, address:addr, postcode:pc.toUpperCase()},
+    items: Object.entries(cart).map(([id,val])=>{
+      if(val&&val.isSet) return {type:'set',name:val.nameZh||val.name,price:val.price,qty:1,summary:val.summary};
+      const p=products.find(x=>x.id===id); if(!p) return null;
+      return {type:'product',productId:id,name:p.nameZh||p.name,price:p.salePrice||p.price,qty:val};
     }).filter(Boolean),
     total: parseFloat(getTotal().toFixed(2)),
-    notes: notes || '',
-    lang,
+    notes: notes||'', lang,
     createdAt: new Date().toISOString(),
-    source: 'web'
   };
 
-  saveOrderToFirebase(orderData);
+  if (window._firebaseReady && window._fbDb) {
+    try {
+      const newRef = window._fbPush(window._fbRef(window._fbDb,'orders'));
+      window._fbSet(newRef, {...orderData, firebaseId: newRef.key});
+    } catch(e) {
+      // Offline backup
+      const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
+      pending.push(orderData);
+      localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
+    }
+  } else {
+    const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
+    pending.push(orderData);
+    localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
+  }
 
-  // ── Cache customer info ──
+  // Cache customer info
   try {
-    localStorage.setItem('jpfruit-last-name',     name);
-    localStorage.setItem('jpfruit-last-phone',    phone);
-    localStorage.setItem('jpfruit-last-addr',     addr);
+    localStorage.setItem('jpfruit-last-name', name);
+    localStorage.setItem('jpfruit-last-phone', phone);
+    localStorage.setItem('jpfruit-last-addr', addr);
     localStorage.setItem('jpfruit-last-postcode', pc.toUpperCase());
-    localStorage.setItem('jpfruit-last-ts',       Date.now());
-    const cartSnapshot = Object.entries(cart)
-      .filter(([id,v])=>!v.isSet)
-      .map(([id,qty])=>`${id}:${qty}`).join(',');
-    if (cartSnapshot) localStorage.setItem('jpfruit-last-cart', cartSnapshot);
-  } catch(e) {}
+    localStorage.setItem('jpfruit-last-ts', Date.now());
+  } catch(e){}
 
   window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
-}
-
-async function saveOrderToFirebase(orderData) {
-  try {
-    if (!window._firebaseReady || !window._fbDb) {
-      // Firebase not ready — save to localStorage as backup
-      const pending = JSON.parse(localStorage.getItem('jpfruit-pending-orders') || '[]');
-      pending.push(orderData);
-      localStorage.setItem('jpfruit-pending-orders', JSON.stringify(pending));
-      return;
-    }
-    const ordersRef = window._fbRef(window._fbDb, 'orders');
-    const newRef    = window._fbPush(ordersRef);
-    await window._fbSet(newRef, {
-      ...orderData,
-      firebaseId: newRef.key,
-    });
-    console.log('Order saved to Firebase:', newRef.key);
-
-    // Also try to flush any pending orders from localStorage
-    flushPendingOrders();
-  } catch(e) {
-    console.error('Firebase save failed:', e);
-    // Fallback: save locally
-    const pending = JSON.parse(localStorage.getItem('jpfruit-pending-orders') || '[]');
-    pending.push(orderData);
-    localStorage.setItem('jpfruit-pending-orders', JSON.stringify(pending));
-  }
-}
-
-async function flushPendingOrders() {
-  try {
-    const pending = JSON.parse(localStorage.getItem('jpfruit-pending-orders') || '[]');
-    if (!pending.length || !window._firebaseReady) return;
-    const ordersRef = window._fbRef(window._fbDb, 'orders');
-    for (const order of pending) {
-      const newRef = window._fbPush(ordersRef);
-      await window._fbSet(newRef, { ...order, firebaseId: newRef.key, syncedAt: new Date().toISOString() });
-    }
-    localStorage.removeItem('jpfruit-pending-orders');
-    console.log(`Flushed ${pending.length} pending orders to Firebase`);
-  } catch(e) { console.error('Flush failed:', e); }
 }
 
 // ── FILTERS ───────────────────────────────────────────────────
@@ -1311,10 +1159,20 @@ function updateCountdown(){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 
 // ── INIT ──────────────────────────────────────────────────────
-window._reloadFromFirebase = () => { if(products.length === 0 || products === window._seedProducts) loadProducts(); };
 applyTX();updateCart();updateCountdown();
-// Flush any pending orders when Firebase becomes ready
-document.addEventListener('firebaseReady', () => { flushPendingOrders(); setTimeout(()=>flushPendingOrders(), 2000); });setInterval(updateCountdown,60000);loadProducts();
+document.addEventListener('firebaseReady', async ()=>{
+  try {
+    const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
+    if(pending.length && window._fbDb){
+      for(const o of pending){
+        const r=window._fbPush(window._fbRef(window._fbDb,'orders'));
+        await window._fbSet(r,{...o,firebaseId:r.key});
+      }
+      localStorage.removeItem('jpfruit-pending');
+      console.log('Flushed pending orders');
+    }
+  } catch(e){}
+});setInterval(updateCountdown,60000);loadProducts();
 </script>
 </body>
 </html>
