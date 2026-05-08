@@ -343,14 +343,14 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
     <div class="hero-left">
       <div class="hero-eyebrow" id="hero-tag">
         <span></span>
-        🥟 港式點心 · 🍣 刺身 · 🥩 凍肉 · 亞洲美食
+        港式點心 · 刺身 · 精選凍肉 · 亞洲美食
       </div>
       <h1 id="hero-h1">新鮮直送<br><em>JP Fruit</em></h1>
       <p class="hero-sub" id="hero-sub">精選日本時令水果、港式美食、亞洲零食，南倫敦各區送貨上門</p>
       <div class="hero-chips">
-        <span class="hero-chip" id="chip1">✈️ 日本直送</span>
-        <span class="hero-chip" id="chip2">🏠 South London 送貨</span>
-        <span class="hero-chip" id="chip3">💳 貨到付款</span>
+        <span class="hero-chip" id="chip1">港式點心</span>
+        <span class="hero-chip" id="chip2">新鮮刺身</span>
+        <span class="hero-chip" id="chip3">貨到付款</span>
       </div>
       <div id="hero-btn-wrap"></div>
     </div>
@@ -372,7 +372,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
 <!-- COUNTDOWN -->
 <div class="countdown-bar">
-  ⏰ <span id="countdown-label-text">⏰ 截單倒數：</span>
+  <span id="countdown-label-text">截單倒數：</span>
   <span class="cd-num" id="countdown">--</span>
   &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 💳 貨到付款
 </div>
@@ -799,12 +799,12 @@ function applyBanner(b) {
 // ── TRANSLATIONS ──────────────────────────────────────────────
 const TX = {
   zh:{
-    topbar:'截單時間 <strong>週二 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五</strong> &nbsp;·&nbsp; 💳 貨到付款 &nbsp;·&nbsp; ⏰ 倒數 <strong id="countdown">--</strong>',
+    topbar:'截單時間 <strong>週二 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; ⏰ 倒數 <strong id="countdown">--</strong>',
     logoSub:'亞洲美食 · South London Delivery', navCart:'購物車',
     heroTag:'🥟 港式點心 · 🍣 刺身 · 🥩 精選凍肉 · 亞洲美食專門',
     heroH1:'南倫敦嘅<br><em>亞洲廚房</em>',
     heroSub:'港式點心、家鄉菜、刺身、精選凍肉、亞洲零食，南倫敦各區送貨上門',
-    chip1:'✈️ 日本直送', chip2:'🏠 South London 送貨', chip3:'💳 貨到付款',
+    chip1:'HK Dim Sum', chip2:'Fresh Sashimi', chip3:'Pay on Delivery',
     searchPh:'搜尋產品...', catAll:'全部', catBest:'🏆 本店熱賣', loading:'載入產品中...',
     cartTitle:'🛒 購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
     subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
@@ -824,7 +824,7 @@ const TX = {
   en:{
     topbar:'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
     logoSub:'Asian Groceries · South London Delivery', navCart:'Cart',
-    heroTag:'🥟 HK Dim Sum · 🍣 Sashimi · 🥩 Frozen Meats · Asian Groceries',
+    heroTag:'HK Dim Sum · Sashimi · Premium Meats · Asian Groceries',
     heroH1:'South London\'s<br><em>Asian Kitchen</em>',
     heroSub:'Authentic HK dim sum, home-cooked dishes, sashimi, premium meats & Asian groceries — delivered across South London',
     chip1:'✈️ Direct from Japan', chip2:'🏠 South London Delivery', chip3:'💳 Pay on Delivery',
@@ -1091,13 +1091,11 @@ function renderCart(cid,sfx){
   const formExists = !!document.getElementById('cf-name'+sfx);
 
   if(!items.length){
-    if(!formExists) el.innerHTML=`<div class="cart-empty-msg">${tx('cartEmpty').replace('
-','<br>')}</div>${cartForm(sfx)}`;
+    if(!formExists) el.innerHTML=`<div class="cart-empty-msg">${tx('cartEmpty').replace('\n','<br>')}</div>${cartForm(sfx)}`;
     else {
       // Just update items area
       let itemsEl = el.querySelector('.cart-items-list');
-      if(itemsEl) itemsEl.innerHTML = `<div class="cart-empty-msg" style="padding:16px 20px;">${tx('cartEmpty').replace('
-','<br>')}</div>`;
+      if(itemsEl) itemsEl.innerHTML = `<div class="cart-empty-msg" style="padding:16px 20px;">${tx('cartEmpty').replace('\n','<br>')}</div>`;
       let summaryEl = el.querySelector('.cart-summary');
       if(summaryEl) summaryEl.style.display = 'none';
     }
