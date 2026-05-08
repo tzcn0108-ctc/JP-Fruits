@@ -84,6 +84,17 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .hfg-4{animation:float-card 5s ease-in-out infinite;animation-delay:3.6s;}
 @keyframes float-card{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 
+
+/* ── QUALITY PROMISE STRIP ── */
+.quality-strip{background:var(--white);border-bottom:1.5px solid var(--border);padding:0 20px;}
+.quality-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0;}
+.quality-item{display:flex;align-items:center;gap:12px;padding:16px 0;flex:1;}
+.quality-icon{width:38px;height:38px;border-radius:10px;background:var(--plum-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.quality-icon svg{width:18px;height:18px;stroke:var(--plum);}
+.quality-title{font-size:0.82rem;font-weight:600;color:var(--ink);margin-bottom:1px;}
+.quality-sub{font-size:0.7rem;color:var(--muted);line-height:1.4;}
+.quality-divider{width:1px;height:36px;background:var(--border);flex-shrink:0;margin:0 8px;}
+@media(max-width:760px){.quality-divider{display:none;}.quality-inner{flex-wrap:wrap;gap:0;}.quality-item{width:50%;flex:none;border-bottom:1px solid var(--border);}.quality-item:nth-child(odd){padding-right:12px;}.quality-item:nth-child(n+7){border-bottom:none;}}
 /* ── COUNTDOWN BAR ── */
 .countdown-bar{background:linear-gradient(90deg,var(--plum-l),var(--peach-l));border-bottom:1.5px solid var(--border);padding:10px 24px;text-align:center;font-size:0.79rem;color:var(--plum);font-weight:500;}
 .countdown-bar .cd-num{font-family:'Noto Serif HK',serif;font-size:1rem;color:var(--berry);font-weight:600;}
@@ -288,10 +299,26 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .loading-state{text-align:center;padding:70px 20px;color:var(--muted);}
 .loading-spinner{width:36px;height:36px;border:3px solid var(--peach-l);border-top-color:var(--plum);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px;}
 @keyframes spin{to{transform:rotate(360deg);}}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+@keyframes fadeOut{to{opacity:0;transform:translateX(-50%) translateY(-10px);}}
 
 /* ── EMPTY ── */
 .no-products{text-align:center;padding:36px;color:var(--muted);font-size:0.84rem;}
 
+
+
+/* ── GROUP BUY SHARE ── */
+.mw-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.mw-share-btn{display:flex;align-items:center;gap:6px;background:var(--plum);color:white;border:none;padding:7px 12px;border-radius:7px;font-size:0.72rem;font-family:'Noto Sans HK',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
+.mw-share-btn:hover{background:var(--plum-m);transform:translateY(-1px);}
+/* ── ORDER BUMP ── */
+.order-bump{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FEF9EC,#FEF3D0);border:1.5px solid var(--gold);border-radius:10px;padding:10px 12px;margin-bottom:12px;cursor:pointer;transition:all 0.18s;}
+.order-bump:hover{background:#FEF0C0;transform:translateY(-1px);}
+.ob-label{font-size:0.58rem;background:var(--gold);color:white;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;text-transform:uppercase;flex-shrink:0;}
+.ob-content{flex:1;}
+.ob-name{font-size:0.78rem;font-weight:600;color:var(--ink-2);line-height:1.3;}
+.ob-price{font-size:0.78rem;color:var(--plum);font-weight:700;margin-top:2px;}
+.ob-cta{background:var(--gold);color:white;border:none;padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Noto Sans HK',sans-serif;flex-shrink:0;}
 /* ── SCROLL TO TOP / CATEGORIES ── */
 .fab-wrap{position:fixed;bottom:28px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:150;}
 .fab{width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:all 0.2s;font-family:'Noto Sans HK',sans-serif;}
@@ -362,6 +389,51 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   </div>
 </div>
 
+
+<!-- QUALITY PROMISE STRIP -->
+<div class="quality-strip">
+  <div class="quality-inner">
+    <div class="quality-item">
+      <div class="quality-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div class="quality-title" id="q1t">品質保證</div>
+        <div class="quality-sub" id="q1s">每週親自挑選，不合格不出售</div>
+      </div>
+    </div>
+    <div class="quality-divider"></div>
+    <div class="quality-item">
+      <div class="quality-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <div>
+        <div class="quality-title" id="q2t">每週五送貨</div>
+        <div class="quality-sub" id="q2s">南倫敦各區，提前一天通知時段</div>
+      </div>
+    </div>
+    <div class="quality-divider"></div>
+    <div class="quality-item">
+      <div class="quality-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </div>
+      <div>
+        <div class="quality-title" id="q3t">一對一客服</div>
+        <div class="quality-sub" id="q3s">WhatsApp 直接溝通，不是機械人</div>
+      </div>
+    </div>
+    <div class="quality-divider"></div>
+    <div class="quality-item">
+      <div class="quality-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+      </div>
+      <div>
+        <div class="quality-title" id="q4t">貨到付款</div>
+        <div class="quality-sub" id="q4s">收到貨先畀錢，安心購物</div>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- COUNTDOWN -->
 <div class="countdown-bar">
   <span id="countdown-label-text">截單倒數：</span>
@@ -795,7 +867,7 @@ const TX = {
     i2h:'最低消費', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
     i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
     footerP:'關注我們 Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
+    waMsg:(name,phone,addr,pc,items,total,notes)=>`你好！我想落單 🙂\n\n*JP Fruit 訂單*\n━━━━━━━━━━━━━━━━\n*姓名:* ${name}\n*WhatsApp:* ${phone}\n*送貨地址:* ${addr}, ${pc.toUpperCase()}\n━━━━━━━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━━━━━━━\n*合計: £${total}*${notes?'\n\n*備註:* '+notes:''}\n\n*想查詢的問題:* _____\n\n謝謝！`,
   },
   en:{
     topbar:'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
@@ -818,7 +890,7 @@ const TX = {
     i2h:'Minimum Order', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
     i3h:'Contact Us', i3p:"We'll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm",
     footerP:'Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
+    waMsg:(name,phone,addr,pc,items,total,notes)=>`Hi JP Fruit, I'd like to place an order 🙂\n\n*JP Fruit Order*\n━━━━━━━━━━━━━━━━\n*Name:* ${name}\n*WhatsApp:* ${phone}\n*Delivery Address:* ${addr}, ${pc.toUpperCase()}\n━━━━━━━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━━━━━━━\n*Total: £${total}*${notes?'\n\n*Remarks:* '+notes:''}\n\n*Any questions:* _____\n\nThank you!`,
   }
 };
 
@@ -859,6 +931,21 @@ function applyTX(){
   document.getElementById('i3h').textContent=t.i3h;
   document.getElementById('i3p').textContent=t.i3p;
   document.getElementById('footer-p').textContent=t.footerP;
+  // Quality strip
+  if(document.getElementById('q1t')){
+    const q = lang==='zh' ? {
+      q1t:'品質保證', q1s:'每週親自挑選，不合格不出售',
+      q2t:'每週五送貨', q2s:'南倫敦各區，提前一天通知時段',
+      q3t:'一對一客服', q3s:'WhatsApp 直接溝通，不是機械人',
+      q4t:'貨到付款', q4s:'收到貨先畀錢，安心購物',
+    } : {
+      q1t:'Quality Assured', q1s:'Personally selected every week',
+      q2t:'Friday Delivery', q2s:'South London wide, slot notified day before',
+      q3t:'Personal Service', q3s:'Direct WhatsApp with our team, not a bot',
+      q4t:'Pay on Delivery', q4s:'Pay when you receive, zero risk',
+    };
+    Object.entries(q).forEach(([id,txt])=>{const el=document.getElementById(id);if(el)el.textContent=txt;});
+  }
   updateCountdown();
 }
 
@@ -1039,9 +1126,18 @@ function renderCart(cid,sfx){
   if(!items.length){el.innerHTML=`<div class="cart-empty-msg">${tx('cartEmpty').replace('\n','<br>')}</div>${cartForm(sfx)}`;return;}
   const pc=document.getElementById('cf-post'+sfx)?.value||'';
   const minI=getMin(pc);
+  const diff = minI ? (minI.min - total) : 0;
   const warn=minI&&total<minI.min?`<div class="min-warning">
-    ${tx('minWarn',minI.area,(minI.min-total).toFixed(2))}
-    <div class="min-warning-progress"><div class="min-warning-fill" style="width:${Math.min(100,total/minI.min*100).toFixed(0)}%"></div></div>
+    <div class="mw-top">
+      <div>
+        ${tx('minWarn',minI.area,diff.toFixed(2))}
+        <div class="min-warning-progress"><div class="min-warning-fill" style="width:${Math.min(100,total/minI.min*100).toFixed(0)}%"></div></div>
+      </div>
+      <button class="mw-share-btn" onclick="shareGroupBuy('${minI.area}',${diff.toFixed(2)})" title="${lang==='zh'?'一鍵分享夾單':'Share with neighbours'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        ${lang==='zh'?'揪鄰居夾單':'Share with neighbours'}
+      </button>
+    </div>
   </div>`:'';
   el.innerHTML=`<div class="cart-items-list">${items.map(({id,val})=>{
     if(val&&val.isSet)return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="rmSetItem('${id}')">✕</button></div><div class="ci-price">£${parseFloat(val.price||0).toFixed(2)}</div></div>`;
@@ -1052,7 +1148,15 @@ function renderCart(cid,sfx){
 }
 function cartForm(sfx){
   const has=getCount()>0;
-  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateCart()"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
+  const bumpItem=getBumpItem();
+return`<div class="checkout-form">${bumpItem?`<div class="order-bump" onclick="addCart('${bumpItem.id}');this.style.display='none'">
+  <div class="ob-label">加購優惠</div>
+  <div class="ob-content">
+    <div class="ob-name">${lang==='zh'?(bumpItem.nameZh||bumpItem.name):bumpItem.nameEn||bumpItem.name}</div>
+    <div class="ob-price">+£${(bumpItem.salePrice||bumpItem.price).toFixed(2)} <span style="text-decoration:line-through;color:var(--muted);font-size:0.7rem;">£${bumpItem.price.toFixed(2)}</span></div>
+  </div>
+  <div class="ob-cta">加入</div>
+</div>`:''}<div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateCart()"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><div style="text-align:right;margin-top:4px;"><button type="button" onclick="clearCachedForm()" style="background:none;border:none;font-size:0.68rem;color:var(--muted);cursor:pointer;font-family:inherit;text-decoration:underline;">${lang==='zh'?'清除已儲存資料':'Clear saved info'}</button></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
 }
 function sendWA(sfx){
   const name=document.getElementById('cf-name'+sfx)?.value?.trim();
@@ -1071,10 +1175,71 @@ function sendWA(sfx){
   if(minI&&total<minI.min){if(!confirm(tx('alertMin',minI.min,total.toFixed(2))))return;}
   const waNum=siteSettings.whatsapp||'447700900000';
   const msg=tx('waMsg',name,phone,addr,pc.toUpperCase(),lines,total.toFixed(2),notes);
+
+  // ── CACHE: save customer info for next visit ──
+  try {
+    localStorage.setItem('jpfruit-last-name',    name);
+    localStorage.setItem('jpfruit-last-phone',   phone);
+    localStorage.setItem('jpfruit-last-addr',    addr);
+    localStorage.setItem('jpfruit-last-postcode', pc.toUpperCase());
+    localStorage.setItem('jpfruit-last-ts',      Date.now());
+    // Save last cart for potential Magic Link generation
+    const cartSnapshot = Object.entries(cart)
+      .filter(([id,v])=>!v.isSet)
+      .map(([id,qty])=>`${id}:${qty}`)
+      .join(',');
+    if (cartSnapshot) localStorage.setItem('jpfruit-last-cart', cartSnapshot);
+  } catch(e) {}
+
   window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 // ── FILTERS ───────────────────────────────────────────────────
+
+function getBumpItem() {
+  // Show a sauce/condiment as upsell when cart total > £20
+  const total = getTotal();
+  if (total < 20) return null;
+  const alreadyInCart = Object.keys(cart);
+  const bumps = products.filter(p =>
+    (p.cat === 'sauces' || p.cat === 'hk-snacks') &&
+    p.price < 8 &&
+    p.salePrice &&
+    !alreadyInCart.includes(p.id)
+  );
+  return bumps.sort((a,b) => (b.historicSold||0) - (a.historicSold||0))[0] || null;
+}
+
+
+function shareGroupBuy(area, diff) {
+  const url = window.location.href.split('?')[0];
+  const msgZh = `喂！我喺 JP Fruit 買緊靚港式點心同亞洲食品，仲差 £${diff.toFixed(2)} 先夠 ${area} 免費送貨！有冇街坊想一齊夾單？\n\n落單連結：${url}\n\n截單係每週二 1pm，週五送貨到門口 🙂`;
+  const msgEn = `Hey! I'm ordering from JP Fruit (HK dim sum & Asian groceries). Need £${diff.toFixed(2)} more for free delivery in ${area} — anyone want to join? \n\nOrder here: ${url}\n\nCutoff every Tuesday 1pm, Friday delivery 🙂`;
+  const msg = lang === 'zh' ? msgZh : msgEn;
+  if (navigator.share) {
+    navigator.share({ title: 'JP Fruit 夾單', text: msg, url }).catch(() => copyToClipboard(msg));
+  } else {
+    copyToClipboard(msg);
+    showToast(lang === 'zh' ? '已複製！貼到 WhatsApp 群組分享' : 'Copied! Paste to your WhatsApp group');
+  }
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(lang === 'zh' ? '已複製！貼到 WhatsApp 群組分享' : 'Copied! Paste to your WhatsApp group');
+    });
+  } else {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast(lang === 'zh' ? '已複製！' : 'Copied!');
+  }
+}
+
 function filterCat(id,el){
   activeCat=id;
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
@@ -1109,6 +1274,159 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 // ── INIT ──────────────────────────────────────────────────────
 
+
+// ── VIP MAGIC LINK ────────────────────────────────────────
+
+
+function clearCachedForm() {
+  ['jpfruit-vip-uid','jpfruit-vip-ts','jpfruit-last-name','jpfruit-last-phone',
+   'jpfruit-last-addr','jpfruit-last-postcode','jpfruit-last-ts','jpfruit-last-cart']
+    .forEach(k => localStorage.removeItem(k));
+  ['', '-m'].forEach(sfx => {
+    ['cf-name','cf-phone','cf-addr','cf-post','cf-notes'].forEach(id => {
+      const el = document.getElementById(id + sfx);
+      if (el) el.value = '';
+    });
+  });
+  showToast(lang === 'zh' ? '已清除儲存資料' : 'Saved info cleared');
+}
+
+function restoreCachedForm() {
+  // For non-VIP returning customers: restore last order info
+  const vipUid = localStorage.getItem('jpfruit-vip-uid');
+  if (vipUid) return; // VIP handled by initVipLink
+
+  const ts = parseInt(localStorage.getItem('jpfruit-last-ts') || '0');
+  const AGE_DAYS = 60;
+  if (!ts || Date.now() - ts > AGE_DAYS * 86400000) return; // expired
+
+  const name  = localStorage.getItem('jpfruit-last-name') || '';
+  const phone = localStorage.getItem('jpfruit-last-phone') || '';
+  const addr  = localStorage.getItem('jpfruit-last-addr') || '';
+  const pc    = localStorage.getItem('jpfruit-last-postcode') || '';
+
+  if (!name) return;
+
+  setTimeout(() => {
+    ['', '-m'].forEach(sfx => {
+      const n  = document.getElementById('cf-name'  + sfx);
+      const ph = document.getElementById('cf-phone' + sfx);
+      const a  = document.getElementById('cf-addr'  + sfx);
+      const pcel = document.getElementById('cf-post' + sfx);
+      if (n  && !n.value)  n.value  = name;
+      if (ph && !ph.value) ph.value = phone;
+      if (a  && !a.value)  a.value  = addr;
+      if (pcel && !pcel.value) pcel.value = pc;
+    });
+    updateCart();
+    showToast(lang === 'zh' ? '已自動填入上次資料' : 'Previous details restored');
+  }, 900);
+}
+
+async function initVipLink() {
+  const params = new URLSearchParams(window.location.search);
+  const vipUid = params.get('vip');
+  const cartParam = params.get('cart');
+
+  // ── CACHE: save UID to localStorage when first visited via Magic Link
+  if (vipUid) {
+    localStorage.setItem('jpfruit-vip-uid', vipUid.toUpperCase());
+    localStorage.setItem('jpfruit-vip-ts', Date.now()); // timestamp for expiry
+  }
+
+  // ── CACHE: try to restore UID from localStorage if no URL param
+  const cachedUid = localStorage.getItem('jpfruit-vip-uid');
+  const cachedTs  = parseInt(localStorage.getItem('jpfruit-vip-ts') || '0');
+  const CACHE_DAYS = 90; // remember for 90 days
+  const cacheValid = cachedUid && (Date.now() - cachedTs < CACHE_DAYS * 86400000);
+
+  const activeUid = vipUid?.toUpperCase() || (cacheValid ? cachedUid : null);
+  const isFromCache = !vipUid && !!activeUid;
+
+  if (!activeUid && !cartParam) return;
+
+  // ── Load VIP profile ──
+  const vipResult = getVipProfile(activeUid);
+  const vipData = vipResult instanceof Promise ? await vipResult : vipResult;
+
+  if (vipData) {
+    setTimeout(() => {
+      ['', '-m'].forEach(sfx => {
+        const n  = document.getElementById('cf-name'  + sfx);
+        const ph = document.getElementById('cf-phone' + sfx);
+        const a  = document.getElementById('cf-addr'  + sfx);
+        const pc = document.getElementById('cf-post'  + sfx);
+        if (n)  n.value  = vipData.name     || '';
+        if (ph) ph.value = vipData.phone    || '';
+        if (a)  a.value  = vipData.address  || '';
+        if (pc) pc.value = vipData.postcode || '';
+      });
+      updateCart();
+      if (isFromCache) {
+        // Returning user — subtle reminder, not full greeting
+        showToast(lang === 'zh' ? `歡迎回來，${vipData.name}！資料已自動填好` : `Welcome back, ${vipData.name}!`);
+      } else {
+        showVipGreeting(vipData.name);
+      }
+    }, 800);
+  }
+
+  // ── Pre-load cart from URL param ──
+  if (cartParam) {
+    cartParam.split(',').forEach(item => {
+      const [id, qty] = item.split(':');
+      if (id && qty && products.find(p => p.id === id)) {
+        cart[id] = parseInt(qty) || 1;
+      }
+    });
+    updateCart();
+    setTimeout(() => {
+      showToast(lang === 'zh' ? '上週訂單已自動載入！' : 'Last order pre-loaded!');
+    }, 1200);
+  }
+
+  // ── CACHE: save last order after WA send ──
+  // (handled in sendWA below)
+}
+
+function getVipProfile(uid) {
+  if (!uid) return null;
+  try {
+    // Try window.storage first, then localStorage
+    const tryParse = (raw) => {
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      const vips = data.vips || {};
+      // Try uppercase, original, and lowercase
+      return vips[uid.toUpperCase()] || vips[uid] || vips[uid.toLowerCase()] || null;
+    };
+    if (typeof window.storage !== 'undefined') {
+      return window.storage.get('jpfruit-v2', true)
+        .then(r => tryParse(r?.value))
+        .catch(() => tryParse(localStorage.getItem('jpfruit-v2')));
+    }
+    return tryParse(localStorage.getItem('jpfruit-v2'));
+  } catch(e) { return null; }
+}
+
+function showVipGreeting(name) {
+  const greet = document.createElement('div');
+  greet.style.cssText = `
+    position:fixed;top:70px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,var(--plum),#8B3A6B);
+    color:white;padding:12px 24px;border-radius:12px;
+    font-size:0.88rem;font-family:'Noto Sans HK',sans-serif;
+    font-weight:500;z-index:500;box-shadow:0 8px 24px rgba(107,76,138,0.35);
+    text-align:center;animation:slideDown 0.4s ease;
+  `;
+  greet.innerHTML = lang === 'zh'
+    ? `歡迎回來，${name}！<br><span style="font-size:0.75rem;opacity:0.85;">您的資料已自動填好 — 檢查後直接落單即可</span>`
+    : `Welcome back, ${name}!<br><span style="font-size:0.75rem;opacity:0.85;">Your details are pre-filled — just review and order</span>`;
+  document.body.appendChild(greet);
+  setTimeout(() => greet.style.animation = 'fadeOut 0.5s forwards', 3500);
+  setTimeout(() => greet.remove(), 4000);
+}
+
 // ── SCROLL BUTTONS ──────────────────────────────────────
 function scrollToTop() {
   window.scrollTo({top: 0, behavior: 'smooth'});
@@ -1124,7 +1442,10 @@ window.addEventListener('scroll', () => {
   fab.style.display = window.scrollY > 300 ? 'flex' : 'none';
 }, {passive: true});
 
-applyTX();updateCart();updateCountdown();setInterval(updateCountdown,60000);loadProducts();
+applyTX();updateCart();updateCountdown();setInterval(updateCountdown,60000);loadProducts().then(()=>{
+  initVipLink();
+  restoreCachedForm();
+});
 </script>
 
 <!-- FAB Buttons -->

@@ -144,6 +144,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
       <div class="nav-item" onclick="showPage('featured')" id="nav-featured"><span class="icon">🏆</span>熱賣專區管理</div>
       <div class="nav-item" onclick="showPage('banner')" id="nav-banner"><span class="icon">🌟</span>本週主打 Banner</div>
       <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">⚙️</span>網站設定</div>
+      <div class="nav-item" onclick="showPage('vip')" id="nav-vip"><span class="icon">⭐</span>VIP 客人</div>
       <div class="nav-item" onclick="showPage('categories')" id="nav-categories"><span class="icon">🏷️</span>分類設定</div>
     </nav>
     <div class="sidebar-footer">
@@ -504,6 +505,60 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 </div>
 
 
+
+    <!-- VIP CUSTOMERS -->
+    <div id="page-vip" style="display:none;">
+      <div class="header">
+        <div class="page-title">⭐ VIP 客人管理</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openVipModal()">+ 新增 VIP</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice">
+          為 VIP 客人生成專屬落單連結。客人點開連結，資料同上週訂單自動填好，一撳即落單。
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>客人</th><th>VIP 編號</th><th>地址</th><th>常購產品</th><th>連結</th><th>操作</th></tr></thead>
+            <tbody id="vip-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIP MODAL -->
+    <div class="modal" id="vip-modal">
+      <div class="modal-content">
+        <div class="modal-header"><div class="modal-title" id="vip-modal-title">新增 VIP 客人</div><button class="close-btn" onclick="closeModal('vip-modal')">✕</button></div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group"><label>稱呼 / 姓名</label><input type="text" id="vip-name" placeholder="例：陳太 / Carrie Chan"></div>
+            <div class="form-group">
+              <label>VIP 編號 <span style="font-size:0.7rem;color:var(--muted);">（自動生成）</span></label>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="text" id="vip-slug" placeholder="JP0001" style="font-family:monospace;font-weight:600;color:var(--plum);letter-spacing:1px;" readonly>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="regenerateVipUid()" title="重新生成">↺</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>WhatsApp 號碼</label><input type="text" id="vip-phone" placeholder="+44 7xxx xxxxxx"></div>
+            <div class="form-group"><label>郵政編碼</label><input type="text" id="vip-postcode" placeholder="SM1 1AA"></div>
+          </div>
+          <div class="form-group"><label>送貨地址</label><input type="text" id="vip-address" placeholder="門牌 街道名"></div>
+          <div class="form-group">
+            <label>上週常購產品（自動加入購物車）</label>
+            <div id="vip-cart-items" style="margin-top:8px;"></div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="addVipCartRow()">+ 加產品</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('vip-modal')">取消</button>
+          <button class="btn btn-primary" onclick="saveVip()">儲存</button>
+        </div>
+      </div>
+    </div>
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none;">
       <div class="header">
@@ -1035,6 +1090,7 @@ async function loadData() {
       state.banner   = saved.banner   || {...DEFAULT_BANNER};
       state.sets     = saved.sets     || [];
       state.settings = saved.settings || {};
+      state.vips = saved.vips || {};
       const existingIds = new Set(state.products.map(p=>p.id));
       for (const sp of SEED_PRODUCTS) {
         if (!existingIds.has(sp.id)) state.products.push(sp);
@@ -1059,7 +1115,7 @@ async function saveData() {
   const data = JSON.stringify({
     products: state.products, orders: state.orders,
     categories: state.categories, banner: state.banner,
-    sets: state.sets, settings: state.settings||{},
+    sets: state.sets, settings: state.settings||{}, vips: state.vips||{},
   });
   if (typeof window.storage !== 'undefined') {
     try { await window.storage.set('jpfruit-v2', data, true); } catch(e) {}
@@ -1079,7 +1135,7 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(page) {
-  ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings'].forEach(p => {
+  ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings','vip'].forEach(p => {
     document.getElementById('page-'+p).style.display = p===page?'block':'none';
     const el = document.getElementById('nav-'+p);
     if(el) el.classList.toggle('active', p===page);
@@ -1093,6 +1149,7 @@ function showPage(page) {
   if(page==='featured') renderFeaturedPage();
   if(page==='banner') renderBannerPage();
   if(page==='settings') initSettings();
+  if(page==='vip') renderVipPage();
   if(page==='categories') renderCategories();
 }
 
@@ -2156,6 +2213,130 @@ function deleteSet() {
   renderSetsPage();
 }
 
+
+
+// ── VIP CUSTOMERS ─────────────────────────────────────────
+function getVips() { return state.vips || {}; }
+
+function renderVipPage() {
+  const vips = getVips();
+  const tbody = document.getElementById('vip-table');
+  if (!tbody) return;
+  const ORDER_BASE = 'https://tzcn0108-ctc.github.io/JP-Fruits/jp_fruit_order.html';
+  const entries = Object.entries(vips);
+  if (!entries.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:28px;">未有 VIP 客人。撳「新增 VIP」開始。</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = entries.map(([slug, v]) => {
+    const cartStr = (v.cart||[]).map(i=>`${i.id}:${i.qty}`).join(',');
+    const link = `${ORDER_BASE}?vip=${slug}${cartStr?'&cart='+cartStr:''}`;
+    return `<tr>
+      <td style="font-weight:500;">${v.name}</td>
+      <td style="font-size:0.8rem;color:var(--muted);">${v.address||''}, ${v.postcode||''}</td>
+      <td>${v.postcode||''}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="text" value="${link}" style="font-size:0.7rem;border:1px solid var(--border);border-radius:4px;padding:3px 6px;width:200px;color:var(--plum);" readonly onclick="this.select()">
+          <button class="btn btn-ghost btn-sm" onclick="copyVipLink('${link}')">複製</button>
+          <a href="${link}" target="_blank" class="btn btn-ghost btn-sm">預覽</a>
+        </div>
+      </td>
+      <td><div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editVip('${slug}')">✏️ 編輯</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteVip('${slug}')">刪除</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function copyVipLink(link) {
+  const uid = new URL(link).searchParams.get('vip') || '';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => {
+      alert(`✅ ${uid} 連結已複製！\n\n直接貼到 WhatsApp 發給 VIP 客人：\n\n「${document.getElementById('vip-name')?.value || 'VIP'}，我哋新系統已將您的資料填好，用呢個連結落單即可：\n${link}」`);
+    });
+  }
+}
+
+let editingVipSlug = null;
+let vipCartRows = [];
+
+function generateVipUid() {
+  const vips = getVips();
+  const existing = Object.keys(vips).filter(k => /^JP\d{4}$/.test(k.toUpperCase()));
+  const maxNum = existing.length
+    ? Math.max(...existing.map(k => parseInt(k.replace(/\D/g,''))))
+    : 0;
+  const next = maxNum + 1;
+  return 'JP' + String(next).padStart(4, '0');
+}
+
+function regenerateVipUid() {
+  if (editingVipSlug) return; // don't change existing VIP UID
+  document.getElementById('vip-slug').value = generateVipUid();
+}
+
+function openVipModal(slug=null) {
+  editingVipSlug = slug;
+  vipCartRows = [];
+  document.getElementById('vip-modal-title').textContent = slug ? '編輯 VIP 客人' : '新增 VIP 客人';
+  const v = slug ? (getVips()[slug] || {}) : {};
+  document.getElementById('vip-name').value = v.name || '';
+  document.getElementById('vip-slug').value = slug || generateVipUid();
+  document.getElementById('vip-slug').disabled = !!slug; // lock UID when editing
+  document.getElementById('vip-phone').value = v.phone || '';
+  document.getElementById('vip-postcode').value = v.postcode || '';
+  document.getElementById('vip-address').value = v.address || '';
+  vipCartRows = (v.cart || []).map(i => ({...i}));
+  renderVipCartRows();
+  document.getElementById('vip-modal').classList.add('open');
+}
+
+function editVip(slug) { openVipModal(slug); }
+
+function deleteVip(slug) {
+  if (!confirm(`確定刪除 ${getVips()[slug]?.name} 嘅 VIP 資料？`)) return;
+  if (!state.vips) state.vips = {};
+  delete state.vips[slug];
+  saveData(); renderVipPage();
+}
+
+function addVipCartRow() {
+  vipCartRows.push({id:'', qty:1});
+  renderVipCartRows();
+}
+
+function renderVipCartRows() {
+  const container = document.getElementById('vip-cart-items');
+  container.innerHTML = vipCartRows.map((row, i) => `
+    <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
+      <select onchange="vipCartRows[${i}].id=this.value" style="flex:1;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.8rem;">
+        <option value="">-- 選擇產品 --</option>
+        ${state.products.filter(p=>p.active!==false&&p.price>0).map(p=>`<option value="${p.id}" ${row.id===p.id?'selected':''}>${p.nameZh||p.name}</option>`).join('')}
+      </select>
+      <input type="number" min="1" max="20" value="${row.qty}" onchange="vipCartRows[${i}].qty=parseInt(this.value)||1" style="width:54px;padding:5px 6px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;text-align:center;">
+      <button onclick="vipCartRows.splice(${i},1);renderVipCartRows()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;">✕</button>
+    </div>
+  `).join('');
+}
+
+function saveVip() {
+  const name = document.getElementById('vip-name').value.trim();
+  const slug = editingVipSlug || document.getElementById('vip-slug').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (!name || !slug) { alert('請填寫姓名同連結 ID！'); return; }
+  if (!state.vips) state.vips = {};
+  state.vips[slug] = {
+    name,
+    phone: document.getElementById('vip-phone').value.trim(),
+    postcode: document.getElementById('vip-postcode').value.trim().toUpperCase(),
+    address: document.getElementById('vip-address').value.trim(),
+    cart: vipCartRows.filter(r => r.id),
+  };
+  saveData();
+  closeModal('vip-modal');
+  renderVipPage();
+}
 
 // ── SITE SETTINGS ─────────────────────────────────────────────
 const DEFAULT_SETTINGS = {
