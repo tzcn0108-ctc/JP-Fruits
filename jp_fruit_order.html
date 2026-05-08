@@ -769,11 +769,132 @@ const SEED_CATEGORIES = [
   {id:'others',name:'Others',zh:'其他'},
 ];
 
+
+const SEED_SETS = [
+  {
+    id:'set001',
+    nameZh:'點心家庭套餐',
+    nameEn:'Dim Sum Family Set',
+    name:'Dim Sum Family Set',
+    cat:'dim-sum',
+    price:28.00,
+    emoji:'',
+    descZh:'精選 4 款港式點心，適合 3-4 人家庭享用',
+    descEn:'4 classic HK dim sum selections, perfect for a family of 3-4',
+    desc:'精選 4 款港式點心，適合 3-4 人家庭享用',
+    isSet:true,
+    groups:[
+      {
+        id:'g001a',
+        nameZh:'燒賣類（選 1）',
+        nameEn:'Siu Mai (Choose 1)',
+        min:1, max:1, allowRepeat:false,
+        items:[
+          {id:'p100', zh:'豬蝦燒賣 20粒', name:'Siu Mai Prawn & Pork 20pcs'},
+          {id:'p101', zh:'魚肉燒賣 20粒', name:'Fish Siu Mai 20pcs'},
+          {id:'p102', zh:'牛肉燒賣 20粒', name:'Beef Siu Mai 20pcs'},
+        ]
+      },
+      {
+        id:'g001b',
+        nameZh:'包點類（選 1）',
+        nameEn:'Buns (Choose 1)',
+        min:1, max:1, allowRepeat:false,
+        items:[
+          {id:'p107', zh:'叉燒包 6個', name:'BBQ Pork Bun 6pcs'},
+          {id:'p108', zh:'雞包 6個', name:'Chicken Bun 6pcs'},
+          {id:'p110', zh:'小籠包 12個', name:'Siu Loong Bao 12pcs'},
+        ]
+      },
+      {
+        id:'g001c',
+        nameZh:'主菜類（選 1）',
+        nameEn:'Main (Choose 1)',
+        min:1, max:1, allowRepeat:false,
+        items:[
+          {id:'p105', zh:'珍珠雞 4件', name:'Mini Glutinous Rice 4pcs'},
+          {id:'p104', zh:'鮮竹捲 10條', name:'Bean Curd Roll 10pcs'},
+          {id:'p111', zh:'豉汁排骨 410g', name:'Black Bean Sauce Spare Ribs 410g'},
+        ]
+      },
+      {
+        id:'g001d',
+        nameZh:'配菜類（選 1）',
+        nameEn:'Side (Choose 1)',
+        min:1, max:1, allowRepeat:false,
+        items:[
+          {id:'p112', zh:'豉汁鳳爪 410g', name:'Black Bean Sauce Chicken Feet 410g'},
+          {id:'p119', zh:'鮮蝦雲吞 12粒', name:'Fresh Prawn Wonton 12pcs'},
+          {id:'p124', zh:'水晶餃 15粒', name:'Crystal Dumplings 15pcs'},
+        ]
+      }
+    ]
+  },
+  {
+    id:'set002',
+    nameZh:'凍肉拼盤套餐',
+    nameEn:'Premium Meat Selection',
+    name:'Premium Meat Selection',
+    cat:'premium-meat',
+    price:32.00,
+    emoji:'',
+    descZh:'精選 3 款優質凍肉，自由配搭',
+    descEn:'Choose 3 premium frozen meat items',
+    desc:'精選 3 款優質凍肉，自由配搭',
+    isSet:true,
+    groups:[
+      {
+        id:'g002a',
+        nameZh:'選擇 3 款肉類',
+        nameEn:'Choose 3 Meat Items',
+        min:3, max:3, allowRepeat:true,
+        items:[
+          {id:'p078', zh:'愛爾蘭頂級牛小排肉片 200g', name:'Premium Boneless Short Rib Slices 200g'},
+          {id:'p079', zh:'愛爾蘭頂級牛小排燒烤肉片 200g', name:'Premium BBQ Short Rib Slices 200g'},
+          {id:'p083', zh:'精選梅花豚肉片 250g', name:'Pork Upper Shoulder Slices 250g'},
+          {id:'p076', zh:'Iberico 豬頸肉', name:'Iberico Secreto'},
+          {id:'p077', zh:'Iberico 扇子肉', name:'Iberico Abanico'},
+          {id:'p085', zh:'日式雞肉串燒 800g', name:'Chicken Yakitori 800g'},
+        ]
+      }
+    ]
+  },
+  {
+    id:'set003',
+    nameZh:'湯麵套餐',
+    nameEn:'Noodle Combo Set',
+    name:'Noodle Combo Set',
+    cat:'noodles',
+    price:18.00,
+    emoji:'',
+    descZh:'選 2 款湯麵，比單買更著數',
+    descEn:'Choose any 2 noodle soups — better value than buying separately',
+    desc:'選 2 款湯麵，比單買更著數',
+    isSet:true,
+    groups:[
+      {
+        id:'g003a',
+        nameZh:'選擇 2 款湯麵',
+        nameEn:'Choose 2 Noodle Soups',
+        min:2, max:2, allowRepeat:true,
+        items:[
+          {id:'p000', zh:'四川麻辣牛肉米線', name:'Spicy Mala Tang with sliced beef'},
+          {id:'p001', zh:'新加坡海鮮喇沙湯麵', name:'Singapore Seafood Laksa Ramen'},
+          {id:'p002', zh:'日式叉燒豬骨湯拉麵', name:'Japanese Tonkotsu Ramen'},
+          {id:'p003', zh:'馬拉椰香雞肉白湯拉麵', name:'Malaysiana Chicken Ramen'},
+          {id:'p004', zh:'港式濃茄牛肉湯麵', name:'HK Style Tomato Beef Noodle'},
+          {id:'p005', zh:'五色素食菠菜烏冬', name:'Five Elements Spinach Veggie Udon'},
+        ]
+      }
+    ]
+  }
+];
+
 async function loadSeedData() {
   // Fallback: load seed data directly into the order form
   products = SEED_PRODUCTS.filter(p => p.active !== false && p.price > 0 && p.stock !== 0);
   categories = SEED_CATEGORIES;
-  sets = [];
+  sets = SEED_SETS;
   buildCatNav();
   renderProducts();
 }
