@@ -1031,7 +1031,7 @@ function renderProducts(){
     const catSets=sets.filter(s=>s.cat===cid&&s.isSet);
     const main=lang==='zh'?(cat?.zh||cid):(cat?.name||cid);
     const sub=lang==='zh'?(cat?.name||''):(cat?.zh||'');
-    const emoji = {'dim-sum':'','bread':'','noodles':'','hk-homecook':'','hk-snacks':'','frozen-seafood':'','premium-meat':'','sashimi':'','fruits':'','sauces':'','snacks':'','personal-care':'','others':''[cid]||'🛒';
+    const emoji = EMOJI[cid] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
     return `<div class="cat-section" id="cat-${cid}">
       <div class="section-head">
         <div class="section-icon">${emoji}</div>
