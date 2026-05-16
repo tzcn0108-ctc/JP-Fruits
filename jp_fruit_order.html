@@ -1050,11 +1050,30 @@ function addCart(id){cart[id]=(cart[id]||0)+1;updateCart();refreshCard(id);showT
 function chQty(id,d){
   cart[id]=Math.max(0,(cart[id]||0)+d);
   if(!cart[id]) delete cart[id];
-  // Direct DOM update for qty display (instant feedback)
+
+  // ── Instant DOM update (no full re-render needed) ──
+  const p = products.find(x=>x.id===id);
+  const pr = p ? (p.salePrice||p.price) : 0;
+  const qty = cart[id]||0;
+
   ['','-m'].forEach(sfx=>{
+    // Update qty number
     const qEl = document.querySelector(`[data-qty-id="${id}${sfx}"]`);
-    if(qEl) qEl.textContent = cart[id]||0;
+    if(qEl) qEl.textContent = qty;
+    // Update line price
+    const prEl = document.querySelector(`[data-price-id="${id}${sfx}"]`);
+    if(prEl) prEl.textContent = qty > 0 ? `£${(pr*qty).toFixed(2)}` : '';
   });
+
+  // Update summary totals instantly
+  const total = getTotal();
+  document.querySelectorAll('.summary-row .summary-total span:last-child').forEach(el => {
+    el.textContent = `£${total.toFixed(2)}`;
+  });
+  document.querySelectorAll('.summary-row:first-child span:last-child').forEach(el => {
+    el.textContent = `£${total.toFixed(2)}`;
+  });
+
   updateCart();
   refreshCard(id);
 }
@@ -1120,11 +1139,9 @@ function updateCart(){
 }
 
 function updateWAButton(){
-  // Update WA button state without re-rendering entire form
   const has = getCount() > 0;
-  ['','-m'].forEach(sfx => {
-    const btn = document.querySelector(`#cart-${sfx?'mobile':'desktop'} .whatsapp-btn`);
-    if (!btn) return;
+  // Find ALL whatsapp buttons on page and update each
+  document.querySelectorAll('.whatsapp-btn').forEach(btn => {
     btn.disabled = !has;
     btn.textContent = has ? tx('waBtn') : tx('waBtnOff');
   });
@@ -1280,7 +1297,7 @@ function updateCountdown(){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 
 // ── INIT ──────────────────────────────────────────────────────
-applyTX();updateCart();updateCountdown();
+applyTX();updateCart();updateCountdown();updateWAButton();
 document.addEventListener('firebaseReady', async ()=>{
   try {
     const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
