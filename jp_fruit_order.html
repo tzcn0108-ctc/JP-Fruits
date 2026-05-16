@@ -76,7 +76,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .hero-food-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:190px;}
 .hfg-card{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:13px 10px;text-align:center;backdrop-filter:blur(12px);transition:all 0.3s;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
 .hfg-card:hover{background:rgba(255,255,255,0.2);transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
-.hfg-card span{font-size:1.9rem;display:block;margin-bottom:5px;}
+.hfg-card svg{display:block;margin:0 auto 6px;stroke:rgba(255,255,255,0.9);}
 .hfg-card small{font-size:0.61rem;color:rgba(255,255,255,0.85);display:block;font-family:'Noto Sans HK',sans-serif;letter-spacing:0.5px;white-space:nowrap;font-weight:500;}
 .hfg-1{animation:float-card 5s ease-in-out infinite;}
 .hfg-2{animation:float-card 5s ease-in-out infinite;animation-delay:1.2s;}
@@ -317,7 +317,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
 <nav>
   <div class="logo" href="#">
-    <img src="/mnt/user-data/uploads/Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit">
+    <img src="Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit">
     <div>
       <div class="logo-text">JP Fruit</div>
       <span class="logo-sub" id="logo-sub">亞洲美食 · South London</span>
@@ -356,10 +356,10 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
     </div>
     <div class="hero-right" id="hero-img-wrap">
       <div class="hero-food-grid">
-        <div class="hfg-card hfg-1"><span>🥟</span><small>港式點心</small></div>
-        <div class="hfg-card hfg-2"><span>🍣</span><small>新鮮刺身</small></div>
-        <div class="hfg-card hfg-3"><span>🥩</span><small>精選凍肉</small></div>
-        <div class="hfg-card hfg-4"><span>🍜</span><small>亞洲麵食</small></div>
+        <div class="hfg-card hfg-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M12 3C7 3 3 6.5 3 11c0 2 .8 3.8 2 5.1V19a1 1 0 001 1h12a1 1 0 001-1v-2.9c1.2-1.3 2-3.1 2-5.1 0-4.5-4-8-9-8z"/><path d="M8 11h8M10 8l2 3 2-3"/></svg><small>港式點心</small></div>
+        <div class="hfg-card hfg-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M4 17c3-5 6-8 10-8 2 0 4 1 6 3M4 17l3-8c2-4 5-6 8-6M4 17h8"/><circle cx="19" cy="8" r="1.5" fill="currentColor"/></svg><small>新鮮刺身</small></div>
+        <div class="hfg-card hfg-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M14.5 3.5c2.5 1 4 3.5 4 6.5 0 4.4-3.6 8-8 8s-8-3.6-8-8c0-3 1.5-5.5 4-6.5"/><path d="M12 2v5M9 3.8l1.5 2.5M15 3.8l-1.5 2.5"/></svg><small>精選凍肉</small></div>
+        <div class="hfg-card hfg-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><ellipse cx="12" cy="9" rx="9" ry="5"/><path d="M3 9v4c0 2.8 4 5 9 5s9-2.2 9-5V9"/><path d="M8 13v2M12 14v2M16 13v2"/></svg><small>亞洲麵食</small></div>
       </div>
     </div>
   </div>
@@ -374,7 +374,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 <div class="countdown-bar">
   <span id="countdown-label-text">截單倒數：</span>
   <span class="cd-num" id="countdown">--</span>
-  &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 💳 貨到付款
+  &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 貨到付款
 </div>
 
 <!-- MAIN LAYOUT -->
@@ -383,7 +383,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
     <!-- SEARCH -->
     <div class="search-wrap">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
       <input class="search-input" id="search-input" type="text" placeholder="搜尋產品..." oninput="searchProducts(this.value)">
     </div>
 
@@ -406,7 +406,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="cart-sidebar">
     <div class="cart-box">
       <div class="cart-head">
-        <div class="cart-head-title" id="cart-title">🛒 購物車</div>
+        <div class="cart-head-title" id="cart-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> 購物車</div>
         <div class="cart-head-count"><span id="cart-count-label">0 項</span></div>
       </div>
       <div id="cart-desktop"></div>
@@ -418,12 +418,12 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 <div class="info-section">
   <div class="info-inner">
     <div class="info-card">
-      <div class="info-icon-wrap">🚚</div>
+      <div class="info-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
       <h3 id="i1h">送貨安排</h3>
       <p id="i1p">逢週五送貨，單數多時提早至週四。送貨前一日通知收貨時間。請確保有人在家收貨。</p>
     </div>
     <div class="info-card">
-      <div class="info-icon-wrap">💷</div>
+      <div class="info-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7a4 4 0 0 0-8 0v10"/><path d="M6 11h9"/><path d="M6 17h12"/></svg></div>
       <h3 id="i2h">最低消費</h3>
       <table class="min-table">
         <tr><td>Sutton SM1-3</td><td>£30</td></tr>
@@ -433,7 +433,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
       </table>
     </div>
     <div class="info-card">
-      <div class="info-icon-wrap">💬</div>
+      <div class="info-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
       <h3 id="i3h">聯絡我們</h3>
       <p id="i3p">截單後我們會透過 WhatsApp 確認訂單。
 營業時間：週一至五 9:30am – 4:00pm</p>
@@ -446,9 +446,9 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="footer-logo">JP Fruit</div>
   <div class="footer-tagline">新鮮直送 · South London · Since 2022</div>
   <div class="social-links">
-    <a href="https://www.facebook.com/jpfruitsuk" class="social-link" target="_blank">📘 Facebook</a>
-    <a href="https://www.instagram.com/jp_fruit_swlondon" class="social-link" target="_blank">📸 Instagram</a>
-    <a href="https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK" class="social-link" target="_blank">💬 WhatsApp 群組</a>
+    <a href="https://www.facebook.com/jpfruitsuk" class="social-link" target="_blank"><span style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> Facebook</span></a>
+    <a href="https://www.instagram.com/jp_fruit_swlondon" class="social-link" target="_blank"><span style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg> Instagram</span></a>
+    <a href="https://chat.whatsapp.com/EYXraKDrKsR3hqlJoJX3jK" class="social-link" target="_blank"><span style="display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.562 4.14 1.54 5.875L0 24l6.317-1.514A11.933 11.933 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.8 9.8 0 0 1-5.001-1.369l-.36-.213-3.728.893.924-3.622-.234-.372A9.786 9.786 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182c5.43 0 9.818 4.388 9.818 9.818 0 5.43-4.388 9.818-9.818 9.818z"/></svg> WhatsApp</span></a>
   </div>
   <div style="margin-top:18px;font-size:0.68rem;color:rgba(255,255,255,0.25);" id="footer-p">© 2025 JP Fruit · South London</div>
 </div>
@@ -458,7 +458,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
   <div class="mobile-cart-panel">
     <div class="mobile-handle"><div></div></div>
     <div class="cart-head">
-      <div class="cart-head-title" id="mobile-cart-title">🛒 購物車</div>
+      <div class="cart-head-title" id="mobile-cart-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> 購物車</div>
       <button onclick="toggleMobileCart()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;">✕</button>
     </div>
     <div id="cart-mobile"></div>
@@ -794,8 +794,8 @@ function applyBanner(b) {
   if(h1El) h1El.innerHTML=title?`<em>${title}</em>`:'<em>JP Fruit</em>';
   if(subEl) subEl.textContent=sub||'';
   if(imgEl){
-    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||'🍓'}</span>'">`;
-    else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||'🍓'}</span>`;
+    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||''}</span>'">`;
+    else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||''}</span>`;
   }
   if(btnEl&&btn) btnEl.innerHTML=`<button onclick="document.querySelector('.products-area').scrollIntoView({behavior:'smooth'})" style="background:#B8892A;color:white;border:none;padding:8px 22px;border-radius:22px;font-size:0.85rem;font-family:'Noto Sans HK',sans-serif;cursor:pointer;font-weight:500;">${btn}</button>`;
 }
@@ -806,17 +806,17 @@ const TX = {
   zh:{
     topbar:'截單時間 <strong>週二 1:00 PM</strong> &nbsp;·&nbsp; 送貨 <strong>週五</strong> &nbsp;·&nbsp; 貨到付款 &nbsp;·&nbsp; ⏰ 倒數 <strong id="countdown">--</strong>',
     logoSub:'亞洲美食 · South London Delivery', navCart:'購物車',
-    heroTag:'🥟 港式點心 · 🍣 刺身 · 🥩 精選凍肉 · 亞洲美食專門',
+    heroTag:'港式點心 · 刺身 · 精選凍肉 · 亞洲美食',
     heroH1:'南倫敦嘅<br><em>亞洲廚房</em>',
     heroSub:'港式點心、家鄉菜、刺身、精選凍肉、亞洲零食，南倫敦各區送貨上門',
     chip1:'HK Dim Sum', chip2:'Fresh Sashimi', chip3:'Pay on Delivery',
-    searchPh:'搜尋產品...', catAll:'全部', catBest:'🏆 本店熱賣', loading:'載入產品中...',
-    cartTitle:'🛒 購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
+    searchPh:'搜尋產品...', catAll:'全部', catBest:'本店熱賣', loading:'載入產品中...',
+    cartTitle:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> 購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
     subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
-    minWarn:(area,diff)=>`⚠️ ${area} 最低消費未達，仲差 £${diff}`,
+    minWarn:(area,diff)=>`${area} 最低消費未達，仲差 £${diff}`,
     cfName:'姓名', cfPhone:'WhatsApp 號碼', cfAddr:'地址', cfPost:'郵政編碼', cfNotes:'備註（可選）',
     cfNamePh:'你嘅名字', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'門牌號 街道名', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'特別要求...',
-    waBtn:'💬 WhatsApp 落單', waBtnOff:'請先加產品入購物車',
+    waBtn:'WhatsApp 落單', waBtnOff:'請先加產品入購物車',
     alertFill:'請填寫晒所有必填資料！',
     alertMin:(min,tot)=>`⚠️ 你的地區最低消費係 £${min}，而家係 £${tot}。\n確定繼續落單？`,
     oos:'售罄', sale:'特價', newLabel:'NEW',
@@ -832,14 +832,14 @@ const TX = {
     heroTag:'HK Dim Sum · Sashimi · Premium Meats · Asian Groceries',
     heroH1:'South London\'s<br><em>Asian Kitchen</em>',
     heroSub:'Authentic HK dim sum, home-cooked dishes, sashimi, premium meats & Asian groceries — delivered across South London',
-    chip1:'✈️ Direct from Japan', chip2:'🏠 South London Delivery', chip3:'💳 Pay on Delivery',
-    searchPh:'Search products...', catAll:'All', catBest:'🏆 Top Sellers', loading:'Loading products...',
-    cartTitle:'🛒 Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
+    chip1:'港式點心', chip2:'新鮮刺身', chip3:'貨到付款',
+    searchPh:'Search products...', catAll:'All', catBest:'Top Sellers', loading:'Loading products...',
+    cartTitle:'Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
     subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
     minWarn:(area,diff)=>`⚠️ Minimum order not met for ${area}. £${diff} more needed.`,
     cfName:'Name', cfPhone:'WhatsApp Number', cfAddr:'Delivery Address', cfPost:'Postcode', cfNotes:'Remarks (optional)',
     cfNamePh:'Your name', cfPhonePh:'+44 7xxx xxxxxx', cfAddrPh:'House no. & street', cfPostPh:'e.g. SM1 1AA', cfNotesPh:'Special requests...',
-    waBtn:'💬 Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
+    waBtn:'Place Order via WhatsApp', waBtnOff:'Add items to your cart first',
     alertFill:'Please fill in all required fields!',
     alertMin:(min,tot)=>`⚠️ Minimum order for your area is £${min}. Current total: £${tot}.\nContinue anyway?`,
     oos:'Sold Out', sale:'Sale', newLabel:'NEW',
@@ -913,14 +913,34 @@ function buildCatNav(){
 }
 
 // ── PRODUCT RENDERING ─────────────────────────────────────────
-const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
+const EMOJI={
+  'dim-sum':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M12 3C7 3 3 6.5 3 11c0 2 .8 3.8 2 5.1V19a1 1 0 001 1h12a1 1 0 001-1v-2.9c1.2-1.3 2-3.1 2-5.1 0-4.5-4-8-9-8z"/><path d="M8 11h8M10 8l2 3 2-3"/></svg>',
+  'bread':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M3 11c0-3.3 4-6 9-6s9 2.7 9 6c0 1.5-.7 2.8-1.9 3.8V19a1 1 0 01-1 1H5.9a1 1 0 01-1-1v-4.2C3.7 13.8 3 12.5 3 11z"/><line x1="8" y1="14" x2="16" y2="14"/></svg>',
+  'noodles':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><ellipse cx="12" cy="9" rx="9" ry="5"/><path d="M3 9v4c0 2.8 4 5 9 5s9-2.2 9-5V9"/><path d="M8 13v2M12 14v2M16 13v2"/></svg>',
+  'hk-homecook': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg>',
+  'hk-homemeal': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg>',
+  'hk-snacks':   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>',
+  'frozen-food': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h10M7 11h10"/></svg>',
+  'frozen-seafood':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M20 12c0 4.4-3.6 8-8 8-2.2 0-4.2-.9-5.7-2.3C4.1 15.5 3 13.4 3 12s1.1-3.5 3.3-5.7C7.8 4.9 9.8 4 12 4c4.4 0 8 3.6 8 8z"/><circle cx="17" cy="9" r="1" fill="currentColor"/><path d="M3 12L1 9M3 12L1 15"/></svg>',
+  'premium-meat':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M14.5 3.5c2.5 1 4 3.5 4 6.5 0 4.4-3.6 8-8 8s-8-3.6-8-8c0-3 1.5-5.5 4-6.5"/><path d="M12 2v5M9 3.8l1.5 2.5M15 3.8l-1.5 2.5"/></svg>',
+  'sea-snacks':  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M4 17c3-5 6-8 10-8 2 0 4 1 6 3M4 17l3-8c2-4 5-6 8-6M4 17h8"/></svg>',
+  'guru':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+  'sashimi':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M4 17c3-5 6-8 10-8 2 0 4 1 6 3M4 17l3-8c2-4 5-6 8-6M4 17h8"/><circle cx="19" cy="8" r="1.5" fill="currentColor"/></svg>',
+  'zongzi':      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M12 2l9 7-9 13L3 9z"/><path d="M12 2v20M3 9h18"/></svg>',
+  'sauces':      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M10 3h4v2.5c2 .5 3.5 2.3 3.5 4.5v9a2 2 0 01-2 2h-7a2 2 0 01-2-2V10c0-2.2 1.5-4 3.5-4.5V3z"/><path d="M9 12h6"/></svg>',
+  'asian-grocer':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>',
+  'personal-care':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  'thai':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/><path d="M12 6v6l4 2"/></svg>',
+  'fruits':      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><circle cx="12" cy="14" r="7"/><path d="M12 7V3M9 4c0-1 3-3 3-3s3 2 3 3"/></svg>',
+  'others':      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" width="40" height="40"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+};
 
 function renderProducts(){
   const area=document.getElementById('products-area');
   if(activeCat==='__best__'){
     const best=getBestSellers();
     area.innerHTML=`<div class="cat-section">
-      <div class="section-head"><div class="section-icon">🏆</div><div class="section-title">${tx('catBest')}</div><span class="section-count">${best.length} 款</span></div>
+      <div class="section-head"><div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a1 1 0 0 1-1-1h-2"/><path d="M8 4h8v7a4 4 0 0 1-8 0Z"/><path d="M12 15v3"/><path d="M8 21h8"/></svg></div><div class="section-title">${tx('catBest')}</div><span class="section-count">${best.length} 款</span></div>
       <div class="product-grid">${best.map(p=>pCard(p)).join('')}</div>
     </div>`;
     return;
@@ -937,7 +957,7 @@ function renderProducts(){
     const best=getBestSellers();
     if(best.length) bestStrip=`<div class="featured-strip">
       <div class="section-head">
-        <div class="section-icon">🏆</div>
+        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a1 1 0 0 1-1-1h-2"/><path d="M8 4h8v7a4 4 0 0 1-8 0Z"/><path d="M12 15v3"/><path d="M8 21h8"/></svg></div>
         <div class="section-title">${tx('catBest')}</div>
         <button onclick="filterCat('__best__',document.querySelector('.best-btn'))" class="section-count" style="cursor:pointer;border:none;font-family:inherit;background:var(--plum-l);color:var(--plum);">全部 →</button>
       </div>
@@ -945,9 +965,9 @@ function renderProducts(){
         const nm=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
         const pr=(p.salePrice||p.price||0);
         const img=p.image&&p.image.startsWith('http');
-        const EMOJI={'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'};
+        // EMOJI dict defined above
         return `<div class="strip-card" onclick="document.getElementById('cat-${p.cat}')?.scrollIntoView({behavior:'smooth'})">
-          <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||'🛒'}</div>
+          <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+nm+'" loading="lazy">':EMOJI[p.cat]||''}</div>
           <div class="strip-info"><div class="strip-name">${nm}</div><div class="strip-price">£${pr.toFixed(2)}</div></div>
         </div>`;
       }).join('')}</div>
@@ -959,7 +979,7 @@ function renderProducts(){
     const catSets=sets.filter(s=>s.cat===cid&&s.isSet);
     const main=lang==='zh'?(cat?.zh||cid):(cat?.name||cid);
     const sub=lang==='zh'?(cat?.name||''):(cat?.zh||'');
-    const emoji = {'dim-sum':'🥟','bread':'🥐','noodles':'🍜','hk-homecook':'🍲','hk-snacks':'🍢','frozen-seafood':'🐟','premium-meat':'🥩','sashimi':'🍣','fruits':'🍓','sauces':'🫙','snacks':'🍵','personal-care':'🧴','others':'📦'}[cid]||'🛒';
+    const emoji = EMOJI[cid] || '';
     return `<div class="cat-section" id="cat-${cid}">
       <div class="section-head">
         <div class="section-icon">${emoji}</div>
@@ -982,7 +1002,7 @@ function pCard(p){
   const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name||p.nameZh||p.zh);
   const pAlt=lang==='zh'?(p.nameEn?`<div class="p-unit" style="font-style:italic;">${p.nameEn}</div>`:''): (p.nameZh||p.zh?`<div class="p-unit">${p.nameZh||p.zh}</div>`:'');
   const pDesc=lang==='zh'?(p.descZh||p.desc||''):(p.descEn||p.descZh||p.desc||'');
-  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||'🛍️'}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
+  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||''}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
 }
 
 // ── SET MEAL ──────────────────────────────────────────────────
@@ -993,7 +1013,7 @@ function renderSetCard(s){
   const setName=isZh?(s.nameZh||s.name):(s.nameEn||s.name||s.nameZh);
   const setDesc=isZh?(s.descZh||s.desc||''):(s.descEn||s.descZh||s.desc||'');
   const chips=groups.map(g=>`<span class="set-rule-chip">${isZh?g.nameZh:g.nameEn} x${g.min}${g.max>g.min?'-'+g.max:''}</span>`).join('');
-  return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||'🎁'} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'✅ 加入購物車 🛒':'✅ Add to Cart 🛒'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
+  return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||''} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'加入購物車':'Add to Cart'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
 }
 function renderSetGroup(sid,g,gi){
   const sel=setSelections[sid][gi]||{}, total=Object.values(sel).reduce((a,b)=>a+b,0), isZh=lang==='zh';
@@ -1148,7 +1168,7 @@ function sendWA(sfx){
   const notes=document.getElementById('cf-notes'+sfx)?.value?.trim();
   if(!name||!phone||!addr||!pc){alert(tx('alertFill'));return;}
   const lines=Object.entries(cart).map(([id,val])=>{
-    if(val&&val.isSet)return`• 🎁 ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}\n  (${val.summary})`;
+    if(val&&val.isSet)return`• ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}\n  (${val.summary})`;
     const p=products.find(x=>x.id===id);if(!p)return'';const pr=p.salePrice||p.price;
     return`• ${p.nameZh||p.name} × ${val} = £${(pr*val).toFixed(2)}`;
   }).filter(Boolean).join('\n');
