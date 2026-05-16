@@ -1047,7 +1047,17 @@ function addSetToCart(sid){
 
 // ── CART ──────────────────────────────────────────────────────
 function addCart(id){cart[id]=(cart[id]||0)+1;updateCart();refreshCard(id);showToast(lang==='zh'?'已加入 ✓':'Added ✓');}
-function chQty(id,d){cart[id]=Math.max(0,(cart[id]||0)+d);if(!cart[id])delete cart[id];updateCart();refreshCard(id);}
+function chQty(id,d){
+  cart[id]=Math.max(0,(cart[id]||0)+d);
+  if(!cart[id]) delete cart[id];
+  // Direct DOM update for qty display (instant feedback)
+  ['','-m'].forEach(sfx=>{
+    const qEl = document.querySelector(`[data-qty-id="${id}${sfx}"]`);
+    if(qEl) qEl.textContent = cart[id]||0;
+  });
+  updateCart();
+  refreshCard(id);
+}
 function rmSetItem(id){delete cart[id];updateCart();}
 function refreshCard(id){const p=products.find(x=>x.id===id);if(!p)return;const el=document.getElementById('card-'+id);if(el)el.outerHTML=pCard(p);}
 function getTotal(){return Object.entries(cart).reduce((s,[id,val])=>{if(val&&val.isSet)return s+(val.price||0)*val.qty;const p=products.find(x=>x.id===id);return s+(p?.salePrice||p?.price||0)*val;},0);}
@@ -1106,6 +1116,18 @@ function updateCart(){
   document.getElementById('cart-count-label').textContent=n+tx('items');
   renderCart('cart-desktop','');
   renderCart('cart-mobile','-m');
+  updateWAButton();
+}
+
+function updateWAButton(){
+  // Update WA button state without re-rendering entire form
+  const has = getCount() > 0;
+  ['','-m'].forEach(sfx => {
+    const btn = document.querySelector(`#cart-${sfx?'mobile':'desktop'} .whatsapp-btn`);
+    if (!btn) return;
+    btn.disabled = !has;
+    btn.textContent = has ? tx('waBtn') : tx('waBtnOff');
+  });
 }
 function renderCart(cid,sfx){
   const el=document.getElementById(cid);if(!el)return;
@@ -1131,7 +1153,7 @@ function renderCart(cid,sfx){
     if(val&&val.isSet)return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="rmSetItem('${id}')">✕</button></div><div class="ci-price">£${parseFloat(val.price||0).toFixed(2)}</div></div>`;
     const p=products.find(x=>x.id===id);if(!p)return'';const pr=p.salePrice||p.price;
     const ciName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
-    return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price">£${(pr*val).toFixed(2)}</div></div>`;
+    return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum" data-qty-id="${id}${sfx}">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price" data-price-id="${id}${sfx}">£${(pr*val).toFixed(2)}</div></div>`;
   }).join('');
 
   const summaryHtml = `<div class="summary-row"><span>${tx('subtotal')}</span><span>£${total.toFixed(2)}</span></div><div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div><div class="summary-row summary-total"><span>${tx('total')}</span><span>£${total.toFixed(2)}</span></div>`;
