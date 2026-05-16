@@ -1135,17 +1135,9 @@ function updateCart(){
   document.getElementById('cart-count-label').textContent=n+tx('items');
   renderCart('cart-desktop','');
   renderCart('cart-mobile','-m');
-  updateWAButton();
 }
 
-function updateWAButton(){
-  const has = getCount() > 0;
-  // Find ALL whatsapp buttons on page and update each
-  document.querySelectorAll('.whatsapp-btn').forEach(btn => {
-    btn.disabled = !has;
-    btn.textContent = has ? tx('waBtn') : tx('waBtnOff');
-  });
-}
+
 function renderCart(cid,sfx){
   const el=document.getElementById(cid);if(!el)return;
   const items=Object.entries(cart).map(([id,val])=>({id,val,p:val&&val.isSet?{name:val.name}:products.find(x=>x.id===id)})).filter(x=>x.p);
@@ -1200,66 +1192,94 @@ function renderCart(cid,sfx){
 }
 function cartForm(sfx){
   const has=getCount()>0;
-  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')" ${has?'':'disabled'}>${has?tx('waBtn'):tx('waBtnOff')}</button></div>`;
+  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')">${tx('waBtn')}</button></div>`;
 }
 function sendWA(sfx){
-  const name=document.getElementById('cf-name'+sfx)?.value?.trim();
-  const phone=document.getElementById('cf-phone'+sfx)?.value?.trim();
-  const addr=document.getElementById('cf-addr'+sfx)?.value?.trim();
-  const pc=document.getElementById('cf-post'+sfx)?.value?.trim();
-  const notes=document.getElementById('cf-notes'+sfx)?.value?.trim();
-  if(!name||!phone||!addr||!pc){alert(tx('alertFill'));return;}
-  const lines=Object.entries(cart).map(([id,val])=>{
-    if(val&&val.isSet)return`• ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}\n  (${val.summary})`;
-    const p=products.find(x=>x.id===id);if(!p)return'';const pr=p.salePrice||p.price;
-    return`• ${p.nameZh||p.name} × ${val} = £${(pr*val).toFixed(2)}`;
-  }).filter(Boolean).join('\n');
-  const total=getTotal();
-  const minI=getMin(pc);
-  if(minI&&total<minI.min){if(!confirm(tx('alertMin',minI.min,total.toFixed(2))))return;}
-  const waNum=siteSettings.whatsapp||'447700900000';
-  const msg=tx('waMsg',name,phone,addr,pc.toUpperCase(),lines,total.toFixed(2),notes);
+  // ── Step 1: Validate cart ──
+  if(getCount()===0){
+    showToast(lang==='zh'?'請先加產品入購物車':'Please add items to your cart first');
+    return;
+  }
 
-  // Save order to Firebase
+  // ── Step 2: Validate form fields ──
+  const name  = document.getElementById('cf-name' +sfx)?.value?.trim();
+  const phone = document.getElementById('cf-phone'+sfx)?.value?.trim();
+  const addr  = document.getElementById('cf-addr' +sfx)?.value?.trim();
+  const pc    = document.getElementById('cf-post' +sfx)?.value?.trim();
+  const notes = document.getElementById('cf-notes'+sfx)?.value?.trim();
+
+  if(!name||!phone||!addr||!pc){
+    showToast(tx('alertFill'));
+    return;
+  }
+
+  // ── Step 3: Build order data ──
+  const items = Object.entries(cart).map(([id,val])=>{
+    if(val&&val.isSet) return `• ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}`;
+    const p=products.find(x=>x.id===id);
+    if(!p) return null;
+    const pr=p.salePrice||p.price;
+    return `• ${p.nameZh||p.zh||p.name} x${val} = £${(pr*val).toFixed(2)}`;
+  }).filter(Boolean).join('\n');
+
+  const total = getTotal();
+  const waNum = '447762929455';
+  const msg   = tx('waMsg',name,phone,addr,pc.toUpperCase(),items,total.toFixed(2),notes);
+
+  // ── Step 4: Save to Firebase FIRST ──
   const orderData = {
     id: 'ORD-' + Date.now(),
     status: 'new',
-    customer: {name, phone, address:addr, postcode:pc.toUpperCase()},
+    name, phone,
+    address: addr,
+    postcode: pc.toUpperCase(),
     items: Object.entries(cart).map(([id,val])=>{
-      if(val&&val.isSet) return {type:'set',name:val.nameZh||val.name,price:val.price,qty:1,summary:val.summary};
-      const p=products.find(x=>x.id===id); if(!p) return null;
-      return {type:'product',productId:id,name:p.nameZh||p.name,price:p.salePrice||p.price,qty:val};
+      if(val&&val.isSet) return {type:'set', name:val.nameZh||val.name, price:val.price, qty:1};
+      const p=products.find(x=>x.id===id);
+      if(!p) return null;
+      return {type:'product', productId:id, name:p.nameZh||p.zh||p.name, price:p.salePrice||p.price, qty:val};
     }).filter(Boolean),
-    total: parseFloat(getTotal().toFixed(2)),
-    notes: notes||'', lang,
+    total: parseFloat(total.toFixed(2)),
+    notes: notes||'',
+    lang,
     createdAt: new Date().toISOString(),
+    source: 'web'
   };
 
-  if (window._firebaseReady && window._fbDb) {
-    try {
+  // Save to Firebase (async, don't block WhatsApp)
+  if(window._firebaseReady && window._fbDb){
+    try{
       const newRef = window._fbPush(window._fbRef(window._fbDb,'orders'));
-      window._fbSet(newRef, {...orderData, firebaseId: newRef.key});
-    } catch(e) {
-      // Offline backup
+      window._fbSet(newRef, {...orderData, firebaseId: newRef.key})
+        .then(()=>console.log('Order saved to Firebase'))
+        .catch(e=>{
+          // Offline: save locally
+          const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
+          pending.push(orderData);
+          localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
+        });
+    }catch(e){
       const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
       pending.push(orderData);
       localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
     }
   } else {
+    // Firebase not ready: save locally for later sync
     const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
     pending.push(orderData);
     localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
   }
 
-  // Cache customer info
-  try {
-    localStorage.setItem('jpfruit-last-name', name);
-    localStorage.setItem('jpfruit-last-phone', phone);
-    localStorage.setItem('jpfruit-last-addr', addr);
+  // ── Step 5: Cache customer info ──
+  try{
+    localStorage.setItem('jpfruit-last-name',     name);
+    localStorage.setItem('jpfruit-last-phone',    phone);
+    localStorage.setItem('jpfruit-last-addr',     addr);
     localStorage.setItem('jpfruit-last-postcode', pc.toUpperCase());
-    localStorage.setItem('jpfruit-last-ts', Date.now());
-  } catch(e){}
+    localStorage.setItem('jpfruit-last-ts',       Date.now());
+  }catch(e){}
 
+  // ── Step 6: Open WhatsApp ──
   window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
@@ -1297,7 +1317,7 @@ function updateCountdown(){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 
 // ── INIT ──────────────────────────────────────────────────────
-applyTX();updateCart();updateCountdown();updateWAButton();
+applyTX();updateCart();updateCountdown();
 document.addEventListener('firebaseReady', async ()=>{
   try {
     const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
