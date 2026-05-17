@@ -979,9 +979,18 @@ function renderProducts(){
   const area=document.getElementById('products-area');
   if(activeCat==='__best__'){
     const best=getBestSellers();
+    const isMobile = window.innerWidth <= 640;
     area.innerHTML=`<div class="cat-section">
-      <div class="section-head"><div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a1 1 0 0 1-1-1h-2"/><path d="M8 4h8v7a4 4 0 0 1-8 0Z"/><path d="M12 15v3"/><path d="M8 21h8"/></svg></div><div class="section-title">${tx('catBest')}</div><span class="section-count">${best.length} 款</span></div>
-      <div class="product-grid">${best.map(p=>pCard(p)).join('')}</div>
+      <div class="section-head">
+        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a1 1 0 0 1-1-1h-2"/><path d="M8 4h8v7a4 4 0 0 1-8 0Z"/><path d="M12 15v3"/><path d="M8 21h8"/></svg></div>
+        <div class="section-title">${tx('catBest')}</div>
+        <span class="section-count">${best.length} 款</span>
+        ${isMobile ? '<span class="scroll-hint">← 左右滑動 →</span>' : ''}
+      </div>
+      ${isMobile
+        ? `<div class="best-scroll-wrap"><div class="best-scroll">${best.map(p=>pCard(p)).join('')}</div></div>`
+        : `<div class="product-grid">${best.map(p=>pCard(p)).join('')}</div>`
+      }
     </div>`;
     return;
   }
