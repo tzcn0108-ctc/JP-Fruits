@@ -1104,12 +1104,12 @@ function chQty(id,d){
     if(prEl) prEl.textContent = qty > 0 ? `£${(pr*qty).toFixed(2)}` : '';
   });
 
-  // Update summary totals instantly
+  // Update summary totals instantly using data attributes
   const total = getTotal();
-  document.querySelectorAll('.summary-row .summary-total span:last-child').forEach(el => {
+  document.querySelectorAll('[data-summary="subtotal"]').forEach(el => {
     el.textContent = `£${total.toFixed(2)}`;
   });
-  document.querySelectorAll('.summary-row:first-child span:last-child').forEach(el => {
+  document.querySelectorAll('[data-summary="total"]').forEach(el => {
     el.textContent = `£${total.toFixed(2)}`;
   });
 
@@ -1204,7 +1204,7 @@ function renderCart(cid,sfx){
     return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum" data-qty-id="${id}${sfx}">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price" data-price-id="${id}${sfx}">£${(pr*val).toFixed(2)}</div></div>`;
   }).join('');
 
-  const summaryHtml = `<div class="summary-row"><span>${tx('subtotal')}</span><span>£${total.toFixed(2)}</span></div><div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div><div class="summary-row summary-total"><span>${tx('total')}</span><span>£${total.toFixed(2)}</span></div>`;
+  const summaryHtml = `<div class="summary-row"><span>${tx('subtotal')}</span><span data-summary="subtotal">£${total.toFixed(2)}</span></div><div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div><div class="summary-row summary-total"><span>${tx('total')}</span><span data-summary="total">£${total.toFixed(2)}</span></div>`;
 
   if(formExists){
     // Surgical update: only replace items and summary, preserve form inputs
