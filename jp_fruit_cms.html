@@ -128,6 +128,8 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, push, set, get, onValue, remove, update, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBw9aUAk0SzTGTZnA7S5M-ehFBnRO0dcuo",
@@ -153,6 +155,14 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
   window._fbRemove = remove;
   window._fbGet = get;
   window._fbOnValue = onValue;
+
+  // Firebase Storage
+  const storage = getStorage(app);
+  window._fbStorage  = storage;
+  window._fbSRef     = sRef;
+  window._fbUpload   = uploadBytes;
+  window._fbGetURL   = getDownloadURL;
+  window._fbDeleteObj = deleteObject;
   window._firebaseReady = true;
 
   // ── Real-time orders listener ──
@@ -752,8 +762,19 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 
       <!-- IMAGE -->
       <div class="form-group">
-        <label>圖片連結 Image URL（可選）</label>
-        <input type="text" id="p-image" placeholder="https://...">
+        <label>產品圖片</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+          <input type="text" id="p-image" placeholder="https://... 或使用右方上傳" style="flex:1;" oninput="previewProductImg(this.value)">
+          <label class="btn btn-primary btn-sm" style="cursor:pointer;white-space:nowrap;margin:0;display:flex;align-items:center;gap:5px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            上傳
+            <input type="file" id="p-image-upload" accept="image/*" style="display:none;" onchange="handleProductImageUpload(this)">
+          </label>
+        </div>
+        <div id="p-image-preview" style="display:none;margin-top:8px;display:flex;align-items:center;gap:10px;">
+          <img id="p-image-preview-img" src="" style="height:72px;width:72px;border-radius:8px;border:1.5px solid var(--border);object-fit:cover;" alt="預覽">
+          <span id="p-image-upload-status" style="font-size:0.72rem;color:var(--muted);"></span>
+        </div>
       </div>
 
       <!-- TOGGLES -->
@@ -1415,6 +1436,16 @@ function openProductModal(id=null) {
     document.getElementById('p-desc-zh').value = p.descZh||p.desc||'';
     document.getElementById('p-desc-en').value = p.descEn||'';
     document.getElementById('p-image').value = p.image||'';
+  // Show existing image preview
+  const prevDiv = document.getElementById('p-image-preview');
+  const prevImg = document.getElementById('p-image-preview-img');
+  if(prevDiv && prevImg && p.image) {
+    prevDiv.style.display = 'block';
+    prevImg.src = p.image;
+    document.getElementById('p-image-upload-status').textContent = '';
+  } else if(prevDiv) {
+    prevDiv.style.display = 'none';
+  }
     document.getElementById('p-active').checked = p.active!==false;
     document.getElementById('p-featured').checked = p.featured||false;
   } else {
@@ -2260,6 +2291,110 @@ function deleteSet() {
   renderSetsPage();
 }
 
+
+
+async function uploadProductImage(file, productId) {
+  if (!window._fbStorage) {
+    alert('Firebase Storage 未準備好，請稍後再試');
+    return null;
+  }
+  if (!file.type.startsWith('image/')) {
+    alert('請選擇圖片檔案（JPG、PNG、WebP）');
+    return null;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    alert('圖片太大！請選擇 5MB 以下的圖片');
+    return null;
+  }
+  try {
+    const compressed = await compressImage(file, 800, 0.82);
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const path = `products/${productId}/${Date.now()}.${ext}`;
+    const storageRef = window._fbSRef(window._fbStorage, path);
+    const snapshot = await window._fbUpload(storageRef, compressed);
+    const url = await window._fbGetURL(snapshot.ref);
+    return url;
+  } catch(e) {
+    console.error('Upload failed:', e);
+    alert('上傳失敗：' + e.message);
+    return null;
+  }
+}
+
+async function handleProductImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const productId = document.getElementById('p-id')?.value || 'temp-' + Date.now();
+  const statusEl = document.getElementById('p-image-upload-status');
+  const previewDiv = document.getElementById('p-image-preview');
+  const previewImg = document.getElementById('p-image-preview-img');
+
+  // Show preview immediately
+  previewDiv.style.display = 'block';
+  previewImg.src = URL.createObjectURL(file);
+  statusEl.textContent = '上傳中...';
+  statusEl.style.color = 'var(--muted)';
+
+  // Upload
+  const url = await uploadProductImage(file, productId);
+
+  if (url) {
+    document.getElementById('p-image').value = url;
+    statusEl.textContent = '✓ 上傳成功！';
+    statusEl.style.color = 'var(--green)';
+  } else {
+    statusEl.textContent = '✗ 上傳失敗';
+    statusEl.style.color = 'var(--red)';
+    previewDiv.style.display = 'none';
+  }
+}
+
+// Show image preview when URL is typed manually
+document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('input', e => {
+    if (e.target.id === 'p-image' && e.target.value.startsWith('http')) {
+      const previewDiv = document.getElementById('p-image-preview');
+      const previewImg = document.getElementById('p-image-preview-img');
+      if (previewDiv && previewImg) {
+        previewDiv.style.display = 'block';
+        previewImg.src = e.target.value;
+      }
+    }
+  });
+});
+
+
+function compressImage(file, maxWidth, quality) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function previewProductImg(url) {
+  const prevDiv = document.getElementById('p-image-preview');
+  const prevImg = document.getElementById('p-image-preview-img');
+  if (!prevDiv || !prevImg) return;
+  if (url && url.startsWith('http')) {
+    prevDiv.style.display = 'flex';
+    prevImg.src = url;
+  } else {
+    prevDiv.style.display = 'none';
+  }
+}
 
 // ── SITE SETTINGS ─────────────────────────────────────────────
 const DEFAULT_SETTINGS = {
