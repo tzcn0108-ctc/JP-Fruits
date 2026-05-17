@@ -1503,6 +1503,7 @@ function renderOrders() {
     {status:'confirmed', label:'已確認',  color:'#2563EB'},
     {status:'delivering',label:'送緊貨',  color:'var(--leaf)'},
     {status:'delivered', label:'已完成',  color:'var(--muted)'},
+    {status:'cancelled', label:'已取消',  color:'#999'},
   ];
   document.getElementById('orders-kanban').innerHTML = cols.map(col=>{
     const orders = state.orders.filter(o=>o.status===col.status);
@@ -1510,15 +1511,17 @@ function renderOrders() {
       <div class="kanban-header"><span style="color:${col.color}">${col.label}</span><span class="kanban-count">${orders.length}</span></div>
       <div class="kanban-items">
         ${orders.length===0?'<div style="text-align:center;color:var(--muted);font-size:0.78rem;padding:20px;">沒有訂單</div>':''}
-        ${orders.map(o=>`<div class="order-card">
-          <div class="order-id">#${o.id.slice(-4).toUpperCase()}</div>
-          <div class="order-name">${o.name}</div>
+        ${orders.map(o=>`<div class="order-card" onclick="viewOrder('${o.id}')" style="cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="order-id">#${o.id.slice(-6).toUpperCase()}</div>
+            <div style="font-size:0.68rem;color:var(--muted);">${o.createdAt?new Date(o.createdAt).toLocaleString('zh-HK',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>
+          </div>
+          <div class="order-name">${o.name||'—'}</div>
           <div class="order-total">£${parseFloat(o.total||0).toFixed(2)}</div>
-          <div class="order-area">${o.postcode} · ${o.driver||'—'}</div>
-          <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.items||''}</div>
-          <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;">
-            ${col.status!=='delivered'?nextStatusBtn(o):''}
-            <button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>
+          <div class="order-area">${o.postcode||''} ${o.phone?'· '+o.phone:''}</div>
+          <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;" onclick="event.stopPropagation()">
+            ${col.status!=='delivered'&&col.status!=='cancelled'?nextStatusBtn(o):''}
+            ${col.status!=='delivered'&&col.status!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>`:''}
           </div>
         </div>`).join('')}
       </div>
@@ -1527,9 +1530,10 @@ function renderOrders() {
 }
 
 function nextStatusBtn(o) {
-  const next={pending:'confirmed',confirmed:'delivering',delivering:'delivered'};
-  const label={pending:'✓ 確認',confirmed:'🚚 出發',delivering:'✅ 送到'};
-  const n=next[o.status]; if(!n) return '';
+  const next  = {new:'pending', pending:'confirmed', confirmed:'delivering', delivering:'delivered'};
+  const label = {new:'接單確認', pending:'✓ 確認', confirmed:'出發送貨', delivering:'完成送達'};
+  const n = next[o.status];
+  if (!n) return '';
   return `<button class="btn btn-primary btn-sm" onclick="advanceOrder('${o.id}','${n}')">${label[o.status]}</button>`;
 }
 function openOrderModal() {
@@ -1546,13 +1550,101 @@ function saveOrder() {
     status:'pending',createdAt:Date.now()};
   state.orders.unshift(order); saveData(); closeModal('order-modal'); renderOrders(); renderDashboard();
 }
+
+function viewOrder(id) {
+  const o = state.orders.find(x => x.id === id);
+  if (!o) return;
+
+  const statusLabel = {new:'新訂單', pending:'待確認', confirmed:'已確認', delivering:'送緊貨', delivered:'已完成', cancelled:'已取消'}[o.status] || o.status;
+  const statusColor = {new:'var(--berry)', pending:'var(--gold)', confirmed:'#2563EB', delivering:'var(--leaf)', delivered:'var(--muted)', cancelled:'var(--muted)'}[o.status] || 'var(--muted)';
+
+  // Build items list
+  const itemsHtml = Array.isArray(o.items)
+    ? o.items.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.85rem;">${i.name} × ${i.qty||1}</span>
+        <span style="font-size:0.85rem;font-weight:600;">£${((i.price||0)*(i.qty||1)).toFixed(2)}</span>
+      </div>`).join('')
+    : `<div style="font-size:0.85rem;color:var(--muted);">${o.items||'—'}</div>`;
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;">
+      <div style="padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:white;z-index:1;">
+        <div>
+          <div style="font-size:0.75rem;color:var(--muted);">${o.createdAt?new Date(o.createdAt).toLocaleString('zh-HK'):''}</div>
+          <div style="font-size:1.1rem;font-weight:700;">訂單 #${o.id.slice(-6).toUpperCase()}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:${statusColor};color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;">${statusLabel}</span>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);">✕</button>
+        </div>
+      </div>
+      <div style="padding:20px;">
+        <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">客人資料</div>
+          <div style="font-size:0.88rem;font-weight:600;">${o.name||'—'}</div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-top:2px;">${o.phone||''}</div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-top:2px;">${o.address||''}, ${o.postcode||''}</div>
+          ${o.notes?`<div style="font-size:0.8rem;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">備註：${o.notes}</div>`:''}
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">訂購產品</div>
+        ${itemsHtml}
+        <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:1rem;font-weight:700;color:var(--plum);">
+          <span>合計</span><span>£${parseFloat(o.total||0).toFixed(2)}</span>
+        </div>
+        ${o.status!=='delivered'&&o.status!=='cancelled'?`
+        <div style="margin-top:16px;display:flex;gap:8px;">
+          ${nextStatusBtn(o)}
+          <button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}');this.closest('[style*=fixed]').remove()">取消訂單</button>
+        </div>`:''}
+      </div>
+    </div>`;
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
 function advanceOrder(id,status) {
   const o=state.orders.find(x=>x.id===id); if(o){o.status=status;saveData();renderOrders();renderDashboard();}
 }
-function cancelOrder(id) {
-  if(!confirm('確定取消？')) return;
-  const o=state.orders.find(x=>x.id===id); if(o){o.status='cancelled';saveData();renderOrders();renderDashboard();}
+
+function advanceOrder(id, newStatus) {
+  // Update in state
+  const o = state.orders.find(x => x.id === id);
+  if (!o) return;
+  o.status = newStatus;
+
+  // Update in Firebase
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    window._fbUpdate(
+      window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
+      { status: newStatus, updatedAt: new Date().toISOString() }
+    ).catch(e => console.warn('Firebase update failed:', e));
+  }
+
+  renderOrders();
+  renderDashboard();
 }
+
+function cancelOrder(id) {
+  if (!confirm('確定取消此訂單？')) return;
+  const o = state.orders.find(x => x.id === id);
+  if (!o) return;
+  o.status = 'cancelled';
+
+  // Update Firebase
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    window._fbUpdate(
+      window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
+      { status: 'cancelled', updatedAt: new Date().toISOString() }
+    ).catch(e => console.warn('Firebase update failed:', e));
+  }
+
+  renderOrders();
+  renderDashboard();
+}
+
+
 
 // ── CATEGORIES ───────────────────────────────────────────────
 function renderCategories() {
