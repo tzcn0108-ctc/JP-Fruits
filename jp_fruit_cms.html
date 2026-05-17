@@ -175,36 +175,36 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
       id: val.id || key,
     })).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    // Merge with state - Firebase orders take priority
+    // Always cache orders globally — regardless of timing
+    window._firebaseOrders = orders;
+
+    // Update state if CMS is ready
     if (window._cmsState) {
       window._cmsState.orders = orders;
-      window._firebaseOrders = orders;  // Reliable global cache
-      // Update badge
-      const newCount = orders.filter(o => o.status === 'new').length;
-      const badge = document.getElementById('orders-badge');
-      if (badge) {
-        badge.textContent = newCount > 0 ? newCount : '';
-        badge.style.display = newCount > 0 ? 'flex' : 'none';
-      }
-      // Re-render orders if on that page
-      // Re-render if orders page is visible
-      try {
-        const ordersPage = document.getElementById('page-orders');
-        if (ordersPage && ordersPage.style.display !== 'none') {
-          if (typeof renderOrders === 'function') renderOrders();
-        }
-      } catch(e) {}
-      // Always update badge count
-      const newCount2 = orders.filter(o => o.status === 'new' || o.status === 'pending').length;
-      if (badge) {
-        badge.textContent = newCount2 > 0 ? newCount2 : '';
-        badge.style.display = newCount2 > 0 ? 'flex' : 'none';
-      }
-      // Update dashboard stats
-      if (document.getElementById('stat-orders')) {
-        if (window._renderDashboard) window._renderDashboard();
-      }
     }
+
+    // Update badge
+    const newCount = orders.filter(o => o.status === 'new' || o.status === 'pending').length;
+    const badge = document.getElementById('orders-badge');
+    if (badge) {
+      badge.textContent = newCount > 0 ? newCount : '';
+      badge.style.display = newCount > 0 ? 'flex' : 'none';
+    }
+
+    // Re-render orders page if visible
+    try {
+      const ordersPage = document.getElementById('page-orders');
+      if (ordersPage && ordersPage.style.display !== 'none') {
+        if (typeof renderOrders === 'function') renderOrders();
+      }
+    } catch(e) {}
+
+    // Update dashboard if visible
+    try {
+      if (document.getElementById('stat-orders')) {
+        if (typeof renderDashboard === 'function') renderDashboard();
+      }
+    } catch(e) {}
   });
 
   document.dispatchEvent(new Event('firebaseReady'));
@@ -1208,8 +1208,10 @@ function showPage(page) {
   if(page==='products') renderProducts();
   if(page==='inventory') renderInventory();
   if(page==='orders') {
-    // Merge Firebase orders into state before rendering
-    if (window._firebaseOrders) state.orders = window._firebaseOrders;
+    // Always get latest from Firebase
+    if (window._firebaseOrders && window._firebaseOrders.length > 0) {
+      state.orders = window._firebaseOrders;
+    }
     renderOrders();
   }
   if(page==='sets') renderSetsPage();
