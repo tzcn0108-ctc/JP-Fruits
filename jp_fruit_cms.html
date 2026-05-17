@@ -317,58 +317,63 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 
 
     <!-- REPORTS -->
+    <!-- REPORTS -->
     <div id="page-reports" style="display:none;">
       <div class="header">
         <div class="page-title">報告 Reports</div>
         <div class="header-actions">
-          <button class="btn btn-gold" onclick="exportWeeklyCSV()">⬇ 匯出週報 CSV</button>
+          <button class="btn btn-gold" onclick="exportWeeklyCSV()">⬇ 匯出 CSV</button>
         </div>
       </div>
       <div class="content">
 
-        <!-- FILTERS -->
-        <div class="table-wrap" style="padding:16px;margin-bottom:16px;">
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-            <div class="form-group" style="margin:0;">
-              <label>日期由 From</label>
-              <input type="date" id="r-date-from" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;">
+        <!-- DATE FILTER -->
+        <div class="table-wrap" style="padding:14px 16px;margin-bottom:16px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:0.75rem;color:var(--muted);white-space:nowrap;">由</label>
+              <input type="date" id="r-date-from" class="search-box" style="padding:6px 10px;font-size:0.8rem;width:130px;">
             </div>
-            <div class="form-group" style="margin:0;">
-              <label>日期至 To</label>
-              <input type="date" id="r-date-to" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:0.75rem;color:var(--muted);white-space:nowrap;">至</label>
+              <input type="date" id="r-date-to" class="search-box" style="padding:6px 10px;font-size:0.8rem;width:130px;">
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('thisweek')">本週</button>
-            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('lastweek')">上週</button>
-            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('thismonth')">本月</button>
-            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('last30')">過去30天</button>
-            <button class="btn btn-ghost btn-sm" onclick="setQuickDate('all')">全部</button>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" onclick="setQuickDate('thisweek')">本週</button>
+              <button class="btn btn-ghost btn-sm" onclick="setQuickDate('lastweek')">上週</button>
+              <button class="btn btn-ghost btn-sm" onclick="setQuickDate('thismonth')">本月</button>
+              <button class="btn btn-ghost btn-sm" onclick="setQuickDate('last30')">過去30天</button>
+              <button class="btn btn-ghost btn-sm" onclick="setQuickDate('all')">全部</button>
+            </div>
             <button class="btn btn-primary btn-sm" onclick="runReports()" style="margin-left:auto;">生成報告</button>
           </div>
         </div>
 
         <!-- SUMMARY STATS -->
-        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);" id="r-stats">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;" id="r-stats">
           <div class="stat-card"><div class="stat-label">總訂單</div><div class="stat-value blue" id="r-total-orders">—</div></div>
           <div class="stat-card"><div class="stat-label">總收入</div><div class="stat-value green" id="r-total-revenue">—</div></div>
           <div class="stat-card"><div class="stat-label">平均訂單</div><div class="stat-value gold" id="r-avg-order">—</div></div>
           <div class="stat-card"><div class="stat-label">獨立客人</div><div class="stat-value blue" id="r-unique-customers">—</div></div>
         </div>
 
-        <!-- TABS -->
-        <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;gap:4px;">
-          <button class="r-tab active" onclick="switchRTab('orders',this)">📋 訂單明細</button>
-          <button class="r-tab" onclick="switchRTab('products',this)">📦 按產品</button>
-          <button class="r-tab" onclick="switchRTab('customers',this)">👤 按客人</button>
-          <button class="r-tab" onclick="switchRTab('payment',this)">💷 付款方式</button>
+        <!-- REPORT TABS (like Neartail) -->
+        <div class="table-wrap" style="padding:0;">
+          <div style="display:flex;border-bottom:2px solid var(--border);padding:0 16px;gap:0;overflow-x:auto;">
+            <button class="r-tab active" onclick="switchRTab('orders',this)">訂單明細</button>
+            <button class="r-tab" onclick="switchRTab('categories',this)">按分類</button>
+            <button class="r-tab" onclick="switchRTab('products',this)">按產品</button>
+            <button class="r-tab" onclick="switchRTab('customers',this)">按客人</button>
+            <button class="r-tab" onclick="switchRTab('packsheet',this)">Pick &amp; Pack</button>
+            <button class="r-tab" onclick="switchRTab('payment',this)">付款方式</button>
+          </div>
+          <div id="r-content" style="min-height:200px;"></div>
         </div>
-
-        <!-- TAB CONTENT -->
-        <div id="r-content"></div>
 
       </div>
     </div>
 
-    <!-- SETS -->
+
     <div id="page-sets" style="display:none;">
       <div class="header">
         <div class="page-title">套餐管理 Set Meals</div>
@@ -1560,9 +1565,9 @@ function viewOrder(id) {
 
   // Build items list
   const itemsHtml = Array.isArray(o.items)
-    ? o.items.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
-        <span style="font-size:0.85rem;">${i.name} × ${i.qty||1}</span>
-        <span style="font-size:0.85rem;font-weight:600;">£${((i.price||0)*(i.qty||1)).toFixed(2)}</span>
+    ? o.items.map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e4dc;">
+        <span style="font-size:0.85rem;color:#1C0F08;">${i.name} × ${i.qty||1}</span>
+        <span style="font-size:0.85rem;font-weight:600;color:#1C0F08;">£${((i.price||0)*(i.qty||1)).toFixed(2)}</span>
       </div>`).join('')
     : `<div style="font-size:0.85rem;color:var(--muted);">${o.items||'—'}</div>`;
 
@@ -1581,16 +1586,16 @@ function viewOrder(id) {
         </div>
       </div>
       <div style="padding:20px;">
-        <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;">
-          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">客人資料</div>
-          <div style="font-size:0.88rem;font-weight:600;">${o.name||'—'}</div>
-          <div style="font-size:0.82rem;color:var(--muted);margin-top:2px;">${o.phone||''}</div>
-          <div style="font-size:0.82rem;color:var(--muted);margin-top:2px;">${o.address||''}, ${o.postcode||''}</div>
-          ${o.notes?`<div style="font-size:0.8rem;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">備註：${o.notes}</div>`:''}
+        <div style="background:var(--plum-l,#EDE6F5);border:1.5px solid var(--plum-m,#9B7AB8);border-radius:10px;padding:14px;margin-bottom:16px;">
+          <div style="font-size:0.7rem;color:var(--plum,#6B4C8A);margin-bottom:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;">客人資料</div>
+          <div style="font-size:0.92rem;font-weight:700;color:#1C0F08;">${o.name||'—'}</div>
+          <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${o.phone||''}</div>
+          <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${o.address||''}, ${o.postcode||''}</div>
+          ${o.notes?`<div style="font-size:0.8rem;color:#3D2B1F;margin-top:8px;padding-top:8px;border-top:1px solid var(--plum-m,#9B7AB8);"><strong>備註：</strong>${o.notes}</div>`:''}
         </div>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">訂購產品</div>
         ${itemsHtml}
-        <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:1rem;font-weight:700;color:var(--plum);">
+        <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:1.05rem;font-weight:700;color:var(--plum,#6B4C8A);border-top:2px solid #f0e4dc;margin-top:4px;">
           <span>合計</span><span>£${parseFloat(o.total||0).toFixed(2)}</span>
         </div>
         ${o.status!=='delivered'&&o.status!=='cancelled'?`
@@ -1958,6 +1963,10 @@ function getFilteredOrders() {
 }
 
 function runReports() {
+  // Always use Firebase orders if available
+  if (window._firebaseOrders && window._firebaseOrders.length > 0) {
+    state.orders = window._firebaseOrders;
+  }
   const orders = getFilteredOrders();
   const totalRev = orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
   const avgOrder = orders.length ? totalRev/orders.length : 0;
@@ -1984,8 +1993,119 @@ function renderRTab(tab, orders) {
 
   if (tab==='orders') renderOrdersReport(el, orders);
   else if (tab==='products') renderProductsReport(el, orders);
+  else if (tab==='categories') renderCategoriesReport(el, orders);
   else if (tab==='customers') renderCustomersReport(el, orders);
+  else if (tab==='packsheet') renderPacksheetReport(el, orders);
   else if (tab==='payment') renderPaymentReport(el, orders);
+}
+
+
+function renderCategoriesReport(el, orders) {
+  // Aggregate by category
+  const catMap = {};
+  orders.forEach(o => {
+    if (!Array.isArray(o.items)) return;
+    o.items.forEach(item => {
+      // Find product to get category (try productId first, then name match)
+      let p = item.productId ? state.products.find(x => x.id === item.productId) : null;
+      if (!p && item.name) p = state.products.find(x => (x.nameZh||x.name) === item.name);
+      const catId = p ? p.cat : null;
+      const cat = catId ? state.categories.find(x => x.id === catId) : null;
+      const catName = cat ? (cat.zh || cat.name) : (p ? '其他' : '未分類');
+      if (!catMap[catName]) catMap[catName] = { qty: 0, revenue: 0, orders: new Set(), products: new Set() };
+      catMap[catName].qty += parseInt(item.qty) || 1;
+      catMap[catName].revenue += parseFloat(item.price || 0) * (parseInt(item.qty) || 1);
+      catMap[catName].orders.add(o.id);
+      catMap[catName].products.add(item.name || '');
+    });
+  });
+
+  const sorted = Object.entries(catMap)
+    .map(([cat, d]) => ({ cat, qty: d.qty, revenue: d.revenue, orders: d.orders.size, prods: d.products.size }))
+    .sort((a, b) => b.revenue - a.revenue);
+
+  const totalRev = sorted.reduce((s, r) => s + r.revenue, 0);
+
+  el.innerHTML = `
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:0.82rem;color:var(--muted);">共 ${sorted.length} 個分類 · ${orders.length} 個訂單</div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>分類 Category</th>
+          <th>款式數</th>
+          <th style="text-align:right">獨立訂單</th>
+          <th style="text-align:right">銷售數量</th>
+          <th style="text-align:right">收入 Amount</th>
+          <th style="text-align:right">佔比</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sorted.map(r => `<tr>
+          <td><div style="font-weight:600;">${r.cat}</div></td>
+          <td style="color:var(--muted);font-size:0.78rem;">${r.prods} 款</td>
+          <td style="text-align:right">${r.orders}</td>
+          <td style="text-align:right;font-weight:500;">${r.qty}</td>
+          <td style="text-align:right;color:var(--green);font-weight:700;">£${r.revenue.toFixed(2)}</td>
+          <td style="text-align:right;">
+            <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">
+              <div style="background:var(--green);height:6px;border-radius:3px;width:${totalRev>0?Math.round(r.revenue/totalRev*60):0}px;opacity:0.7;"></div>
+              ${totalRev > 0 ? (r.revenue/totalRev*100).toFixed(1) : 0}%
+            </div>
+          </td>
+        </tr>`).join('')}
+        <tr style="font-weight:700;border-top:2px solid var(--border);background:var(--surface2);">
+          <td>合計 Total</td>
+          <td style="color:var(--muted);">${sorted.reduce((s,r)=>s+r.prods,0)} 款</td>
+          <td style="text-align:right">${orders.length}</td>
+          <td style="text-align:right">${sorted.reduce((s,r)=>s+r.qty,0)}</td>
+          <td style="text-align:right;color:var(--green);">£${totalRev.toFixed(2)}</td>
+          <td style="text-align:right">100%</td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+
+function renderPacksheetReport(el, orders) {
+  // Pick & Pack: list all products needed across all orders
+  const packMap = {};
+  orders.forEach(o => {
+    if (!Array.isArray(o.items)) return;
+    o.items.forEach(item => {
+      const name = item.name || '未知產品';
+      if (!packMap[name]) packMap[name] = { qty: 0, orders: [], productId: item.productId };
+      packMap[name].qty += parseInt(item.qty) || 1;
+      packMap[name].orders.push({ orderId: o.id, customer: o.name, qty: item.qty || 1, postcode: o.postcode });
+    });
+  });
+
+  const sorted = Object.entries(packMap)
+    .map(([name, d]) => ({ name, ...d }))
+    .sort((a, b) => b.qty - a.qty);
+
+  el.innerHTML = `
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:0.82rem;color:var(--muted);">Pick &amp; Pack 清單 · 共 ${sorted.length} 款產品</div>
+      <div style="font-size:0.82rem;font-weight:600;color:var(--green);">總件數：${sorted.reduce((s,r)=>s+r.qty,0)}</div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>產品名稱</th><th style="text-align:center">總數量</th><th>訂單詳情</th></tr>
+      </thead>
+      <tbody>
+        ${sorted.map(r => `<tr>
+          <td style="font-weight:600;">${r.name}</td>
+          <td style="text-align:center;">
+            <span style="background:var(--plum,#7C5CBF);color:white;border-radius:20px;padding:3px 12px;font-size:0.82rem;font-weight:700;">${r.qty}</span>
+          </td>
+          <td style="font-size:0.75rem;color:var(--muted);">
+            ${r.orders.map(o => `<span style="display:inline-block;background:var(--surface2);border-radius:4px;padding:1px 6px;margin:2px;">${o.customer} ×${o.qty}</span>`).join('')}
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
 }
 
 // ─ ORDERS TAB ─
@@ -2120,77 +2240,122 @@ function renderPaymentReport(el, orders) {
 
 // ─ WEEKLY CSV EXPORT ─
 function exportWeeklyCSV() {
+  // Sync Firebase orders first
+  if (window._firebaseOrders && window._firebaseOrders.length > 0) {
+    state.orders = window._firebaseOrders;
+  }
   const orders = getFilteredOrders();
-  if (!orders.length) { alert('呢個時間段冇訂單，請先揀選日期範圍！'); return; }
+  if (!orders.length) {
+    alert('呢個時間段冇訂單！請先揀選日期範圍，再撳「生成報告」。');
+    return;
+  }
 
-  const from = document.getElementById('r-date-from').value;
-  const to = document.getElementById('r-date-to').value;
+  const from = document.getElementById('r-date-from').value || 'all';
+  const to   = document.getElementById('r-date-to').value   || 'all';
 
-  // Build CSV matching your April Excel format:
-  // Rows: products as rows (parsed from items text)
-  // Columns: each order as a column
-  // Summary rows: total, payment, driver, date etc.
-
-  const sortedOrders = [...orders].sort((a,b)=>(a.deliveryDate||'').localeCompare(b.deliveryDate||''));
-
-  // Collect all unique product names across orders
-  const allProds = new Set();
-  sortedOrders.forEach(o=>{
-    if(!o.items) return;
-    o.items.split('\n').forEach(line=>{
-      const m = line.match(/^[•·\-\s]*(.+?)\s*[×x]\s*(\d+)/);
-      if(m) allProds.add(m[1].trim());
-    });
-  });
-  const prodList = [...allProds];
-
-  // Build a map: orderId -> {productName -> qty}
-  const orderProdMap = {};
-  sortedOrders.forEach(o=>{
-    orderProdMap[o.id]={};
-    if(!o.items) return;
-    o.items.split('\n').forEach(line=>{
-      const m = line.match(/^[•·\-\s]*(.+?)\s*[×x]\s*(\d+)/);
-      if(m) orderProdMap[o.id][m[1].trim()] = parseInt(m[2])||1;
-    });
+  // Sort by delivery date then created date
+  const sorted = [...orders].sort((a,b) => {
+    const da = a.deliveryDate || a.createdAt || '';
+    const db = b.deliveryDate || b.createdAt || '';
+    return da.localeCompare(db);
   });
 
-  // CSV header row 1: Order ID
-  const esc = v => `"${String(v||'').replace(/"/g,'""')}"`;
+  // ── Collect ALL unique products across orders ──
+  const allProds = [];
+  const prodSet = new Set();
+  sorted.forEach(o => {
+    if (Array.isArray(o.items)) {
+      o.items.forEach(i => {
+        if (i.name && !prodSet.has(i.name)) {
+          prodSet.add(i.name);
+          allProds.push(i.name);
+        }
+      });
+    }
+  });
 
+  // ── Build order → product map ──
+  const orderMap = {};
+  sorted.forEach(o => {
+    orderMap[o.id] = {};
+    if (Array.isArray(o.items)) {
+      o.items.forEach(i => {
+        if (i.name) orderMap[o.id][i.name] = i.qty || 1;
+      });
+    }
+  });
+
+  const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
   let rows = [];
-  rows.push(['Order Id','','','','', ...sortedOrders.map(o=>'#'+o.id.slice(-4).toUpperCase())]);
-  rows.push(['客人姓名 Name','','','','', ...sortedOrders.map(o=>o.name||'')]);
-  rows.push(['郵編 Postcode','','','','', ...sortedOrders.map(o=>o.postcode||'')]);
+
+  // ── HEADER ROWS ──
+  rows.push(['Order Id',          '', ...sorted.map(o => o.id ? '#' + o.id.slice(-6).toUpperCase() : '')]);
+  rows.push(['客人姓名 Name',      '', ...sorted.map(o => o.name || '')]);
+  rows.push(['收貨地址 Postcode',  '', ...sorted.map(o => o.postcode || '')]);
+  rows.push(['聯絡電話 Phone',     '', ...sorted.map(o => o.phone || '')]);
+  rows.push(['地址 Address',       '', ...sorted.map(o => o.address || '')]);
   rows.push(['']); // blank separator
 
-  // Product rows
-  prodList.forEach(prod=>{
-    rows.push([prod,'','','','', ...sortedOrders.map(o=>orderProdMap[o.id][prod]||'')]);
+  // ── PRODUCT ROWS (one per product, qty in each order column) ──
+  allProds.forEach(prod => {
+    const total = sorted.reduce((s, o) => s + (parseInt(orderMap[o.id][prod]) || 0), 0);
+    rows.push([
+      prod,
+      total || '',  // total qty column
+      ...sorted.map(o => orderMap[o.id][prod] || '')
+    ]);
   });
 
   rows.push(['']); // blank separator
 
-  // Summary rows
-  rows.push(['訂單總數 Order Total','','','','', ...sortedOrders.map(o=>'£'+parseFloat(o.total||0).toFixed(2))]);
-  rows.push(['付款方式 Payment','','','','', ...sortedOrders.map(o=>o.payment==='transfer'?'轉數':o.payment==='cash'?'現金':'COD')]);
-  rows.push(['送貨員 Deliver by','','','','', ...sortedOrders.map(o=>o.driver||'')]);
-  rows.push(['送貨日期 Deliver date','','','','', ...sortedOrders.map(o=>o.deliveryDate||'')]);
-  rows.push(['備註 Notes','','','','', ...sortedOrders.map(o=>o.notes||'')]);
+  // ── SUMMARY ROWS ──
+  const grandTotal = sorted.reduce((s, o) => s + parseFloat(o.total || 0), 0);
 
-  // Convert to CSV
-  const csv = '\uFEFF' + rows.map(r=>r.map(esc).join(',')).join('\r\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  rows.push(['訂單總數 Order Total',
+    '£' + grandTotal.toFixed(2),
+    ...sorted.map(o => '£' + parseFloat(o.total || 0).toFixed(2))
+  ]);
+
+  rows.push(['訂單數量 Order Quantity',
+    sorted.reduce((s, o) => s + (Array.isArray(o.items) ? o.items.reduce((q, i) => q + (i.qty||1), 0) : 0), 0),
+    ...sorted.map(o => Array.isArray(o.items) ? o.items.reduce((q, i) => q + (i.qty||1), 0) : '')
+  ]);
+
+  // Cash vs transfer
+  const cashOrders = sorted.filter(o => o.payment === 'cash');
+  const cashTotal = cashOrders.reduce((s, o) => s + parseFloat(o.total||0), 0);
+  const transferTotal = grandTotal - cashTotal;
+
+  rows.push(['現金 Cash',
+    cashTotal > 0 ? '£' + cashTotal.toFixed(2) : '',
+    ...sorted.map(o => o.payment === 'cash' ? '£' + parseFloat(o.total||0).toFixed(2) : '')
+  ]);
+  rows.push(['過數 Transfer',
+    transferTotal > 0 ? '£' + transferTotal.toFixed(2) : '',
+    ...sorted.map(o => o.payment !== 'cash' ? '£' + parseFloat(o.total||0).toFixed(2) : '')
+  ]);
+
+  rows.push(['Deliver by',   '', ...sorted.map(o => o.driver || '')]);
+  rows.push(['Deliver time', '', ...sorted.map(o => o.deliveryTime || '')]);
+  rows.push(['Deliver date', '', ...sorted.map(o => o.deliveryDate || (o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : ''))]);
+  rows.push(['備註 Remarks', '', ...sorted.map(o => o.notes || '')]);
+  rows.push(['確認收錢',     '', ...sorted.map(o => o.status === 'delivered' ? 'Checked' : '')]);
+
+  // ── Convert to CSV with BOM for Excel Chinese support ──
+  const csv = '\uFEFF' + rows.map(r => r.map(esc).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = `JP_Fruit_Sales_${from}_to_${to}.csv`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+
+  alert(`✅ 已匯出 ${sorted.length} 個訂單！\n\n用 Excel 或 Google Sheets 打開 CSV 檔案。`);
 }
 
-// ── SETS MANAGEMENT ──────────────────────────────────────────
-let editingGroups = []; // temp state while editing modal
 
 function uid3() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 
