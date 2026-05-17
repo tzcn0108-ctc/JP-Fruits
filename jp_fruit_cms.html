@@ -168,6 +168,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
     // Merge with state - Firebase orders take priority
     if (window._cmsState) {
       window._cmsState.orders = orders;
+      window._firebaseOrders = orders;  // Reliable global cache
       // Update badge
       const newCount = orders.filter(o => o.status === 'new').length;
       const badge = document.getElementById('orders-badge');
@@ -176,8 +177,18 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
         badge.style.display = newCount > 0 ? 'flex' : 'none';
       }
       // Re-render orders if on that page
-      if (document.getElementById('page-orders')?.style.display !== 'none') {
-        if (window._renderOrders) window._renderOrders();
+      // Re-render if orders page is visible
+      try {
+        const ordersPage = document.getElementById('page-orders');
+        if (ordersPage && ordersPage.style.display !== 'none') {
+          if (typeof renderOrders === 'function') renderOrders();
+        }
+      } catch(e) {}
+      // Always update badge count
+      const newCount2 = orders.filter(o => o.status === 'new' || o.status === 'pending').length;
+      if (badge) {
+        badge.textContent = newCount2 > 0 ? newCount2 : '';
+        badge.style.display = newCount2 > 0 ? 'flex' : 'none';
       }
       // Update dashboard stats
       if (document.getElementById('stat-orders')) {
@@ -1175,7 +1186,11 @@ function showPage(page) {
   if(page==='dashboard') renderDashboard();
   if(page==='products') renderProducts();
   if(page==='inventory') renderInventory();
-  if(page==='orders') renderOrders();
+  if(page==='orders') {
+    // Merge Firebase orders into state before rendering
+    if (window._firebaseOrders) state.orders = window._firebaseOrders;
+    renderOrders();
+  }
   if(page==='sets') renderSetsPage();
   if(page==='reports') initReports();
   if(page==='featured') renderFeaturedPage();
@@ -1450,10 +1465,11 @@ function deleteProduct() {
 // ── ORDERS ───────────────────────────────────────────────────
 function renderOrders() {
   const cols = [
-    {status:'pending',label:'待確認',color:'var(--gold)'},
-    {status:'confirmed',label:'已確認',color:'var(--blue)'},
-    {status:'delivering',label:'送緊貨',color:'var(--green)'},
-    {status:'delivered',label:'已完成',color:'var(--muted)'},
+    {status:'new',       label:'新訂單',  color:'var(--berry)'},
+    {status:'pending',   label:'待確認',  color:'var(--gold)'},
+    {status:'confirmed', label:'已確認',  color:'#2563EB'},
+    {status:'delivering',label:'送緊貨',  color:'var(--leaf)'},
+    {status:'delivered', label:'已完成',  color:'var(--muted)'},
   ];
   document.getElementById('orders-kanban').innerHTML = cols.map(col=>{
     const orders = state.orders.filter(o=>o.status===col.status);
