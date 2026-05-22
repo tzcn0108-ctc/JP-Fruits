@@ -927,6 +927,72 @@ function savePendingOrder(orderData) {
   console.warn('Firebase offline - order saved locally, WA still proceeding');
 }
 
+
+// ── PROMO CODE SYSTEM ──────────────────────────────────
+function applyPromo(code, sfx) {
+  const input = document.getElementById('cf-promo'+sfx);
+  const msgEl = document.getElementById('cf-promo-msg'+sfx);
+  if (!code) return;
+
+  const today = new Date().toISOString().slice(0,10);
+  const promo = promos.find(p =>
+    p.code === code.trim().toUpperCase() &&
+    p.active !== false &&
+    (!p.startDate || p.startDate <= today) &&
+    (!p.endDate   || p.endDate   >= today) &&
+    (!p.maxUses   || (p.usedCount||0) < p.maxUses)
+  );
+
+  if (!promo) {
+    appliedPromo = null;
+    if (msgEl) { msgEl.textContent = '❌ 優惠碼無效或已過期'; msgEl.style.color='var(--berry)'; }
+    updateCart();
+    return;
+  }
+
+  const total = getTotal();
+  if (promo.minOrder > 0 && total < promo.minOrder) {
+    appliedPromo = null;
+    if (msgEl) { msgEl.textContent = `最低消費 £${promo.minOrder}，未達到優惠門檻`; msgEl.style.color='var(--berry)'; }
+    updateCart();
+    return;
+  }
+
+  appliedPromo = promo;
+  const discountLabel = promo.type==='percent'
+    ? `${promo.value}% OFF`
+    : promo.type==='fixed'
+      ? `減 £${promo.value}`
+      : '免運費';
+
+  if (msgEl) {
+    msgEl.textContent = `✓ 優惠碼 ${promo.code} 已應用：${discountLabel}`;
+    msgEl.style.color = 'var(--leaf)';
+  }
+  updateCart();
+}
+
+function removePromo(sfx) {
+  appliedPromo = null;
+  const input = document.getElementById('cf-promo'+sfx);
+  const msgEl = document.getElementById('cf-promo-msg'+sfx);
+  if (input) input.value = '';
+  if (msgEl) { msgEl.textContent = ''; }
+  updateCart();
+}
+
+function getDiscount() {
+  if (!appliedPromo) return 0;
+  const subtotal = getTotal();
+  if (appliedPromo.type === 'percent') return parseFloat((subtotal * appliedPromo.value / 100).toFixed(2));
+  if (appliedPromo.type === 'fixed')   return Math.min(appliedPromo.value, subtotal);
+  return 0; // free_delivery: discount shown separately
+}
+
+function getFinalTotal() {
+  return Math.max(0, getTotal() - getDiscount());
+}
+
 function scrollToCart() {
   if (window.innerWidth <= 860) { toggleMobileCart(); return; }
   const el = document.getElementById('cart-section');
@@ -1409,6 +1475,7 @@ async function loadProducts() {
       products = (data.products||[]).filter(p=>p.active!==false && p.price>0 && p.stock!==0);
       sets = data.sets||[];
       categories = data.categories||[];
+      promos = data.promos||[];
       if (data.banner) applyBanner(data.banner);
       if (data.settings) { siteSettings = data.settings; applySettings(data.settings); }
     } else {
@@ -1496,7 +1563,7 @@ const TX = {
 };
 
 // ── STATE ──────────────────────────────────────────────────────
-let lang='zh', products=[], categories=[], sets=[], cart={}, searchQuery='', activeCat='all';
+let lang='zh', products=[], categories=[], sets=[], promos=[], cart={}, appliedPromo=null, searchQuery='', activeCat='all';
 let siteSettings={};
 const setSelections={};
 
@@ -1752,8 +1819,12 @@ function chQty(id,d){
   document.querySelectorAll('[data-summary="subtotal"]').forEach(el => {
     el.textContent = `£${total.toFixed(2)}`;
   });
-  document.querySelectorAll('[data-summary="total"]').forEach(el => {
+  const finalTotal2 = getFinalTotal();
+  document.querySelectorAll('[data-summary="subtotal"]').forEach(el => {
     el.textContent = `£${total.toFixed(2)}`;
+  });
+  document.querySelectorAll('[data-summary="total"]').forEach(el => {
+    el.textContent = `£${finalTotal2.toFixed(2)}`;
   });
 
   updateCart();
@@ -1859,7 +1930,17 @@ function renderCart(cid,sfx){
     return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum" data-qty-id="${id}${sfx}">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price" data-price-id="${id}${sfx}">£${(pr*val).toFixed(2)}</div></div>`;
   }).join('');
 
-  const summaryHtml = `<div class="summary-row"><span>${tx('subtotal')}</span><span data-summary="subtotal">£${total.toFixed(2)}</span></div><div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div><div class="summary-row summary-total"><span>${tx('total')}</span><span data-summary="total">£${total.toFixed(2)}</span></div>`;
+  const discount = getDiscount();
+  const finalTotal = getFinalTotal();
+  const discountRow = appliedPromo
+    ? `<div class="summary-row" style="color:var(--leaf);">
+        <span>🎫 ${appliedPromo.code}</span>
+        <span>-£${discount.toFixed(2)}</span>
+       </div>` : '';
+  const summaryHtml = `<div class="summary-row"><span>${tx('subtotal')}</span><span data-summary="subtotal">£${total.toFixed(2)}</span></div>
+  ${discountRow}
+  <div class="summary-row"><span>${tx('delivery')}</span><span style="color:var(--leaf)">${tx('deliveryVal')}</span></div>
+  <div class="summary-row summary-total"><span>${tx('total')}</span><span data-summary="total">£${finalTotal.toFixed(2)}</span></div>`;
 
   if(formExists){
     // Surgical update: only replace items and summary, preserve form inputs
@@ -1886,7 +1967,22 @@ function renderCart(cid,sfx){
 }
 function cartForm(sfx){
   const has=getCount()>0;
-  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}" autocomplete="name"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}" autocomplete="tel"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}" autocomplete="street-address"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="postal-code" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')">${tx('waBtn')}</button></div>`;
+  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}" autocomplete="name"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}" autocomplete="tel"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}" autocomplete="street-address"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="postal-code" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div>
+  <div style="margin:10px 0;padding:10px 12px;background:var(--plum-l,#EDE6F5);border-radius:10px;">
+    <div style="font-size:0.73rem;font-weight:600;color:var(--plum);margin-bottom:7px;">🎫 ${lang==='zh'?'優惠碼':'Promo Code'}</div>
+    <div style="display:flex;gap:6px;">
+      <input type="text" id="cf-promo${sfx}" placeholder="${lang==='zh'?'輸入優惠碼...':'Enter promo code...'}"
+        style="flex:1;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:var(--font);letter-spacing:1px;"
+        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+        onkeydown="if(event.key==='Enter'){applyPromo(this.value,'${sfx}');event.preventDefault();}">
+      <button onclick="applyPromo(document.getElementById('cf-promo${sfx}').value,'${sfx}')"
+        style="background:var(--plum);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;flex-shrink:0;">
+        ${lang==='zh'?'使用':'Apply'}
+      </button>
+    </div>
+    <div id="cf-promo-msg${sfx}" style="font-size:0.76rem;margin-top:5px;min-height:1em;"></div>
+  </div>
+  <button class="whatsapp-btn" onclick="sendWA('${sfx}')">${tx('waBtn')}</button></div>`;
 }
 function sendWA(sfx){
   // ── Anti-duplicate: disable button immediately ──
@@ -1934,7 +2030,9 @@ function sendWA(sfx){
 
   const total = getTotal();
   const waNum = '447762929455';
-  const msg   = tx('waMsg',name,phone,addr,pc.toUpperCase(),items,total.toFixed(2),notes);
+  const finalTot = getFinalTotal();
+  const promoLine = appliedPromo ? `\n🎫 優惠碼：${appliedPromo.code} (-£${getDiscount().toFixed(2)})` : '';
+  const msg   = tx('waMsg',name,phone,addr,pc.toUpperCase(),items+promoLine,finalTot.toFixed(2),notes);
 
   // ── Step 4: Save to Firebase FIRST ──
   const orderData = {
@@ -1949,7 +2047,10 @@ function sendWA(sfx){
       if(!p) return null;
       return {type:'product', productId:id, name:p.nameZh||p.zh||p.name, price:p.salePrice||p.price, qty:val};
     }).filter(Boolean),
-    total: parseFloat(total.toFixed(2)),
+    total: parseFloat(getFinalTotal().toFixed(2)),
+    subtotal: parseFloat(total.toFixed(2)),
+    promoCode: appliedPromo?.code||'',
+    discount: getDiscount(),
     notes: notes||'',
     lang,
     createdAt: new Date().toISOString(),

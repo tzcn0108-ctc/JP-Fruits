@@ -121,6 +121,69 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 .order-area{font-size:0.72rem;color:var(--muted);}
 .empty{text-align:center;padding:50px 20px;color:var(--muted);}
 .section-divider{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 14px;background:var(--bg);border-bottom:1px solid var(--border);}
+
+/* ── SET MEAL MODAL ── */
+.set-section{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px;
+  margin-bottom:14px;
+}
+.set-section-title{
+  font-size:0.72rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+.group-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  padding:14px;
+  margin-bottom:10px;
+  transition:border-color 0.2s;
+}
+.group-card:hover{border-color:var(--plum-m,#9B7AB8);}
+.group-card-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+.group-card-header input[type=text]{
+  background:var(--surface3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:5px 10px;
+  color:var(--text);
+  font-family:var(--font);
+  font-size:0.82rem;
+}
+.group-card-header input[type=number]{
+  background:var(--surface3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:5px 8px;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:0.82rem;
+  width:52px;
+  text-align:center;
+}
+.group-products-grid{
+  max-height:180px;
+  overflow-y:auto;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:4px;
+  padding:4px 0;
+}
+@media(max-width:600px){.group-products-grid{grid-template-columns:repeat(2,1fr);}}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -227,6 +290,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
       <div class="nav-section">訂單</div>
       <div class="nav-item" onclick="showPage('orders')" id="nav-orders" style="position:relative;"><span class="icon">📋</span>訂單管理<span id="orders-badge" style="display:none;position:absolute;top:6px;right:8px;background:#C0392B;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;align-items:center;justify-content:center;font-weight:700;">0</span></div>
       <div class="nav-item" onclick="showPage('reports')" id="nav-reports"><span class="icon">📊</span>報告 Reports</div>
+      <div class="nav-item" onclick="showPage('promos')" id="nav-promos"><span class="icon">🎫</span>推廣優惠碼</div>
       <div class="nav-section">設定</div>
       <div class="nav-item" onclick="showPage('featured')" id="nav-featured"><span class="icon">🏆</span>熱賣專區管理</div>
       <div class="nav-item" onclick="showPage('banner')" id="nav-banner"><span class="icon">🌟</span>本週主打 Banner</div>
@@ -356,6 +420,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
           <div class="stat-card"><div class="stat-label">平均訂單</div><div class="stat-value gold" id="r-avg-order">—</div></div>
           <div class="stat-card"><div class="stat-label">獨立客人</div><div class="stat-value blue" id="r-unique-customers">—</div></div>
         </div>
+        <div id="r-breakdown" style="margin-bottom:16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;"></div>
 
         <!-- REPORT TABS (like Neartail) -->
         <div class="table-wrap" style="padding:0;">
@@ -377,7 +442,9 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
     <div id="page-sets" style="display:none;">
       <div class="header">
         <div class="page-title">套餐管理 Set Meals</div>
-        <div class="header-actions">
+        <div class="header-actions" style="gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="createTemplateSet('homey')">🍲 家餸套餐模板</button>
+          <button class="btn btn-ghost btn-sm" onclick="createTemplateSet('bread')">🍞 麵包套餐模板</button>
           <button class="btn btn-primary" onclick="openSetModal()">+ 新增套餐</button>
         </div>
       </div>
@@ -393,7 +460,39 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
         <div class="page-title">訂單管理 Orders</div>
         <div class="header-actions"><button class="btn btn-primary" onclick="openOrderModal()">+ 新增訂單</button></div>
       </div>
-      <div class="content"><div class="kanban" id="orders-kanban"></div></div>
+      <div class="content">
+        <!-- Advanced Search & Filter Bar -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="order-search-name" placeholder="搜尋姓名..."
+              style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:var(--font);font-size:0.82rem;width:140px;"
+              oninput="filterOrders()">
+            <input type="text" id="order-search-phone" placeholder="搜尋電話..."
+              style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:var(--font);font-size:0.82rem;width:140px;"
+              oninput="filterOrders()">
+            <input type="text" id="order-search-postcode" placeholder="郵編..."
+              style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:var(--font);font-size:0.82rem;width:100px;"
+              oninput="filterOrders()">
+            <select id="order-filter-payment" onchange="filterOrders()"
+              style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;">
+              <option value="">所有付款</option>
+              <option value="paid">已收錢</option>
+              <option value="unpaid">未收錢</option>
+              <option value="refunded">退款</option>
+            </select>
+            <input type="date" id="order-filter-from"
+              style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.78rem;"
+              onchange="filterOrders()">
+            <span style="color:var(--muted);font-size:0.78rem;">至</span>
+            <input type="date" id="order-filter-to"
+              style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.78rem;"
+              onchange="filterOrders()">
+            <button class="btn btn-ghost btn-sm" onclick="clearOrderFilters()">清除</button>
+            <span id="order-filter-count" style="font-size:0.75rem;color:var(--muted);margin-left:auto;"></span>
+          </div>
+        </div>
+        <div class="kanban" id="orders-kanban"></div>
+      </div>
     </div>
 
     <!-- FEATURED / BESTSELLERS -->
@@ -523,78 +622,159 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 
 <!-- SET MODAL -->
 <div class="modal-overlay" id="set-modal">
-  <div class="modal" style="width:680px;max-height:92vh;">
+  <div class="modal" style="width:720px;max-height:94vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title" id="set-modal-title">新增套餐</div>
       <button class="close-btn" onclick="closeModal('set-modal')">✕</button>
     </div>
-    <div class="modal-body">
-      <!-- Basic info -->
-      <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">套餐名稱 Set Name</div>
+    <div class="modal-body" style="overflow-y:auto;flex:1;padding:20px;">
+
+      <!-- ── SECTION 1: Basic Info ── -->
+      <div class="set-section">
+        <div class="set-section-title">基本資料</div>
         <div class="form-row">
-          <div class="form-group" style="margin-bottom:0;">
-            <label>🇭🇰 中文名稱</label>
-            <input type="text" id="s-name-zh" placeholder="例：麵包自選套餐">
+          <div class="form-group">
+            <label>套餐名稱（中文）</label>
+            <input type="text" id="s-name-zh" placeholder="例：家餸套餐" style="width:100%">
           </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label>🇬🇧 English Name</label>
-            <input type="text" id="s-name-en" placeholder="e.g. Build-Your-Own Bread Set">
+          <div class="form-group">
+            <label>Set Name (English)</label>
+            <input type="text" id="s-name-en" placeholder="e.g. Homey Dish Set" style="width:100%">
           </div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>所屬分類 Category</label>
-          <select id="s-cat"></select>
-        </div>
-        <div class="form-group">
-          <label>Emoji / 圖示</label>
-          <input type="text" id="s-emoji" placeholder="🎁" maxlength="4">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>套餐價錢 (£)</label>
-          <div class="price-input"><span>£</span><input type="number" id="s-price" step="0.01" placeholder="0.00"></div>
-        </div>
-        <div class="form-group" style="opacity:0;pointer-events:none;"><label>_</label><input></div>
-      </div>
-      <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">套餐描述 Description（可選）</div>
         <div class="form-row">
-          <div class="form-group" style="margin-bottom:0;">
-            <label>🇭🇰 中文描述</label>
-            <input type="text" id="s-desc-zh" placeholder="例：自由組合 6 款手工麵包，比單買更著數">
+          <div class="form-group">
+            <label>套餐描述（客人睇到）</label>
+            <input type="text" id="s-desc" placeholder="例：自選家常菜，配湯一款" style="width:100%">
           </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label>🇬🇧 English Description</label>
-            <input type="text" id="s-desc-en" placeholder="e.g. Mix and match 6 artisan breads, better value than buying separately">
+        </div>
+        <div class="form-row" style="align-items:end;">
+          <div class="form-group">
+            <label>套餐價錢 £（0 = 按選項計算）</label>
+            <input type="number" id="s-price" placeholder="0.00" min="0" step="0.01" style="width:120px;">
+          </div>
+          <div class="form-group">
+            <label>顯示分類</label>
+            <select id="s-cat" style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);"></select>
+          </div>
+          <div class="form-group">
+            <label>套餐圖片 URL（可選）</label>
+            <input type="text" id="s-image" placeholder="https://..." style="width:100%">
           </div>
         </div>
       </div>
 
-      <!-- Groups -->
-      <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div style="font-size:0.88rem;font-weight:500;">選項分組 Option Groups</div>
+      <!-- ── SECTION 2: Option Groups ── -->
+      <div class="set-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div class="set-section-title" style="margin-bottom:2px;">選項分組 Option Groups</div>
+            <div style="font-size:0.72rem;color:var(--muted);">每個分組 = 客人要選嘅一類東西（例：主菜、配菜、湯、飲品）</div>
+          </div>
           <button class="btn btn-ghost btn-sm" onclick="addGroup()">+ 加分組</button>
         </div>
-        <div class="notice" style="margin-bottom:12px;font-size:0.78rem;">
-          單組套餐：只加一個分組（例：任選 6 款麵包）<br>
-          多組套餐：加多個分組（例：湯 選1 + 餸 選2）
+
+        <!-- Quick templates -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:10px;background:var(--surface2);border-radius:8px;">
+          <div style="font-size:0.72rem;color:var(--muted);width:100%;margin-bottom:4px;">快速結構模板：</div>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('single')">單選（任選1款）</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('multi')">多選（自訂數量）</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('meal2soup1')">2餸+1湯</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('bread6')">任選6款麵包</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('maindish')">主菜+配菜+湯+飲品</button>
         </div>
+
         <div id="s-groups"></div>
       </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger" id="s-delete-btn" style="display:none;" onclick="deleteSet()">刪除套餐</button>
+      <div style="flex:1;"></div>
       <button class="btn btn-ghost" onclick="closeModal('set-modal')">取消</button>
       <button class="btn btn-primary" onclick="saveSet()">儲存套餐</button>
     </div>
   </div>
 </div>
 
+</div>
+</div>
+
+
+    <!-- PROMOS -->
+    <div id="page-promos" style="display:none;">
+      <div class="header">
+        <div class="page-title">推廣 & 優惠碼 Promotions</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openPromoModal()">+ 新增優惠碼</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice" style="margin-bottom:16px;">優惠碼喺 Order Form 結帳時輸入，自動計算折扣。</div>
+        <div id="promos-list"></div>
+      </div>
+    </div>
+
+    <!-- PROMO MODAL -->
+    <div class="modal-overlay" id="promo-modal">
+      <div class="modal" style="width:480px;">
+        <div class="modal-header">
+          <div class="modal-title" id="promo-modal-title">新增優惠碼</div>
+          <button class="close-btn" onclick="closeModal('promo-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>優惠碼（大寫英數字）</label>
+            <input type="text" id="promo-code" placeholder="例：WELCOME10" style="text-transform:uppercase;width:100%"
+              oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>折扣類型</label>
+              <select id="promo-type" style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);">
+                <option value="percent">百分比折扣（例：9折）</option>
+                <option value="fixed">固定減免（例：減£5）</option>
+                <option value="free_delivery">免運費</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>折扣數值</label>
+              <input type="number" id="promo-value" placeholder="例：10 = 九折 / 5 = 減£5" min="0" step="0.01" style="width:100%">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>最低消費 £（0 = 無限制）</label>
+              <input type="number" id="promo-min" value="0" min="0" step="0.01" style="width:100%">
+            </div>
+            <div class="form-group">
+              <label>使用次數上限（0 = 無限）</label>
+              <input type="number" id="promo-max-uses" value="0" min="0" style="width:100%">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>有效日期由</label>
+              <input type="date" id="promo-start" style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);">
+            </div>
+            <div class="form-group">
+              <label>有效日期至</label>
+              <input type="date" id="promo-end" style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>備註（內部用）</label>
+            <input type="text" id="promo-desc" placeholder="例：KOL合作優惠碼" style="width:100%">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="promo-delete-btn" style="display:none;" onclick="deletePromo()">刪除</button>
+          <div style="flex:1;"></div>
+          <button class="btn btn-ghost" onclick="closeModal('promo-modal')">取消</button>
+          <button class="btn btn-primary" onclick="savePromo()">儲存</button>
+        </div>
+      </div>
+    </div>
 
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none;">
@@ -1167,7 +1347,8 @@ async function saveData() {
   const payload = {
     products: state.products, orders: state.orders,
     categories: state.categories, banner: state.banner,
-    sets: state.sets, settings: state.settings||{}, vips: state.vips||{}
+    sets: state.sets,
+        promos: state.promos||[], settings: state.settings||{}, vips: state.vips||{}
   };
   const data = JSON.stringify(payload);
 
@@ -1186,6 +1367,7 @@ async function saveData() {
         sets:       state.sets,
         banner:     state.banner,
         settings:   state.settings || {},
+        promos:     (state.promos||[]).filter(p=>p.active!==false),
         updatedAt:  new Date().toISOString(),
       });
     } catch(e) { console.warn('Firebase catalogue sync failed:', e); }
@@ -1220,6 +1402,7 @@ function showPage(page) {
     renderOrders();
   }
   if(page==='sets') renderSetsPage();
+  if(page==='promos') renderPromosPage();
   if(page==='reports') initReports();
   if(page==='featured') renderFeaturedPage();
   if(page==='banner') renderBannerPage();
@@ -1580,8 +1763,11 @@ function viewOrder(id) {
           <div style="font-size:0.75rem;color:var(--muted);">${o.createdAt?new Date(o.createdAt).toLocaleString('zh-HK'):''}</div>
           <div style="font-size:1.1rem;font-weight:700;">訂單 #${o.id.slice(-6).toUpperCase()}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span style="background:${statusColor};color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;">${statusLabel}</span>
+          <span style="background:${o.paymentStatus==='paid'?'#16a34a':o.paymentStatus==='refunded'?'#dc2626':'#d97706'};color:white;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;">
+            ${o.paymentStatus==='paid'?'✓ 已收錢':o.paymentStatus==='refunded'?'退款':o.paymentStatus==='unpaid'?'未收錢':'未確認'}
+          </span>
           <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);">✕</button>
         </div>
       </div>
@@ -1589,8 +1775,8 @@ function viewOrder(id) {
         <div style="background:var(--plum-l,#EDE6F5);border:1.5px solid var(--plum-m,#9B7AB8);border-radius:10px;padding:14px;margin-bottom:16px;">
           <div style="font-size:0.7rem;color:var(--plum,#6B4C8A);margin-bottom:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;">客人資料</div>
           <div style="font-size:0.92rem;font-weight:700;color:#1C0F08;">${o.name||'—'}</div>
-          <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${o.phone||''}</div>
-          <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${o.address||''}, ${o.postcode||''}</div>
+          <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${escapeHTML(o.phone)||''}</div>
+          <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${escapeHTML(o.address)||''}, ${escapeHTML(o.postcode)||''}</div>
           ${o.notes?`<div style="font-size:0.8rem;color:#3D2B1F;margin-top:8px;padding-top:8px;border-top:1px solid var(--plum-m,#9B7AB8);"><strong>備註：</strong>${o.notes}</div>`:''}
         </div>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">訂購產品</div>
@@ -1598,9 +1784,34 @@ function viewOrder(id) {
         <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:1.05rem;font-weight:700;color:var(--plum,#6B4C8A);border-top:2px solid #f0e4dc;margin-top:4px;">
           <span>合計</span><span>£${parseFloat(o.total||0).toFixed(2)}</span>
         </div>
+        <!-- Payment status control -->
+        <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:8px;">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;">付款狀態 Payment</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${['unpaid','paid','refunded'].map(ps=>`
+              <button onclick="updatePaymentStatus('${o.id}','${ps}');this.closest('.payment-ctrl').querySelectorAll('button').forEach(b=>b.style.fontWeight='400');this.style.fontWeight='700';"
+                class="btn btn-sm ${o.paymentStatus===ps?'btn-primary':'btn-ghost'} payment-ctrl-btn">
+                ${ps==='paid'?'✓ 已收錢':ps==='refunded'?'退款':'未收錢'}
+              </button>`).join('')}
+          </div>
+        </div>
+
+        <!-- Internal admin note -->
+        <div style="margin-top:10px;">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;font-weight:600;">內部備註（客人睇唔到）</div>
+          <textarea id="admin-note-${o.id}" rows="2"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;resize:vertical;"
+            placeholder="例：司機送貨時致電 07xxxxxx；客人要求2pm後送..."
+            onchange="updateAdminNote('${o.id}',this.value)">${escapeHTML(o.adminNote||'')}</textarea>
+        </div>
+
+        <!-- WA notify + action buttons -->
         ${o.status!=='delivered'&&o.status!=='cancelled'?`
-        <div style="margin-top:16px;display:flex;gap:8px;">
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
           ${nextStatusBtn(o)}
+          <button class="btn btn-ghost btn-sm" onclick="sendWANotify('${o.id}')" style="background:#25d366;color:white;border-color:#25d366;">
+            📱 WA 通知客人
+          </button>
           <button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}');this.closest('[style*=fixed]').remove()">取消訂單</button>
         </div>`:''}
       </div>
@@ -1609,8 +1820,185 @@ function viewOrder(id) {
   document.body.appendChild(modal);
 }
 
+
+// ── PAYMENT STATUS ──
+function updatePaymentStatus(id, status) {
+  const o = state.orders.find(x=>x.id===id);
+  if (!o) return;
+  o.paymentStatus = status;
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    window._fbUpdate(window._fbRef(window._fbDb, 'orders/'+o.firebaseId),
+      {paymentStatus: status, updatedAt: new Date().toISOString()});
+  }
+  showToast(status==='paid'?'✓ 已標記收錢':status==='refunded'?'已標記退款':'已標記未收錢');
+}
+
+// ── ADMIN NOTE ──
+function updateAdminNote(id, note) {
+  const o = state.orders.find(x=>x.id===id);
+  if (!o) return;
+  o.adminNote = note;
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    window._fbUpdate(window._fbRef(window._fbDb, 'orders/'+o.firebaseId),
+      {adminNote: note, updatedAt: new Date().toISOString()});
+  }
+}
+
+// ── WA NOTIFY: 1-click WhatsApp status notification to customer ──
+function sendWANotify(id) {
+  const o = state.orders.find(x=>x.id===id);
+  if (!o || !o.phone) { alert('找不到客人電話！'); return; }
+  const statusMsg = {
+    pending:    '您的訂單已確認，我們正在準備中。',
+    confirmed:  '您的訂單已確認，會在指定時間送達。',
+    delivering: '您的訂單已出發送貨，請保持電話暢通！',
+    delivered:  '您的訂單已成功送達，感謝惠顧 JP Fruit！🎉',
+  }[o.status] || '您的訂單狀態已更新。';
+
+  const orderNum = o.id ? '#'+o.id.slice(-6).toUpperCase() : '';
+  const msg = `你好 ${o.name||''}！
+
+您的 JP Fruit 訂單 ${orderNum}
+${statusMsg}
+
+如有疑問，請直接回覆此訊息。
+謝謝！JP Fruit 🛒`;
+
+  const phone = o.phone.replace(/\s/g,'').replace(/^\+/,'').replace(/^0/,'44');
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+
+// ── ADVANCED ORDER FILTERS ──
+function filterOrders() {
+  const name  = (document.getElementById('order-search-name')?.value||'').toLowerCase();
+  const phone = (document.getElementById('order-search-phone')?.value||'').toLowerCase();
+  const pc    = (document.getElementById('order-search-postcode')?.value||'').toLowerCase();
+  const pay   = document.getElementById('order-filter-payment')?.value||'';
+  const from  = document.getElementById('order-filter-from')?.value||'';
+  const to    = document.getElementById('order-filter-to')?.value||'';
+
+  const allOrders = window._firebaseOrders || state.orders;
+  let filtered = allOrders;
+
+  if (name)  filtered = filtered.filter(o=>(o.name||'').toLowerCase().includes(name));
+  if (phone) filtered = filtered.filter(o=>(o.phone||'').toLowerCase().includes(phone));
+  if (pc)    filtered = filtered.filter(o=>(o.postcode||'').toLowerCase().includes(pc));
+  if (pay)   filtered = filtered.filter(o=>(o.paymentStatus||'unpaid')===pay);
+  if (from)  filtered = filtered.filter(o=>o.createdAt && o.createdAt.slice(0,10)>=from);
+  if (to)    filtered = filtered.filter(o=>o.createdAt && o.createdAt.slice(0,10)<=to);
+
+  // Update count
+  const countEl = document.getElementById('order-filter-count');
+  const hasFilter = name||phone||pc||pay||from||to;
+  if (countEl) countEl.textContent = hasFilter ? `找到 ${filtered.length} 張訂單` : '';
+
+  // Re-render kanban with filtered orders
+  renderFilteredOrders(filtered);
+}
+
+function clearOrderFilters() {
+  ['order-search-name','order-search-phone','order-search-postcode','order-filter-from','order-filter-to'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const payEl = document.getElementById('order-filter-payment');
+  if (payEl) payEl.value = '';
+  const countEl = document.getElementById('order-filter-count');
+  if (countEl) countEl.textContent = '';
+  renderOrders();
+}
+
+function renderFilteredOrders(filteredOrders) {
+  const cols = [
+    {status:'new',       label:'新訂單',  color:'var(--berry)'},
+    {status:'pending',   label:'待確認',  color:'var(--gold)'},
+    {status:'confirmed', label:'已確認',  color:'#2563EB'},
+    {status:'delivering',label:'送緊貨',  color:'var(--leaf)'},
+    {status:'delivered', label:'已完成',  color:'var(--muted)'},
+    {status:'cancelled', label:'已取消',  color:'#999'},
+  ];
+  const kanban = document.getElementById('orders-kanban');
+  if (!kanban) return;
+
+  kanban.innerHTML = cols.map(col => {
+    const orders = filteredOrders.filter(o=>o.status===col.status);
+    return `<div class="kanban-col">
+      <div class="kanban-col-header" style="border-top:3px solid ${col.color};">
+        <span>${col.label}</span>
+        <span class="kanban-count">${orders.length}</span>
+      </div>
+      ${orders.map(o=>`<div class="order-card" onclick="viewOrder('${o.id}')" style="cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="order-id">#${o.id.slice(-6).toUpperCase()}</div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            ${o.paymentStatus==='paid'?'<span style="background:#16a34a;color:white;border-radius:4px;font-size:0.6rem;padding:1px 5px;">已收</span>':o.paymentStatus==='unpaid'?'<span style="background:#d97706;color:white;border-radius:4px;font-size:0.6rem;padding:1px 5px;">未收</span>':''}
+            <div style="font-size:0.68rem;color:var(--muted);">${o.createdAt?new Date(o.createdAt).toLocaleString('zh-HK',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>
+          </div>
+        </div>
+        <div class="order-name">${escapeHTML(o.name||'—')}</div>
+        <div class="order-total">£${parseFloat(o.total||0).toFixed(2)}</div>
+        <div class="order-area">${escapeHTML(o.postcode||'')} ${o.phone?'· '+escapeHTML(o.phone.slice(-4)):''}</div>
+        ${o.adminNote?`<div style="font-size:0.7rem;color:var(--gold);margin-top:4px;border-top:1px solid var(--border);padding-top:4px;">📌 ${escapeHTML(o.adminNote.slice(0,40))}${o.adminNote.length>40?'...':''}</div>`:''}
+        <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;" onclick="event.stopPropagation()">
+          ${col.status!=='delivered'&&col.status!=='cancelled'?nextStatusBtn(o):''}
+          ${col.status!=='delivered'&&col.status!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>`:''}
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
 function advanceOrder(id,status) {
   const o=state.orders.find(x=>x.id===id); if(o){o.status=status;saveData();renderOrders();renderDashboard();}
+}
+
+
+// ── PAYMENT STATUS ──
+function updatePaymentStatus(id, status) {
+  const o = state.orders.find(x=>x.id===id);
+  if (!o) return;
+  o.paymentStatus = status;
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    window._fbUpdate(window._fbRef(window._fbDb, 'orders/'+o.firebaseId),
+      {paymentStatus: status, updatedAt: new Date().toISOString()});
+  }
+  showToast(status==='paid'?'✓ 已標記收錢':status==='refunded'?'已標記退款':'已標記未收錢');
+}
+
+// ── ADMIN NOTE ──
+function updateAdminNote(id, note) {
+  const o = state.orders.find(x=>x.id===id);
+  if (!o) return;
+  o.adminNote = note;
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    window._fbUpdate(window._fbRef(window._fbDb, 'orders/'+o.firebaseId),
+      {adminNote: note, updatedAt: new Date().toISOString()});
+  }
+}
+
+// ── WA NOTIFY: 1-click WhatsApp status notification to customer ──
+function sendWANotify(id) {
+  const o = state.orders.find(x=>x.id===id);
+  if (!o || !o.phone) { alert('找不到客人電話！'); return; }
+  const statusMsg = {
+    pending:    '您的訂單已確認，我們正在準備中。',
+    confirmed:  '您的訂單已確認，會在指定時間送達。',
+    delivering: '您的訂單已出發送貨，請保持電話暢通！',
+    delivered:  '您的訂單已成功送達，感謝惠顧 JP Fruit！🎉',
+  }[o.status] || '您的訂單狀態已更新。';
+
+  const orderNum = o.id ? '#'+o.id.slice(-6).toUpperCase() : '';
+  const msg = `你好 ${o.name||''}！
+
+您的 JP Fruit 訂單 ${orderNum}
+${statusMsg}
+
+如有疑問，請直接回覆此訊息。
+謝謝！JP Fruit 🛒`;
+
+  const phone = o.phone.replace(/\s/g,'').replace(/^\+/,'').replace(/^0/,'44');
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function advanceOrder(id, newStatus) {
@@ -1650,6 +2038,32 @@ function cancelOrder(id) {
 }
 
 
+
+
+
+// ── PERFORMANCE: Debounce search inputs ──
+function debounce(fn, delay=250) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
+const debouncedSearch = debounce(() => {
+  const q = document.getElementById('search-input')?.value || '';
+  filterAndRenderProducts(q);
+}, 200);
+
+// ── SECURITY: escapeHTML prevents XSS injection ──
+function escapeHTML(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // ── CATEGORIES ───────────────────────────────────────────────
 function renderCategories() {
@@ -1963,20 +2377,52 @@ function getFilteredOrders() {
 }
 
 function runReports() {
-  // Always use Firebase orders if available
   if (window._firebaseOrders && window._firebaseOrders.length > 0) {
     state.orders = window._firebaseOrders;
   }
   const orders = getFilteredOrders();
-  const totalRev = orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
-  const avgOrder = orders.length ? totalRev/orders.length : 0;
+  const totalRev    = orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const avgOrder    = orders.length ? totalRev/orders.length : 0;
   const uniqueCustomers = new Set(orders.map(o=>(o.phone||o.name||'').trim().toLowerCase()).filter(Boolean)).size;
 
-  document.getElementById('r-total-orders').textContent = orders.length;
-  document.getElementById('r-total-revenue').textContent = '£'+totalRev.toFixed(2);
-  document.getElementById('r-avg-order').textContent = '£'+avgOrder.toFixed(2);
-  document.getElementById('r-unique-customers').textContent = uniqueCustomers;
+  // Revenue breakdown
+  const paidOrders    = orders.filter(o=>o.paymentStatus==='paid');
+  const unpaidOrders  = orders.filter(o=>!o.paymentStatus||o.paymentStatus==='unpaid');
+  const paidRev       = paidOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const unpaidRev     = unpaidOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const cashOrders    = orders.filter(o=>o.payment==='cash');
+  const transferOrders= orders.filter(o=>o.payment!=='cash');
 
+  document.getElementById('r-total-orders').textContent    = orders.length;
+  document.getElementById('r-total-revenue').textContent   = '£'+totalRev.toFixed(2);
+  document.getElementById('r-avg-order').textContent       = '£'+avgOrder.toFixed(2);
+  document.getElementById('r-unique-customers').textContent= uniqueCustomers;
+
+  // Update breakdown stats
+  const breakEl = document.getElementById('r-breakdown');
+  if (breakEl) {
+    breakEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;">✓ 已收錢</div>
+          <div style="font-size:1rem;font-weight:700;color:#16a34a;">£${paidRev.toFixed(2)}</div>
+          <div style="font-size:0.7rem;color:var(--muted);">${paidOrders.length} 單</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;">⏳ 未收錢</div>
+          <div style="font-size:1rem;font-weight:700;color:#d97706;">£${unpaidRev.toFixed(2)}</div>
+          <div style="font-size:0.7rem;color:var(--muted);">${unpaidOrders.length} 單</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;">現金 / 過數</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">
+            £${cashOrders.reduce((s,o)=>s+parseFloat(o.total||0),0).toFixed(2)} /
+            £${transferOrders.reduce((s,o)=>s+parseFloat(o.total||0),0).toFixed(2)}
+          </div>
+          <div style="font-size:0.7rem;color:var(--muted);">${cashOrders.length} / ${transferOrders.length} 單</div>
+        </div>
+      </div>`;
+  }
   renderRTab(currentRTab, orders);
 }
 
@@ -2360,6 +2806,79 @@ function exportWeeklyCSV() {
 function uid3() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 
 // ─ RENDER SETS PAGE ─
+
+function createTemplateSet(type) {
+  // Open set modal with pre-filled template
+  openSetModal();
+
+  if (type === 'homey') {
+    // 家餸套餐: 2 dishes + 1 soup
+    document.getElementById('s-name-zh').value = '家餸套餐';
+    document.getElementById('s-name-en').value = 'Homey Dish Set';
+    document.getElementById('s-price').value = '0';
+
+    // Set category to hk-homemeal
+    const catSel = document.getElementById('s-cat');
+    if (catSel) {
+      for (let opt of catSel.options) {
+        if (opt.value === 'hk-homemeal' || opt.value === 'hk-homecook') {
+          catSel.value = opt.value;
+          break;
+        }
+      }
+    }
+
+    // Create 2 groups: 家餸 (min:2, max:2) + 湯 (min:1, max:1)
+    editingGroups = [
+      { nameZh:'家餸 Dishes', nameEn:'Dishes', min:2, max:2, allowRepeat:false, items:[] },
+      { nameZh:'湯 Soup',     nameEn:'Soup',    min:1, max:1, allowRepeat:false, items:[] },
+    ];
+    renderGroups();
+
+    // Auto-filter: dishes → hk-homemeal, soup → same
+    setTimeout(() => {
+      const catEl0 = document.getElementById('g-cat-0');
+      if (catEl0) {
+        catEl0.value = 'hk-homemeal';
+        filterGroupProducts(0);
+      }
+      const catEl1 = document.getElementById('g-cat-1');
+      if (catEl1) {
+        catEl1.value = 'hk-homemeal';
+        filterGroupProducts(1);
+      }
+    }, 100);
+
+    showToast('家餸套餐模板已載入！請選擇可揀選嘅家餸同湯', 3000);
+
+  } else if (type === 'bread') {
+    // 麵包套餐: choose any 6 breads
+    document.getElementById('s-name-zh').value = 'Knead N Nap 任選麵包套餐';
+    document.getElementById('s-name-en').value = 'Bread Selection Set';
+    document.getElementById('s-price').value = '0';
+
+    // Set category to bread
+    const catSel = document.getElementById('s-cat');
+    if (catSel) catSel.value = 'bread';
+
+    // 1 group: any 6 breads
+    editingGroups = [
+      { nameZh:'麵包 Bread', nameEn:'Bread', min:1, max:6, allowRepeat:true, items:[] },
+    ];
+    renderGroups();
+
+    setTimeout(() => {
+      const catEl = document.getElementById('g-cat-0');
+      if (catEl) {
+        catEl.value = 'bread';
+        filterGroupProducts(0);
+      }
+    }, 100);
+
+    showToast('麵包套餐模板已載入！選擇可揀選嘅麵包款式', 3000);
+  }
+}
+
 function renderSetsPage() {
   const el = document.getElementById('sets-list');
   if (!state.sets.length) {
@@ -2424,43 +2943,61 @@ function editSet(id) { openSetModal(id); }
 // ─ GROUPS UI ─
 function renderGroups() {
   const el = document.getElementById('s-groups');
-  el.innerHTML = editingGroups.map((g,gi) => `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+  if (!editingGroups.length) {
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.82rem;">
+      尚未有分組。撳「+ 加分組」或選擇上方模板開始。
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = editingGroups.map((g, gi) => `
+    <div class="group-card" id="group-card-${gi}">
+      <!-- Group header row -->
+      <div class="group-card-header">
+        <div style="background:var(--plum);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">${gi+1}</div>
         <input type="text" value="${g.nameZh}" onchange="updateGroup(${gi},'nameZh',this.value)"
-          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;width:120px;" placeholder="分組名（中）">
+          placeholder="分組名（中）" style="width:130px;">
         <input type="text" value="${g.nameEn}" onchange="updateGroup(${gi},'nameEn',this.value)"
-          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:0.82rem;width:120px;" placeholder="Group name (EN)">
-        <label style="font-size:0.78rem;color:var(--muted);margin:0;">最少</label>
-        <input type="number" value="${g.min}" min="1" onchange="updateGroup(${gi},'min',+this.value)"
-          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:0.82rem;width:56px;text-align:center;">
-        <label style="font-size:0.78rem;color:var(--muted);margin:0;">最多</label>
-        <input type="number" value="${g.max}" min="1" onchange="updateGroup(${gi},'max',+this.value)"
-          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:0.82rem;width:56px;text-align:center;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:0.78rem;color:var(--muted);margin:0;cursor:pointer;">
+          placeholder="Group name (EN)" style="width:130px;">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <label style="font-size:0.75rem;color:var(--muted);">至少選</label>
+          <input type="number" value="${g.min}" min="0" max="99" onchange="updateGroup(${gi},'min',+this.value)" style="width:52px;">
+          <label style="font-size:0.75rem;color:var(--muted);">至多選</label>
+          <input type="number" value="${g.max}" min="1" max="99" onchange="updateGroup(${gi},'max',+this.value)" style="width:52px;">
+        </div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--muted);cursor:pointer;white-space:nowrap;">
           <input type="checkbox" ${g.allowRepeat?'checked':''} onchange="updateGroup(${gi},'allowRepeat',this.checked)"> 可重複選
         </label>
-        ${editingGroups.length>1?`<button class="btn btn-danger btn-sm" onclick="removeGroup(${gi})" style="margin-left:auto;">✕ 刪分組</button>`:''}
+        ${editingGroups.length>1?`<button class="btn btn-danger btn-sm" onclick="removeGroup(${gi})" style="margin-left:auto;">✕ 刪除</button>`:''}
       </div>
 
-      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">選擇可選產品（從現有產品揀）：</div>
+      <!-- Selected count badge -->
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">
+        已選產品：<span style="color:${(g.items||[]).length>0?'var(--green)':'var(--muted)'};font-weight:600;">${(g.items||[]).length} 款</span>
+        ${(g.items||[]).length>0?`<span style="color:var(--muted);"> ·  ${(g.items||[]).slice(0,3).map(i=>{const p=state.products.find(x=>x.id===i.id);return p?(p.nameZh||p.zh||p.name):'?';}).join('、')}${(g.items||[]).length>3?'...':''}</span>`:''}
+      </div>
 
+      <!-- Filter row -->
       <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
-        <select id="g-cat-${gi}" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--font);font-size:0.78rem;" onchange="filterGroupProducts(${gi})">
+        <select id="g-cat-${gi}" onchange="filterGroupProducts(${gi})"
+          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--font);font-size:0.78rem;flex:0 0 auto;">
           <option value="">所有分類</option>
-          ${state.categories.map(c=>`<option value="${c.id}">${c.zh}</option>`).join('')}
+          ${state.categories.map(cat=>`<option value="${cat.id}">${cat.zh}</option>`).join('')}
         </select>
-        <input type="text" id="g-search-${gi}" placeholder="搜尋產品..."
-          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:0.78rem;flex:1;"
-          oninput="filterGroupProducts(${gi})">
+        <input type="text" id="g-search-${gi}" placeholder="搜尋產品名..."
+          oninput="filterGroupProducts(${gi})"
+          style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:0.78rem;flex:1;min-width:120px;">
+        <button class="btn btn-ghost btn-sm" onclick="clearGroupItems(${gi})" title="清除所有選擇" style="flex-shrink:0;">清除</button>
       </div>
 
-      <div id="g-products-${gi}" style="max-height:160px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:4px;"></div>
+      <!-- Products grid -->
+      <div class="group-products-grid" id="g-products-${gi}"></div>
     </div>
   `).join('');
 
   editingGroups.forEach((_,gi) => filterGroupProducts(gi));
 }
+
 
 function filterGroupProducts(gi) {
   const g = editingGroups[gi];
@@ -2495,6 +3032,41 @@ function toggleGroupItem(gi, pid, checked) {
 
 function updateGroup(gi, key, val) {
   editingGroups[gi][key] = val;
+}
+
+
+function applyGroupTemplate(type) {
+  const templates = {
+    'single': [
+      {nameZh:'選擇', nameEn:'Choose', min:1, max:1, allowRepeat:false, items:[]}
+    ],
+    'multi': [
+      {nameZh:'選擇', nameEn:'Choose', min:1, max:3, allowRepeat:false, items:[]}
+    ],
+    'meal2soup1': [
+      {nameZh:'家餸 Dishes', nameEn:'Dishes', min:2, max:2, allowRepeat:false, items:[]},
+      {nameZh:'湯 Soup',     nameEn:'Soup',   min:1, max:1, allowRepeat:false, items:[]}
+    ],
+    'bread6': [
+      {nameZh:'麵包 Bread', nameEn:'Bread', min:1, max:6, allowRepeat:true, items:[]}
+    ],
+    'maindish': [
+      {nameZh:'主菜 Main',    nameEn:'Main Dish',  min:1, max:1, allowRepeat:false, items:[]},
+      {nameZh:'配菜 Side',    nameEn:'Side Dish',  min:1, max:2, allowRepeat:false, items:[]},
+      {nameZh:'湯 Soup',      nameEn:'Soup',       min:1, max:1, allowRepeat:false, items:[]},
+      {nameZh:'飲品 Drink',   nameEn:'Drink',      min:0, max:1, allowRepeat:false, items:[]}
+    ],
+  };
+  if (!templates[type]) return;
+  editingGroups = templates[type].map(g=>({...g, items:[...g.items]}));
+  renderGroups();
+  showToast(`已套用模板：${editingGroups.map(g=>g.nameZh).join(' + ')}`, 2500);
+}
+
+function clearGroupItems(gi) {
+  if (!confirm('確定清除此分組嘅所有已選產品？')) return;
+  editingGroups[gi].items = [];
+  renderGroups();
 }
 
 function addGroup() {
@@ -2653,6 +3225,95 @@ function previewProductImg(url) {
   } else {
     prevDiv.style.display = 'none';
   }
+}
+
+
+// ══════════════════════════════════════════════════════
+// PROMO CODES
+// ══════════════════════════════════════════════════════
+function renderPromosPage() {
+  const el = document.getElementById('promos-list');
+  if (!el) return;
+  const promos = state.promos || [];
+
+  if (!promos.length) {
+    el.innerHTML = '<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px;">🎫</div><div>仲未有優惠碼</div><div style="font-size:0.8rem;margin-top:6px;color:var(--muted);">撳右上角「+ 新增優惠碼」開始</div></div>';
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  el.innerHTML = `<table class="data-table">
+    <thead><tr>
+      <th>優惠碼</th><th>類型</th><th>折扣</th><th>最低消費</th><th>使用次數</th><th>有效期</th><th>狀態</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${promos.map(p=>{
+        const expired = p.endDate && p.endDate < today;
+        const used = p.maxUses > 0 && (p.usedCount||0) >= p.maxUses;
+        const active = !expired && !used;
+        const discountLabel = p.type==='percent' ? `${p.value}% OFF` : p.type==='fixed' ? `減 £${p.value}` : '免運費';
+        return `<tr>
+          <td><strong style="font-family:var(--mono);color:${active?'var(--green)':'var(--muted)'};">${escapeHTML(p.code)}</strong></td>
+          <td style="font-size:0.78rem;">${p.type==='percent'?'百分比':p.type==='fixed'?'固定減免':'免運費'}</td>
+          <td style="color:var(--gold);font-weight:600;">${discountLabel}</td>
+          <td>£${p.minOrder||0}</td>
+          <td>${p.usedCount||0}${p.maxUses>0?' / '+p.maxUses:' / ∞'}</td>
+          <td style="font-size:0.75rem;">${p.startDate||'—'} ~ ${p.endDate||'—'}</td>
+          <td><span style="background:${active?'var(--green)':'var(--muted)'};color:white;border-radius:4px;padding:2px 8px;font-size:0.72rem;">${active?'有效':expired?'過期':'用盡'}</span></td>
+          <td><button class="btn btn-ghost btn-sm" onclick="openPromoModal('${p.id}')">編輯</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openPromoModal(id=null) {
+  state.editingPromoId = id;
+  const p = id ? (state.promos||[]).find(x=>x.id===id) : null;
+  document.getElementById('promo-modal-title').textContent = p ? '編輯優惠碼' : '新增優惠碼';
+  document.getElementById('promo-delete-btn').style.display = p ? 'block' : 'none';
+  document.getElementById('promo-code').value  = p?.code||'';
+  document.getElementById('promo-type').value  = p?.type||'percent';
+  document.getElementById('promo-value').value = p?.value||'';
+  document.getElementById('promo-min').value   = p?.minOrder||0;
+  document.getElementById('promo-max-uses').value = p?.maxUses||0;
+  document.getElementById('promo-start').value = p?.startDate||'';
+  document.getElementById('promo-end').value   = p?.endDate||'';
+  document.getElementById('promo-desc').value  = p?.desc||'';
+  document.getElementById('promo-modal').classList.add('open');
+}
+
+function savePromo() {
+  const code = document.getElementById('promo-code').value.trim().toUpperCase();
+  if (!code) { alert('請輸入優惠碼！'); return; }
+  const promo = {
+    id:        state.editingPromoId || 'promo-'+Date.now(),
+    code,
+    type:      document.getElementById('promo-type').value,
+    value:     parseFloat(document.getElementById('promo-value').value)||0,
+    minOrder:  parseFloat(document.getElementById('promo-min').value)||0,
+    maxUses:   parseInt(document.getElementById('promo-max-uses').value)||0,
+    startDate: document.getElementById('promo-start').value||'',
+    endDate:   document.getElementById('promo-end').value||'',
+    desc:      document.getElementById('promo-desc').value.trim(),
+    usedCount: state.editingPromoId ? ((state.promos||[]).find(x=>x.id===state.editingPromoId)?.usedCount||0) : 0,
+    active:    true,
+  };
+  if (!state.promos) state.promos = [];
+  const idx = state.promos.findIndex(x=>x.id===promo.id);
+  if (idx>=0) state.promos[idx]=promo; else state.promos.push(promo);
+  saveData();
+  renderPromosPage();
+  closeModal('promo-modal');
+  showToast(`優惠碼 ${promo.code} 已儲存！`);
+}
+
+function deletePromo() {
+  if (!confirm('確定刪除此優惠碼？')) return;
+  state.promos = (state.promos||[]).filter(x=>x.id!==state.editingPromoId);
+  saveData();
+  renderPromosPage();
+  closeModal('promo-modal');
 }
 
 // ── SITE SETTINGS ─────────────────────────────────────────────
