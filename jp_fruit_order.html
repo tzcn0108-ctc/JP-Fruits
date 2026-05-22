@@ -91,7 +91,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 
 /* ── MAIN LAYOUT ── */
 .layout{display:grid;grid-template-columns:1fr 360px;max-width:1100px;margin:0 auto;padding:28px 20px 80px;gap:28px;}
-@media(max-width:860px){.layout{grid-template-columns:1fr;padding:10px 12px 80px;}.cart-sidebar{display:none !important;}}
+@media(max-width:860px){.layout{grid-template-columns:1fr;.cart-sidebar{display:none !important;}.cart-sidebar{display:none !important;}padding:10px 12px 80px;}/* cart-sidebar desktop: shown via layout grid */}
 
 /* ── SEARCH BAR ── */
 .search-wrap{position:relative;margin-bottom:20px;}
@@ -207,7 +207,18 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .set-preview.show{display:block;}
 
 /* ── CART SIDEBAR ── */
-.cart-sidebar{position:sticky;top:70px;align-self:start;}
+.cart-sidebar{
+  position:sticky;
+  top:16px;
+  align-self:start;
+  max-height:calc(100vh - 32px);
+  overflow-y:auto;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-md);
+  background:var(--white);
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
 .cart-box{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-md);}
 .cart-head{padding:16px 20px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--plum-l) 0%,var(--peach-l) 100%);}
 .cart-head-title{font-weight:700;font-size:0.9rem;color:var(--plum);}
@@ -850,6 +861,33 @@ body { background: var(--cream, #FFFDF9); }
   .cf-label{font-size:0.85rem !important;}
 }
 
+
+/* ── SCROLL TO TOP BTN ── */
+.scroll-top-btn{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:var(--plum);
+  color:white;
+  border:none;
+  cursor:pointer;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 16px rgba(107,76,138,0.4);
+  z-index:150;
+  transition:all 0.2s ease;
+}
+.scroll-top-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(107,76,138,0.5);
+}
+.scroll-top-btn.visible{display:flex;}
+@media(max-width:860px){.scroll-top-btn{display:none !important;}}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -905,6 +943,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, {passive: true});
   }
 });
+
+// Show scroll-to-top button after scrolling 400px
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scroll-top-btn');
+  if(btn) btn.classList.toggle('visible', window.scrollY > 400);
+}, {passive: true});
+
 </script>
 </head>
 <body>
@@ -914,7 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <nav>
   <div class="logo" href="#">
-    <img src="Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit">
+    <img src="Logo_new.png" onerror="this.style.display='none'" alt="JP Fruit" loading="eager">
     <div>
       <div class="logo-text">JP Fruit</div>
       <span class="logo-sub" id="logo-sub">亞洲美食 · South London</span>
@@ -1393,7 +1438,7 @@ function applyBanner(b) {
   if(h1El) h1El.innerHTML=title?`<em>${title}</em>`:'<em>JP Fruit</em>';
   if(subEl) subEl.textContent=sub||'';
   if(imgEl){
-    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||''}</span>'">`;
+    if(b.image) imgEl.innerHTML=`<img src="${b.image}" style="height:90px;border-radius:10px;object-fit:cover;" loading="lazy" onerror="this.outerHTML='<span style=\\'font-size:3.5rem\\'>${b.emoji||''}</span>'">`;
     else imgEl.innerHTML=`<span style="font-size:3.5rem;">${b.emoji||''}</span>`;
   }
   if(btnEl&&btn) btnEl.innerHTML=`<button onclick="document.querySelector('.products-area').scrollIntoView({behavior:'smooth'})" style="background:#B8892A;color:white;border:none;padding:8px 22px;border-radius:22px;font-size:0.85rem;font-family:'Noto Sans HK',sans-serif;cursor:pointer;font-weight:500;">${btn}</button>`;
@@ -1623,8 +1668,10 @@ function pCard(p){
   const pNameEn=(lang==='zh'&&(p.nameEn||p.name)!==pName)?`<div class="pc-en">${p.nameEn||p.name}</div>`:'';
 
   // Image: use pc-img-wrap for consistent 1:1 aspect ratio
+  // onerror fallback: if supplier blocks hotlinking, show SVG icon instead
+  const fallbackSvg = EMOJI[p.cat] || '';
   const imgSection=img
-    ?`<div class="pc-img-wrap"><img src="${p.image}" alt="${pName}" loading="lazy"></div>`
+    ?`<div class="pc-img-wrap"><img src="${p.image}" alt="${pName}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.innerHTML='<div class=\"pc-emoji\">${fallbackSvg.replace(/"/g,'\\"')}</div>';this.onerror=null;"></div>`
     :`<div class="pc-img-wrap"><div class="pc-emoji">${EMOJI[p.cat]||''}</div></div>`;
 
   return`<div class="product-card" onclick="if(!event.target.closest('button')){}">
@@ -1996,6 +2043,11 @@ document.addEventListener('firebaseReady', async ()=>{
 });setInterval(updateCountdown,60000);loadProducts();
 </script>
 
+
+<!-- SCROLL TO TOP (desktop only) -->
+<button class="scroll-top-btn" id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
 <!-- MOBILE STICKY BOTTOM CART -->
 <div class="mobile-sticky-cart" id="mobile-sticky-cart" style="display:none;">
   <div class="msc-left">
