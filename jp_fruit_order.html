@@ -396,6 +396,264 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .msc-left{color:var(--ink-2);}
 .msc-btn{background:var(--plum);color:white;border:none;border-radius:8px;padding:9px 20px;font-family:inherit;font-size:0.82rem;font-weight:600;cursor:pointer;}
 @media(min-width:861px){.mobile-sticky-cart{display:none !important;}}
+
+/* ══════════════════════════════════════════════════════
+   JP FRUIT DESIGN ENHANCEMENT v2
+   Based on UX research & brand guidelines
+   ═══════════════════════════════════════════════════ */
+
+/* ── 1. VISUAL CONSISTENCY: Uniform product card ── */
+.product-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  /* Micro-interaction: smooth lift on hover */
+  transition: transform 0.22s cubic-bezier(.34,.84,.64,1),
+              box-shadow 0.22s cubic-bezier(.34,.84,.64,1),
+              border-color 0.22s ease;
+}
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(107,76,138,0.16);
+  border-color: var(--plum-m, #9B7AB8);
+}
+.product-card:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(107,76,138,0.12);
+}
+
+/* ── 1b. IMAGE CONSISTENCY: Fixed aspect ratio 1:1 ── */
+.pc-img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--cream, #FFFDF9);
+  flex-shrink: 0;
+}
+.pc-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.product-card:hover .pc-img-wrap img {
+  transform: scale(1.04);
+}
+/* SVG fallback icon centered in square */
+.pc-img-wrap .pc-emoji {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--plum-l,#EDE6F5) 0%, var(--cream,#FFFDF9) 100%);
+}
+.pc-img-wrap .pc-emoji svg {
+  width: 38%;
+  height: 38%;
+  opacity: 0.55;
+}
+
+/* ── 2. WHITESPACE: Breathing room in cards ── */
+.pc-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+}
+.pc-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-2, #3D2B1F); /* warm dark brown, not pure black */
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.3em;
+}
+.pc-en {
+  font-size: 0.7rem;
+  color: var(--muted, #9A8880);
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+}
+.pc-price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--plum, #6B4C8A);
+  font-family: 'Noto Sans HK', sans-serif;
+}
+.pc-price-orig {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-decoration: line-through;
+  margin-left: 3px;
+}
+
+/* ── 3. COLOR PSYCHOLOGY: 70/20/10 rule enforcement ── */
+/* 70% cream/white background, 20% plum brand, 10% accent */
+body { background: var(--cream, #FFFDF9); }
+.layout { background: transparent; }
+.products-area { background: transparent; }
+
+/* Sale badge - berry red for urgency */
+.p-badge-sale {
+  background: var(--berry, #C0392B) !important;
+  color: white !important;
+  font-size: 0.6rem !important;
+  font-weight: 700 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  letter-spacing: 0.3px;
+}
+/* New badge - plum for prestige */
+.p-badge-new {
+  background: var(--plum, #6B4C8A) !important;
+  color: white !important;
+}
+/* OOS badge - muted */
+.p-badge-oos {
+  background: var(--muted, #9A8880) !important;
+  color: white !important;
+}
+
+/* ── 4. TYPOGRAPHY HIERARCHY ── */
+/* Hero H1: Cormorant Garamond (already set) */
+/* Prices: heavier weight for scannability */
+.summary-total span:last-child {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--plum);
+}
+/* Section titles: elegant contrast */
+.section-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--ink, #1C0F08);
+}
+/* Category buttons: clean sans-serif */
+.cat-btn {
+  font-family: 'Noto Sans HK', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+.cat-btn.active {
+  font-weight: 700;
+}
+
+/* ── 5. MICRO-INTERACTIONS ── */
+/* Add-to-cart button: smooth color transition */
+.add-btn {
+  transition: background 0.25s ease,
+              transform 0.15s ease,
+              box-shadow 0.25s ease !important;
+}
+.add-btn:hover:not(:disabled) {
+  background: var(--plum-d, #4A3060) !important;
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(107,76,138,0.35);
+}
+.add-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* WhatsApp button: premium feel */
+.whatsapp-btn {
+  transition: background 0.25s ease,
+              transform 0.18s ease,
+              box-shadow 0.25s ease !important;
+}
+.whatsapp-btn:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(37,211,102,0.45) !important;
+}
+.whatsapp-btn:active:not(:disabled) {
+  transform: translateY(0) !important;
+}
+
+/* Category nav buttons: smooth active state */
+.cat-btn {
+  transition: background 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+.cat-btn:hover:not(.active) {
+  background: var(--plum-l, #EDE6F5);
+  border-color: var(--plum-m, #9B7AB8);
+  color: var(--plum, #6B4C8A);
+}
+
+/* Cart item rows: hover highlight */
+.cart-item-row {
+  transition: background 0.15s ease;
+  border-radius: 6px;
+  padding: 8px 4px;
+}
+.cart-item-row:hover {
+  background: var(--cream, #FFFDF9);
+}
+
+/* ── STICKY COUNTDOWN: more prominent ── */
+.countdown-bar {
+  background: linear-gradient(90deg, var(--berry,#C0392B) 0%, #a93226 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.3px;
+}
+.countdown-bar strong, .countdown-bar #countdown {
+  color: #FFD700;
+  font-weight: 800;
+}
+
+/* ── PRODUCT GRID: more breathing room ── */
+.product-grid {
+  gap: 14px !important;
+}
+
+/* ── SECTION HEADER: refined ── */
+.section-head {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+/* ── QUALITY STRIP: warmer feel ── */
+.quality-item-title {
+  color: var(--plum, #6B4C8A);
+  font-weight: 700;
+}
+
+/* ── MOBILE ENHANCEMENTS ── */
+@media(max-width: 640px) {
+  .pc-body { padding: 8px 10px 10px; }
+  .pc-name { font-size: 0.8rem; }
+  .pc-price { font-size: 0.9rem; }
+  .product-grid { gap: 10px !important; }
+}
+
+.pc-prices{display:flex;align-items:baseline;gap:4px;}.pc-price{font-size:0.95rem;font-weight:700;color:var(--plum,#6B4C8A);}.pc-price-orig{font-size:0.72rem;color:var(--muted);text-decoration:line-through;}
 </style>
 
 <!-- Firebase SDK -->
@@ -1137,16 +1395,43 @@ function renderProducts(){
 function pCard(p){
   const inCart=cart[p.id]||0, oos=p.stock===0;
   const img=p.image&&p.image.startsWith('http');
-  const badge=oos?`<div class="p-badge p-badge-oos">${tx('oos')}</div>`:p.salePrice?`<div class="p-badge p-badge-sale">${tx('sale')}</div>`:!(p.historicSold)?`<div class="p-badge p-badge-new">${tx('newLabel')}</div>`:'';
-  const price=p.salePrice?`<div><div class="p-price">£${p.salePrice.toFixed(2)}</div><div class="p-price-orig">£${p.price.toFixed(2)}</div></div>`:`<div class="p-price">£${p.price.toFixed(2)}</div>`;
-  const ctrl=oos?`<button class="add-btn" disabled>✕</button>`:inCart>0?`<div class="qty-control"><button class="qty-btn" onclick="chQty('${p.id}',-1)">−</button><div class="qty-num">${inCart}</div><button class="qty-btn" onclick="chQty('${p.id}',1)">+</button></div>`:`<button class="add-btn" onclick="addCart('${p.id}')">+</button>`;
-  const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name||p.nameZh||p.zh);
-  const pAlt=lang==='zh'?(p.nameEn?`<div class="p-unit" style="font-style:italic;">${p.nameEn}</div>`:''): (p.nameZh||p.zh?`<div class="p-unit">${p.nameZh||p.zh}</div>`:'');
-  const pDesc=lang==='zh'?(p.descZh||p.desc||''):(p.descEn||p.descZh||p.desc||'');
-  return `<div class="product-card${oos?' oos':''}" id="card-${p.id}"><div class="product-thumb">${img?`<img src="${p.image}" alt="${pName}" loading="lazy">`:EMOJI[p.cat]||''}${badge}</div><div class="product-info"><div class="p-name">${pName}</div>${pAlt}${pDesc?`<div class="p-unit" style="font-size:0.67rem;line-height:1.3;margin-bottom:3px;">${pDesc}</div>`:''} ${p.unit?`<div class="p-unit">${p.unit}</div>`:''}<div class="p-price-row">${price}${ctrl}</div></div></div>`;
+  const badge=oos
+    ?`<div class="p-badge p-badge-oos">${tx('oos')}</div>`
+    :p.salePrice
+      ?`<div class="p-badge p-badge-sale">${tx('sale')}</div>`
+      :!(p.historicSold)
+        ?`<div class="p-badge p-badge-new">${tx('newLabel')}</div>`
+        :'';
+  const price=p.salePrice
+    ?`<div class="pc-prices"><div class="pc-price">£${p.salePrice.toFixed(2)}</div><div class="pc-price-orig">£${p.price.toFixed(2)}</div></div>`
+    :`<div class="pc-prices"><div class="pc-price">£${p.price.toFixed(2)}</div></div>`;
+  const ctrl=oos
+    ?`<button class="add-btn" disabled>✕</button>`
+    :inCart>0
+      ?`<div class="qty-control"><button class="qty-btn" onclick="chQty('${p.id}',-1)">−</button><div class="qty-num" data-qty-id="${p.id}">${inCart}</div><button class="qty-btn" onclick="chQty('${p.id}',1)">+</button></div>`
+      :`<button class="add-btn" onclick="addCart('${p.id}')">+</button>`;
+  const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
+  const pNameEn=(lang==='zh'&&(p.nameEn||p.name)!==pName)?`<div class="pc-en">${p.nameEn||p.name}</div>`:'';
+
+  // Image: use pc-img-wrap for consistent 1:1 aspect ratio
+  const imgSection=img
+    ?`<div class="pc-img-wrap"><img src="${p.image}" alt="${pName}" loading="lazy"></div>`
+    :`<div class="pc-img-wrap"><div class="pc-emoji">${EMOJI[p.cat]||''}</div></div>`;
+
+  return`<div class="product-card" onclick="if(!event.target.closest('button')){}">
+    ${badge}
+    ${imgSection}
+    <div class="pc-body">
+      <div class="pc-name">${pName}</div>
+      ${pNameEn}
+      <div class="pc-footer">
+        ${price}
+        ${ctrl}
+      </div>
+    </div>
+  </div>`;
 }
 
-// ── SET MEAL ──────────────────────────────────────────────────
 function renderSetCard(s){
   const sid=s.id;
   if(!setSelections[sid]) setSelections[sid]={};
