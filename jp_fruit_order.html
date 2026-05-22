@@ -151,11 +151,11 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .p-price-sale{font-size:1rem;font-weight:700;color:var(--berry);}
 
 /* Add/Qty controls */
-.add-btn{background:var(--plum);color:white;border:none;width:30px;height:30px;border-radius:50%;font-size:1.15rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s;box-shadow:0 3px 10px rgba(107,76,138,0.35);}
+.add-btn{background:var(--plum);color:white;border:none;width:34px;height:34px;border-radius:50%;font-size:1.15rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s;box-shadow:0 3px 10px rgba(107,76,138,0.35);}
 .add-btn:hover{background:var(--plum-m);transform:scale(1.12);box-shadow:0 5px 15px rgba(107,76,138,0.45);}
 .add-btn:disabled{background:var(--border);cursor:not-allowed;color:var(--muted);box-shadow:none;transform:none;}
 .qty-control{display:flex;align-items:center;gap:4px;}
-.qty-btn{background:var(--peach-l);border:1.5px solid var(--peach-m);width:27px;height:27px;border-radius:50%;cursor:pointer;font-size:0.95rem;display:flex;align-items:center;justify-content:center;color:var(--plum);transition:all 0.15s;font-weight:600;}
+.qty-btn{background:var(--peach-l);border:1.5px solid var(--peach-m);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:0.95rem;display:flex;align-items:center;justify-content:center;color:var(--plum);transition:all 0.15s;font-weight:600;}
 .qty-btn:hover{background:var(--peach-m);}
 .qty-num{font-weight:700;font-size:0.9rem;min-width:20px;text-align:center;color:var(--plum);}
 
@@ -654,6 +654,202 @@ body { background: var(--cream, #FFFDF9); }
 }
 
 .pc-prices{display:flex;align-items:baseline;gap:4px;}.pc-price{font-size:0.95rem;font-weight:700;color:var(--plum,#6B4C8A);}.pc-price-orig{font-size:0.72rem;color:var(--muted);text-decoration:line-through;}
+@media(max-width:768px){
+  /* ── Product grid: 2 columns ── */
+  .product-grid{
+    grid-template-columns:repeat(2,1fr) !important;
+    gap:10px !important;
+    padding:4px 0 !important;
+  }
+  /* ── Product card: flex column so footer always at bottom ── */
+  .product-card{
+    padding:0 0 0 0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    height:100%;
+  }
+  /* ── Image: fixed height, full width ── */
+  .pc-img-wrap{
+    width:100% !important;
+    aspect-ratio:1/1 !important;
+    border-radius:var(--radius-md) var(--radius-md) 0 0 !important;
+    flex-shrink:0 !important;
+  }
+  .pc-img-wrap img{
+    height:100% !important;
+    width:100% !important;
+    object-fit:cover !important;
+  }
+  /* ── Card body: flex-grow so footer pushed to bottom ── */
+  .pc-body{
+    padding:8px 10px 10px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    flex:1 !important;
+  }
+  /* ── Product name: flex-grow to push price/btn down ── */
+  .pc-name{
+    font-size:0.82rem !important;
+    line-height:1.35 !important;
+    margin:0 0 4px !important;
+    flex-grow:1 !important;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .pc-en{display:none !important;}
+  /* ── Footer: always at bottom ── */
+  .pc-footer{
+    margin-top:auto !important;
+    padding-top:6px !important;
+  }
+  .pc-price{font-size:0.88rem !important;}
+  /* ── Category nav: horizontal scroll ── */
+  .cat-nav{
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+    scrollbar-width:none !important;
+    padding-bottom:4px !important;
+  }
+  .cat-nav::-webkit-scrollbar{display:none;}
+  .cat-btn{
+    white-space:nowrap !important;
+    padding:6px 14px !important;
+    font-size:0.8rem !important;
+    flex-shrink:0 !important;
+  }
+  /* ── Form inputs: font-size 16px prevents iOS zoom ── */
+  .cf-input{font-size:16px !important;}
+  .cf-row{grid-template-columns:1fr !important;}
+}
+
+/* ── STICKY CART: class-based toggle ── */
+.mobile-sticky-cart{
+  display:none !important; /* hidden on desktop always */
+}
+@media(max-width:860px){
+  .mobile-sticky-cart.show{
+    display:flex !important;
+  }
+}
+
+/* ── CAT NAV: Fade + touch improvements ── */
+.cat-nav-fade-wrap{
+  position:relative;
+}
+/* Right fade: tells user "more content →" */
+.cat-nav-fade-wrap::after{
+  content:'';
+  position:absolute;
+  top:0;
+  right:0;
+  width:40px;
+  height:100%;
+  background:linear-gradient(to right, transparent, var(--cream,#FFFDF9));
+  pointer-events:none;
+  z-index:2;
+  border-radius:0 var(--radius-md) var(--radius-md) 0;
+}
+/* Left fade: appears when scrolled right */
+.cat-nav-fade-wrap.scrolled::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  width:40px;
+  height:100%;
+  background:linear-gradient(to left, transparent, var(--cream,#FFFDF9));
+  pointer-events:none;
+  z-index:2;
+}
+/* Better touch targets for cat buttons */
+.cat-btn{
+  min-height:36px;          /* Apple guideline: 44px min; 36px acceptable */
+  padding:7px 16px !important;
+  font-size:0.78rem;
+  white-space:nowrap;
+  flex-shrink:0;
+  border-radius:20px;
+  cursor:pointer;
+}
+@media(max-width:640px){
+  .cat-btn{
+    padding:8px 14px !important;
+    font-size:0.76rem !important;
+    min-height:34px;
+  }
+  .cat-nav{
+    gap:6px !important;
+    padding:0 4px !important;
+  }
+}
+
+
+/* ── MOBILE: Bigger touch targets for qty/add buttons ── */
+@media(max-width:640px){
+  .add-btn{
+    width:36px !important;
+    height:36px !important;
+    font-size:1.2rem !important;
+    border-radius:9px !important;
+  }
+  .qty-btn{
+    width:34px !important;
+    height:34px !important;
+    font-size:1.1rem !important;
+    border-radius:8px !important;
+  }
+  .qty-num{
+    font-size:0.88rem !important;
+    min-width:22px !important;
+    font-weight:700 !important;
+  }
+  /* Cart item qty buttons */
+  .ci-qbtn{
+    width:30px !important;
+    height:30px !important;
+    font-size:1rem !important;
+    border-radius:6px !important;
+  }
+}
+
+
+/* ── FORM LABELS: clearer, higher contrast ── */
+.cf-label{
+  font-size:0.8rem !important;
+  font-weight:600 !important;
+  color:var(--ink-2,#3D2B1F) !important;
+  letter-spacing:0.2px;
+  margin-bottom:5px !important;
+  display:block;
+}
+.cf-input{
+  border:1.5px solid var(--border) !important;
+  border-radius:10px !important;
+  padding:11px 14px !important;
+  font-size:0.88rem !important;
+  color:var(--ink,#1C0F08) !important;
+  transition:border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.cf-input:focus{
+  outline:none !important;
+  border-color:var(--plum,#6B4C8A) !important;
+  box-shadow:0 0 0 3px rgba(107,76,138,0.12) !important;
+}
+.cf-input::placeholder{
+  color:var(--muted,#9A8880) !important;
+  font-size:0.82rem !important;
+}
+@media(max-width:640px){
+  .cf-input{
+    font-size:16px !important; /* prevents iOS zoom */
+    padding:12px 14px !important;
+  }
+  .cf-label{font-size:0.85rem !important;}
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -698,6 +894,17 @@ function scrollToCart() {
   const el = document.getElementById('cart-section');
   if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
 }
+
+// Cat nav: show left fade when scrolled
+document.addEventListener('DOMContentLoaded', () => {
+  const nav = document.getElementById('cat-nav');
+  const wrap = nav?.closest('.cat-nav-fade-wrap');
+  if(nav && wrap){
+    nav.addEventListener('scroll', () => {
+      wrap.classList.toggle('scrolled', nav.scrollLeft > 20);
+    }, {passive: true});
+  }
+});
 </script>
 </head>
 <body>
@@ -778,8 +985,10 @@ function scrollToCart() {
     </div>
 
     <!-- CAT NAV -->
-    <div class="cat-nav-wrap">
-      <div class="cat-nav" id="cat-nav"></div>
+    <div class="cat-nav-fade-wrap">
+      <div class="cat-nav-wrap">
+        <div class="cat-nav" id="cat-nav"></div>
+      </div>
     </div>
 
     <!-- PRODUCTS AREA -->
@@ -1562,15 +1771,15 @@ function updateCart(){
   document.getElementById('cart-count-label').textContent=n+tx('items');
   renderCart('cart-section','');
   renderCart('cart-mobile','-m');
-  // Update sticky bottom cart
+  // Update sticky bottom cart (class-based, CSS handles responsive)
   const sticky=document.getElementById('mobile-sticky-cart');
   if(sticky){
     if(n>0 && window.innerWidth<=860){
-      sticky.style.display='flex';
+      sticky.classList.add('show');
       document.getElementById('msc-count').textContent=n;
       document.getElementById('msc-total').textContent='£'+total.toFixed(2);
     } else {
-      sticky.style.display='none';
+      sticky.classList.remove('show');
     }
   }
 }
@@ -1630,7 +1839,7 @@ function renderCart(cid,sfx){
 }
 function cartForm(sfx){
   const has=getCount()>0;
-  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')">${tx('waBtn')}</button></div>`;
+  return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}" autocomplete="name"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}" autocomplete="tel"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}" autocomplete="street-address"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="postal-code" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div><button class="whatsapp-btn" onclick="sendWA('${sfx}')">${tx('waBtn')}</button></div>`;
 }
 function sendWA(sfx){
   // ── Anti-duplicate: disable button immediately ──
