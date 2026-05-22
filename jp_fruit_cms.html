@@ -184,6 +184,17 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 }
 @media(max-width:600px){.group-products-grid{grid-template-columns:repeat(2,1fr);}}
 
+
+/* ── KANBAN DRAG & DROP ── */
+.order-card[draggable]{cursor:grab;}
+.order-card[draggable]:active{cursor:grabbing;}
+.order-card.dragging{opacity:0.4;transform:scale(0.98);}
+.kanban-col.drag-over{
+  background:rgba(107,76,138,0.08);
+  border-radius:8px;
+  outline:2px dashed var(--plum-m,#9B7AB8);
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -290,6 +301,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
       <div class="nav-section">訂單</div>
       <div class="nav-item" onclick="showPage('orders')" id="nav-orders" style="position:relative;"><span class="icon">📋</span>訂單管理<span id="orders-badge" style="display:none;position:absolute;top:6px;right:8px;background:#C0392B;color:white;border-radius:50%;width:18px;height:18px;font-size:0.65rem;align-items:center;justify-content:center;font-weight:700;">0</span></div>
       <div class="nav-item" onclick="showPage('reports')" id="nav-reports"><span class="icon">📊</span>報告 Reports</div>
+      <div class="nav-item" onclick="showPage('vip')" id="nav-vip"><span class="icon">⭐</span>VIP 客人</div>
       <div class="nav-item" onclick="showPage('promos')" id="nav-promos"><span class="icon">🎫</span>推廣優惠碼</div>
       <div class="nav-section">設定</div>
       <div class="nav-item" onclick="showPage('featured')" id="nav-featured"><span class="icon">🏆</span>熱賣專區管理</div>
@@ -387,6 +399,7 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
         <div class="page-title">報告 Reports</div>
         <div class="header-actions">
           <button class="btn btn-gold" onclick="exportWeeklyCSV()">⬇ 匯出 CSV</button>
+          <button class="btn btn-ghost" onclick="exportXeroCSV()" title="匯出 Xero/QuickBooks 格式">⬇ Xero CSV</button>
         </div>
       </div>
       <div class="content">
@@ -700,6 +713,85 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 </div>
 </div>
 
+
+    <!-- VIP CUSTOMERS -->
+    <div id="page-vip" style="display:none;">
+      <div class="header">
+        <div class="page-title">VIP 客人 ⭐</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openVIPModal()">+ 新增 VIP</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="notice" style="margin-bottom:16px;">VIP 客人可以獲得專屬優惠碼同 Magic Link，一鍵預填個人資料落單。</div>
+        <div id="vip-list"></div>
+      </div>
+    </div>
+
+    <!-- VIP MODAL -->
+    <div class="modal-overlay" id="vip-modal">
+      <div class="modal" style="width:480px;">
+        <div class="modal-header">
+          <div class="modal-title" id="vip-modal-title">新增 VIP 客人</div>
+          <button class="close-btn" onclick="closeModal('vip-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>客人姓名</label>
+              <input type="text" id="vip-name" placeholder="姓名" style="width:100%">
+            </div>
+            <div class="form-group">
+              <label>VIP ID</label>
+              <input type="text" id="vip-uid" placeholder="自動生成" style="width:100%" readonly
+                style="background:var(--surface3);">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>電話</label>
+              <input type="tel" id="vip-phone" placeholder="+447..." style="width:100%">
+            </div>
+            <div class="form-group">
+              <label>郵編</label>
+              <input type="text" id="vip-postcode" placeholder="SM1 3RN" style="width:100%"
+                oninput="this.value=this.value.toUpperCase()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>地址</label>
+            <input type="text" id="vip-address" placeholder="門牌號 街道名" style="width:100%">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>專屬優惠碼（可選）</label>
+              <input type="text" id="vip-promo" placeholder="例：VIP0001" style="width:100%"
+                oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <div class="form-group">
+              <label>折扣 %</label>
+              <input type="number" id="vip-discount" placeholder="10" min="0" max="100" style="width:100%">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>備註</label>
+            <input type="text" id="vip-notes" placeholder="例：老客人，每週五必買" style="width:100%">
+          </div>
+          <!-- Magic Link preview -->
+          <div id="vip-link-preview" style="display:none;margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;word-break:break-all;">
+            <div style="font-size:0.7rem;color:var(--muted);margin-bottom:4px;">Magic Link 預覽</div>
+            <div id="vip-link-text" style="font-size:0.75rem;color:var(--green);"></div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="copyVIPLink()">複製連結</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="vip-delete-btn" style="display:none;" onclick="deleteVIP()">刪除</button>
+          <div style="flex:1;"></div>
+          <button class="btn btn-ghost" onclick="closeModal('vip-modal')">取消</button>
+          <button class="btn btn-primary" onclick="saveVIP()">儲存</button>
+        </div>
+      </div>
+    </div>
 
     <!-- PROMOS -->
     <div id="page-promos" style="display:none;">
@@ -1386,7 +1478,7 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(page) {
-  ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings'].forEach(p => {
+  ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings','promos','vip'].forEach(p => {
     document.getElementById('page-'+p).style.display = p===page?'block':'none';
     const el = document.getElementById('nav-'+p);
     if(el) el.classList.toggle('active', p===page);
@@ -1403,6 +1495,7 @@ function showPage(page) {
   }
   if(page==='sets') renderSetsPage();
   if(page==='promos') renderPromosPage();
+  if(page==='vip') renderVIPPage();
   if(page==='reports') initReports();
   if(page==='featured') renderFeaturedPage();
   if(page==='banner') renderBannerPage();
@@ -1685,6 +1778,13 @@ function deleteProduct() {
 
 // ── ORDERS ───────────────────────────────────────────────────
 function renderOrders() {
+  // Sync Firebase orders first
+  const allOrders = window._firebaseOrders || state.orders;
+  if (window._firebaseOrders) state.orders = window._firebaseOrders;
+  renderFilteredOrders(allOrders);
+}
+
+function _renderOrdersKanban() {
   const cols = [
     {status:'new',       label:'新訂單',  color:'var(--berry)'},
     {status:'pending',   label:'待確認',  color:'var(--gold)'},
@@ -1699,7 +1799,7 @@ function renderOrders() {
       <div class="kanban-header"><span style="color:${col.color}">${col.label}</span><span class="kanban-count">${orders.length}</span></div>
       <div class="kanban-items">
         ${orders.length===0?'<div style="text-align:center;color:var(--muted);font-size:0.78rem;padding:20px;">沒有訂單</div>':''}
-        ${orders.map(o=>`<div class="order-card" onclick="viewOrder('${o.id}')" style="cursor:pointer;">
+        ${orders.map(o=>`<div class="order-card" onclick="viewOrder('${o.id}')" style="cursor:grab;" draggable="true" ondragstart="onCardDragStart(event,'${o.id}')" ondragend="onCardDragEnd(event)">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div class="order-id">#${o.id.slice(-6).toUpperCase()}</div>
             <div style="font-size:0.68rem;color:var(--muted);">${o.createdAt?new Date(o.createdAt).toLocaleString('zh-HK',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>
@@ -1748,11 +1848,21 @@ function viewOrder(id) {
 
   // Build items list
   const itemsHtml = Array.isArray(o.items)
-    ? o.items.map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e4dc;">
-        <span style="font-size:0.85rem;color:#1C0F08;">${i.name} × ${i.qty||1}</span>
-        <span style="font-size:0.85rem;font-weight:600;color:#1C0F08;">£${((i.price||0)*(i.qty||1)).toFixed(2)}</span>
+    ? o.items.map((item, idx) => `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4dc;">
+        <span style="flex:1;font-size:0.85rem;color:#1C0F08;">${escapeHTML(item.name||'—')}</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <button onclick="editOrderItemQty('${o.id}',${idx},-1)"
+            style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">−</button>
+          <span style="font-size:0.85rem;font-weight:600;min-width:20px;text-align:center;">${item.qty||1}</span>
+          <button onclick="editOrderItemQty('${o.id}',${idx},1)"
+            style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">+</button>
+        </div>
+        <span style="font-size:0.85rem;font-weight:600;color:#1C0F08;min-width:52px;text-align:right;">£${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
+        <button onclick="removeOrderItem('${o.id}',${idx})"
+          style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:0.85rem;padding:2px 4px;">✕</button>
       </div>`).join('')
-    : `<div style="font-size:0.85rem;color:var(--muted);">${o.items||'—'}</div>`;
+    : `<div style="font-size:0.85rem;color:var(--muted);">${escapeHTML(o.items||'—')}</div>`;
 
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -1784,13 +1894,40 @@ function viewOrder(id) {
         <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:1.05rem;font-weight:700;color:var(--plum,#6B4C8A);border-top:2px solid #f0e4dc;margin-top:4px;">
           <span>合計</span><span>£${parseFloat(o.total||0).toFixed(2)}</span>
         </div>
-        <!-- Payment status control -->
+        <!-- Delivery assignment -->
         <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:8px;">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;font-weight:600;">送貨安排 Delivery</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div>
+              <div style="font-size:0.7rem;color:var(--muted);margin-bottom:4px;">送貨員</div>
+              <input type="text" value="${escapeHTML(o.driver||'')}"
+                onchange="updateOrderField('${o.id}','driver',this.value)"
+                placeholder="例：TC / Edmond"
+                style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:0.8rem;font-family:var(--font);">
+            </div>
+            <div>
+              <div style="font-size:0.7rem;color:var(--muted);margin-bottom:4px;">送貨日期</div>
+              <input type="date" value="${o.deliveryDate||''}"
+                onchange="updateOrderField('${o.id}','deliveryDate',this.value)"
+                style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:0.8rem;">
+            </div>
+            <div>
+              <div style="font-size:0.7rem;color:var(--muted);margin-bottom:4px;">送貨時間</div>
+              <input type="text" value="${escapeHTML(o.deliveryTime||'')}"
+                onchange="updateOrderField('${o.id}','deliveryTime',this.value)"
+                placeholder="例：6-7pm"
+                style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:0.8rem;font-family:var(--font);">
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment status control -->
+        <div style="margin-top:10px;padding:12px;background:var(--surface2);border-radius:8px;">
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;">付款狀態 Payment</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             ${['unpaid','paid','refunded'].map(ps=>`
-              <button onclick="updatePaymentStatus('${o.id}','${ps}');this.closest('.payment-ctrl').querySelectorAll('button').forEach(b=>b.style.fontWeight='400');this.style.fontWeight='700';"
-                class="btn btn-sm ${o.paymentStatus===ps?'btn-primary':'btn-ghost'} payment-ctrl-btn">
+              <button onclick="updatePaymentStatus('${o.id}','${ps}')"
+                class="btn btn-sm ${o.paymentStatus===ps?'btn-primary':'btn-ghost'}">
                 ${ps==='paid'?'✓ 已收錢':ps==='refunded'?'退款':'未收錢'}
               </button>`).join('')}
           </div>
@@ -1822,54 +1959,9 @@ function viewOrder(id) {
 
 
 // ── PAYMENT STATUS ──
-function updatePaymentStatus(id, status) {
-  const o = state.orders.find(x=>x.id===id);
-  if (!o) return;
-  o.paymentStatus = status;
-  if (window._firebaseReady && window._fbDb && o.firebaseId) {
-    window._fbUpdate(window._fbRef(window._fbDb, 'orders/'+o.firebaseId),
-      {paymentStatus: status, updatedAt: new Date().toISOString()});
-  }
-  showToast(status==='paid'?'✓ 已標記收錢':status==='refunded'?'已標記退款':'已標記未收錢');
-}
-
-// ── ADMIN NOTE ──
-function updateAdminNote(id, note) {
-  const o = state.orders.find(x=>x.id===id);
-  if (!o) return;
-  o.adminNote = note;
-  if (window._firebaseReady && window._fbDb && o.firebaseId) {
-    window._fbUpdate(window._fbRef(window._fbDb, 'orders/'+o.firebaseId),
-      {adminNote: note, updatedAt: new Date().toISOString()});
-  }
-}
-
-// ── WA NOTIFY: 1-click WhatsApp status notification to customer ──
-function sendWANotify(id) {
-  const o = state.orders.find(x=>x.id===id);
-  if (!o || !o.phone) { alert('找不到客人電話！'); return; }
-  const statusMsg = {
-    pending:    '您的訂單已確認，我們正在準備中。',
-    confirmed:  '您的訂單已確認，會在指定時間送達。',
-    delivering: '您的訂單已出發送貨，請保持電話暢通！',
-    delivered:  '您的訂單已成功送達，感謝惠顧 JP Fruit！🎉',
-  }[o.status] || '您的訂單狀態已更新。';
-
-  const orderNum = o.id ? '#'+o.id.slice(-6).toUpperCase() : '';
-  const msg = `你好 ${o.name||''}！
-
-您的 JP Fruit 訂單 ${orderNum}
-${statusMsg}
-
-如有疑問，請直接回覆此訊息。
-謝謝！JP Fruit 🛒`;
-
-  const phone = o.phone.replace(/\s/g,'').replace(/^\+/,'').replace(/^0/,'44');
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-}
 
 
-// ── ADVANCED ORDER FILTERS ──
+
 function filterOrders() {
   const name  = (document.getElementById('order-search-name')?.value||'').toLowerCase();
   const phone = (document.getElementById('order-search-phone')?.value||'').toLowerCase();
@@ -1923,12 +2015,15 @@ function renderFilteredOrders(filteredOrders) {
 
   kanban.innerHTML = cols.map(col => {
     const orders = filteredOrders.filter(o=>o.status===col.status);
-    return `<div class="kanban-col">
+    return `<div class="kanban-col"
+      ondragover="onColDragOver(event)"
+      ondragleave="onColDragLeave(event)"
+      ondrop="onColDrop(event,'${col.status}')">
       <div class="kanban-col-header" style="border-top:3px solid ${col.color};">
         <span>${col.label}</span>
         <span class="kanban-count">${orders.length}</span>
       </div>
-      ${orders.map(o=>`<div class="order-card" onclick="viewOrder('${o.id}')" style="cursor:pointer;">
+      ${orders.map(o=>`<div class="order-card" draggable="true" ondragstart="onCardDragStart(event,'${o.id}')" ondragend="onCardDragEnd(event)" onclick="viewOrder('${o.id}')" style="cursor:pointer;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div class="order-id">#${o.id.slice(-6).toUpperCase()}</div>
           <div style="display:flex;gap:4px;align-items:center;">
@@ -1949,12 +2044,64 @@ function renderFilteredOrders(filteredOrders) {
   }).join('');
 }
 
-function advanceOrder(id,status) {
-  const o=state.orders.find(x=>x.id===id); if(o){o.status=status;saveData();renderOrders();renderDashboard();}
+
+
+
+function editOrderItemQty(orderId, itemIdx, delta) {
+  // Find in Firebase orders first, then state
+  let allOrders = window._firebaseOrders || state.orders;
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o || !Array.isArray(o.items)) return;
+  o.items[itemIdx].qty = Math.max(1, (o.items[itemIdx].qty||1) + delta);
+  o.total = parseFloat(o.items.reduce((s,i) => s + (i.price||0)*(i.qty||1), 0).toFixed(2));
+  // Sync to state too
+  const stateIdx = state.orders.findIndex(x => x.id === orderId);
+  if (stateIdx >= 0) state.orders[stateIdx] = o;
+  syncOrderToFirebase(o);
+  // Refresh modal without full page re-render
+  document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(el => el.remove());
+  viewOrder(orderId);
 }
 
+function removeOrderItem(orderId, itemIdx) {
+  let allOrders2 = window._firebaseOrders || state.orders;
+  const o = allOrders2.find(x => x.id === orderId);
+  if (!o || !Array.isArray(o.items)) return;
+  if (!confirm(`確定移除「${o.items[itemIdx].name}」？`)) return;
+  o.items.splice(itemIdx, 1);
+  o.total = o.items.reduce((s,i) => s + (i.price||0)*(i.qty||1), 0);
+  syncOrderToFirebase(o);
+  document.querySelector('[style*=fixed]')?.remove();
+  if (o.items.length > 0) viewOrder(orderId);
+  else renderOrders();
+}
 
-// ── PAYMENT STATUS ──
+function syncOrderToFirebase(o) {
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    window._fbUpdate(
+      window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
+      { items: o.items, total: o.total, updatedAt: new Date().toISOString() }
+    ).then(() => showToast('✓ 訂單已更新'))
+     .catch(e => showToast('❌ 儲存失敗'));
+  }
+  renderOrders();
+  renderDashboard();
+}
+
+function updateOrderField(id, field, value) {
+  const o = state.orders.find(x => x.id === id);
+  if (!o) return;
+  o[field] = value;
+  if (window._firebaseReady && window._fbDb && o.firebaseId) {
+    const update = { updatedAt: new Date().toISOString() };
+    update[field] = value;
+    window._fbUpdate(
+      window._fbRef(window._fbDb, 'orders/' + o.firebaseId), update
+    ).then(() => showToast('✓ 已儲存'))
+     .catch(e => showToast('❌ 儲存失敗：' + e.message));
+  }
+}
+
 function updatePaymentStatus(id, status) {
   const o = state.orders.find(x=>x.id===id);
   if (!o) return;
@@ -2002,17 +2149,34 @@ ${statusMsg}
 }
 
 function advanceOrder(id, newStatus) {
-  // Update in state
   const o = state.orders.find(x => x.id === id);
   if (!o) return;
   o.status = newStatus;
 
-  // Update in Firebase
+  const updates = { status: newStatus, updatedAt: new Date().toISOString() };
+
+  // When confirming order: update promo usedCount
+  if (newStatus === 'confirmed' && o.promoCode && !o._promoCounted) {
+    const promo = (state.promos||[]).find(p => p.code === o.promoCode);
+    if (promo) {
+      promo.usedCount = (promo.usedCount||0) + 1;
+      o._promoCounted = true;
+      // Update promo in Firebase catalogue
+      if (window._firebaseReady && window._fbDb) {
+        window._fbUpdate(
+          window._fbRef(window._fbDb, 'catalogue/promos'),
+          state.promos.reduce((acc, p, i) => { acc[i] = p; return acc; }, {})
+        ).catch(e => console.warn('Promo update failed:', e));
+      }
+      showToast(`優惠碼 ${promo.code} 使用次數 +1（共 ${promo.usedCount} 次）`);
+    }
+  }
+
   if (window._firebaseReady && window._fbDb && o.firebaseId) {
     window._fbUpdate(
       window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
-      { status: newStatus, updatedAt: new Date().toISOString() }
-    ).catch(e => console.warn('Firebase update failed:', e));
+      updates
+    ).catch(e => { showToast('❌ Firebase 更新失敗，請檢查網絡'); console.warn(e); });
   }
 
   renderOrders();
@@ -2030,7 +2194,7 @@ function cancelOrder(id) {
     window._fbUpdate(
       window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
       { status: 'cancelled', updatedAt: new Date().toISOString() }
-    ).catch(e => console.warn('Firebase update failed:', e));
+    ).catch(e => { showToast('❌ Firebase 更新失敗，請重試'); console.error(e); });
   }
 
   renderOrders();
@@ -2053,6 +2217,150 @@ const debouncedSearch = debounce(() => {
   const q = document.getElementById('search-input')?.value || '';
   filterAndRenderProducts(q);
 }, 200);
+
+
+
+// ══════════════════════════════════════════════════════
+// VIP CUSTOMERS
+// ══════════════════════════════════════════════════════
+function nextVIPId() {
+  const vips = Object.values(state.vips||{});
+  const nums = vips.map(v=>parseInt((v.uid||'JP0000').replace('JP',''))||0);
+  return 'JP' + String((Math.max(0,...nums)+1)).padStart(4,'0');
+}
+
+function renderVIPPage() {
+  const el = document.getElementById('vip-list');
+  if (!el) return;
+  const vips = Object.values(state.vips||{});
+  if (!vips.length) {
+    el.innerHTML = '<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px;">⭐</div><div>仲未有 VIP 客人</div></div>';
+    return;
+  }
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>VIP ID</th><th>姓名</th><th>電話</th><th>郵編</th><th>優惠碼</th><th>備註</th><th></th></tr></thead>
+    <tbody>
+      ${vips.map(v=>`<tr>
+        <td><strong style="font-family:var(--mono);color:var(--gold);">${escapeHTML(v.uid||'')}</strong></td>
+        <td>${escapeHTML(v.name||'')}</td>
+        <td style="font-size:0.78rem;">${escapeHTML(v.phone||'')}</td>
+        <td><span style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.75rem;">${escapeHTML(v.postcode||'')}</span></td>
+        <td style="color:var(--green);font-weight:600;">${escapeHTML(v.promoCode||'—')}</td>
+        <td style="font-size:0.75rem;color:var(--muted);">${escapeHTML(v.notes||'')}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="openVIPModal('${v.uid}')">編輯</button>
+          <button class="btn btn-ghost btn-sm" onclick="genVIPLink('${v.uid}')" title="Magic Link">🔗</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openVIPModal(uid=null) {
+  state.editingVIPId = uid;
+  const v = uid ? (state.vips||{})[uid] : null;
+  const newUid = uid || nextVIPId();
+  document.getElementById('vip-modal-title').textContent = v ? '編輯 VIP 客人' : '新增 VIP 客人';
+  document.getElementById('vip-delete-btn').style.display = v ? 'block' : 'none';
+  document.getElementById('vip-uid').value      = newUid;
+  document.getElementById('vip-name').value     = v?.name||'';
+  document.getElementById('vip-phone').value    = v?.phone||'';
+  document.getElementById('vip-postcode').value = v?.postcode||'';
+  document.getElementById('vip-address').value  = v?.address||'';
+  document.getElementById('vip-promo').value    = v?.promoCode||'';
+  document.getElementById('vip-discount').value = v?.discount||'';
+  document.getElementById('vip-notes').value    = v?.notes||'';
+  // Show magic link preview
+  updateVIPLinkPreview(newUid, v);
+  document.getElementById('vip-modal').classList.add('open');
+}
+
+function updateVIPLinkPreview(uid, v) {
+  const base = window.location.origin + window.location.pathname.replace('jp_fruit_cms.html','jp_fruit_order.html');
+  const phone = (v?.phone||'').replace(/\s/g,'');
+  const params = [`vip=${uid}`];
+  const link = `${base}?${params.join('&')}`;
+  const prev = document.getElementById('vip-link-preview');
+  const txt = document.getElementById('vip-link-text');
+  if (prev && txt) {
+    prev.style.display = 'block';
+    txt.textContent = link;
+    txt.dataset.link = link;
+  }
+}
+
+function copyVIPLink() {
+  const txt = document.getElementById('vip-link-text');
+  if (txt) {
+    navigator.clipboard.writeText(txt.dataset.link||txt.textContent)
+      .then(() => showToast('✓ Magic Link 已複製！'))
+      .catch(() => showToast('請手動複製'));
+  }
+}
+
+function genVIPLink(uid) {
+  const v = (state.vips||{})[uid];
+  const base = window.location.origin + window.location.pathname.replace('jp_fruit_cms.html','jp_fruit_order.html');
+  const link = `${base}?vip=${uid}`;
+  navigator.clipboard.writeText(link)
+    .then(() => showToast(`✓ ${uid} Magic Link 已複製！`))
+    .catch(() => prompt('複製此連結：', link));
+}
+
+function saveVIP() {
+  const uid = document.getElementById('vip-uid').value.trim();
+  if (!uid) return;
+  const vip = {
+    uid,
+    name:      document.getElementById('vip-name').value.trim(),
+    phone:     document.getElementById('vip-phone').value.trim(),
+    postcode:  document.getElementById('vip-postcode').value.trim().toUpperCase(),
+    address:   document.getElementById('vip-address').value.trim(),
+    promoCode: document.getElementById('vip-promo').value.trim().toUpperCase(),
+    discount:  parseFloat(document.getElementById('vip-discount').value)||0,
+    notes:     document.getElementById('vip-notes').value.trim(),
+    createdAt: (state.vips||{})[uid]?.createdAt || new Date().toISOString(),
+  };
+  if (!state.vips) state.vips = {};
+  state.vips[uid] = vip;
+  saveData();
+  renderVIPPage();
+  closeModal('vip-modal');
+  showToast(`✓ VIP ${uid} 已儲存！`);
+}
+
+function deleteVIP() {
+  const uid = state.editingVIPId;
+  if (!uid || !confirm(`確定刪除 VIP ${uid}？`)) return;
+  delete state.vips[uid];
+  saveData();
+  renderVIPPage();
+  closeModal('vip-modal');
+}
+
+// ── TARGETED FIREBASE SYNC (performance) ──
+async function syncProductToFirebase(product) {
+  if (!window._firebaseReady || !window._fbDb) return;
+  try {
+    // Find product index in state
+    const idx = state.products.findIndex(p => p.id === product.id);
+    if (idx < 0) return;
+    await window._fbUpdate(
+      window._fbRef(window._fbDb, 'catalogue'),
+      { [`products/${idx}`]: product, updatedAt: new Date().toISOString() }
+    );
+  } catch(e) { console.warn('Product sync failed:', e); }
+}
+
+async function syncSettingsToFirebase() {
+  if (!window._firebaseReady || !window._fbDb) return;
+  try {
+    await window._fbUpdate(
+      window._fbRef(window._fbDb, 'catalogue'),
+      { settings: state.settings, updatedAt: new Date().toISOString() }
+    );
+  } catch(e) { console.warn('Settings sync failed:', e); }
+}
 
 // ── SECURITY: escapeHTML prevents XSS injection ──
 function escapeHTML(str) {
@@ -2381,13 +2689,17 @@ function runReports() {
     state.orders = window._firebaseOrders;
   }
   const orders = getFilteredOrders();
-  const totalRev    = orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  // Exclude refunded orders from revenue
+  const activeOrders = orders.filter(o=>o.paymentStatus!=='refunded');
+  const refundedOrders = orders.filter(o=>o.paymentStatus==='refunded');
+  const totalRev    = activeOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const refundedRev = refundedOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
   const avgOrder    = orders.length ? totalRev/orders.length : 0;
   const uniqueCustomers = new Set(orders.map(o=>(o.phone||o.name||'').trim().toLowerCase()).filter(Boolean)).size;
 
   // Revenue breakdown
-  const paidOrders    = orders.filter(o=>o.paymentStatus==='paid');
-  const unpaidOrders  = orders.filter(o=>!o.paymentStatus||o.paymentStatus==='unpaid');
+  const paidOrders    = activeOrders.filter(o=>o.paymentStatus==='paid');
+  const unpaidOrders  = activeOrders.filter(o=>!o.paymentStatus||o.paymentStatus==='unpaid');
   const paidRev       = paidOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
   const unpaidRev     = unpaidOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
   const cashOrders    = orders.filter(o=>o.payment==='cash');
@@ -2412,6 +2724,11 @@ function runReports() {
           <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;">⏳ 未收錢</div>
           <div style="font-size:1rem;font-weight:700;color:#d97706;">£${unpaidRev.toFixed(2)}</div>
           <div style="font-size:0.7rem;color:var(--muted);">${unpaidOrders.length} 單</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;">↩ 退款（已扣）</div>
+          <div style="font-size:1rem;font-weight:700;color:#dc2626;">-£${refundedRev.toFixed(2)}</div>
+          <div style="font-size:0.7rem;color:var(--muted);">${refundedOrders.length} 單</div>
         </div>
         <div>
           <div style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;">現金 / 過數</div>
@@ -2685,6 +3002,68 @@ function renderPaymentReport(el, orders) {
 }
 
 // ─ WEEKLY CSV EXPORT ─
+
+// ── XERO-COMPATIBLE CSV EXPORT ──────────────────
+function exportXeroCSV() {
+  if (window._firebaseOrders && window._firebaseOrders.length > 0) {
+    state.orders = window._firebaseOrders;
+  }
+  const orders = getFilteredOrders().filter(o => o.paymentStatus === 'paid');
+  if (!orders.length) {
+    alert('冇已付款訂單可匯出。請先在「報告」頁選擇日期範圍並生成報告。');
+    return;
+  }
+
+  // Xero Invoice Import format
+  const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const rows = [];
+
+  // Xero headers
+  rows.push([
+    'ContactName','EmailAddress','POAddressLine1','POCity','POPostalCode','POCountry',
+    'InvoiceNumber','InvoiceDate','DueDate','Description','Quantity','UnitAmount',
+    'Discount','AccountCode','TaxType','Currency'
+  ]);
+
+  orders.forEach(o => {
+    const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '';
+    const items = Array.isArray(o.items) ? o.items : [];
+    if (!items.length) {
+      // Single line order
+      rows.push([
+        o.name||'', '', o.address||'', 'London', o.postcode||'', 'United Kingdom',
+        o.id ? 'INV-'+o.id.slice(-6).toUpperCase() : '',
+        date, date,
+        'JP Fruit Order', '1', (o.total||0).toFixed(2),
+        o.discount||0, '200', 'NONE', 'GBP'
+      ]);
+    } else {
+      items.forEach((item, i) => {
+        rows.push([
+          i===0?(o.name||''):'',
+          '', i===0?(o.address||''):'', i===0?'London':'', i===0?(o.postcode||''):'', i===0?'United Kingdom':'',
+          i===0?(o.id?'INV-'+o.id.slice(-6).toUpperCase():''):'',
+          i===0?date:'', i===0?date:'',
+          item.name||'', item.qty||1, (item.price||0).toFixed(2),
+          '0', '200', 'NONE', 'GBP'
+        ]);
+      });
+    }
+  });
+
+  const csv = '\uFEFF' + rows.map(r => r.map(esc).join(',')).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Xero_Import_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`✓ Xero CSV 已匯出（${orders.length} 張已付款訂單）`);
+}
+
 function exportWeeklyCSV() {
   // Sync Firebase orders first
   if (window._firebaseOrders && window._firebaseOrders.length > 0) {
@@ -3379,6 +3758,46 @@ function saveSettings() {
 window._cmsState = state;
 window._renderOrders = renderOrders;
 window._renderDashboard = renderDashboard;
+
+// ── KANBAN DRAG & DROP ──────────────────────────────
+let dragOrderId = null;
+
+function onCardDragStart(e, orderId) {
+  dragOrderId = orderId;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => { if(e.target) e.target.classList.add('dragging'); }, 0);
+}
+
+function onCardDragEnd(e) {
+  if(e.target) e.target.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col').forEach(col => col.classList.remove('drag-over'));
+  dragOrderId = null;
+}
+
+function onColDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onColDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+
+function onColDrop(e, newStatus) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragOrderId || !newStatus) return;
+  const o = (window._firebaseOrders || state.orders).find(x => x.id === dragOrderId);
+  if (!o || o.status === newStatus) { dragOrderId = null; return; }
+  const statusLabels = {new:'新訂單',pending:'待確認',confirmed:'已確認',delivering:'送緊貨',delivered:'已完成',cancelled:'已取消'};
+  advanceOrder(dragOrderId, newStatus);
+  showToast(`#${dragOrderId.slice(-4).toUpperCase()} → ${statusLabels[newStatus]||newStatus}`);
+  dragOrderId = null;
+}
+
 loadData();
 </script>
 </body>
