@@ -324,8 +324,17 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 <div class="app">
   <div class="sidebar">
     <div class="logo">
-      <div class="logo-title">JP Fruit CMS</div>
-      <div class="logo-sub">Admin Panel</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="logo-title">JP Fruit CMS</div>
+          <div class="logo-sub">Admin Panel</div>
+        </div>
+        <button id="theme-toggle-btn" onclick="toggleTheme()" title="切換深色/淺色模式"
+          style="background:var(--surface2);border:1.5px solid var(--border);
+                 border-radius:8px;padding:5px 9px;cursor:pointer;
+                 font-size:1rem;line-height:1;flex-shrink:0;margin-top:2px;
+                 transition:all 0.2s;">🌙</button>
+      </div>
     </div>
     <nav class="nav">
       <div class="nav-section">主頁</div>
@@ -664,92 +673,6 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
           <tbody id="categories-table"></tbody></table>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- SET MODAL -->
-<div class="modal-overlay" id="set-modal">
-  <div class="modal" style="width:720px;max-height:94vh;display:flex;flex-direction:column;">
-    <div class="modal-header">
-      <div class="modal-title" id="set-modal-title">新增套餐</div>
-      <button class="close-btn" onclick="closeModal('set-modal')">✕</button>
-    </div>
-    <div class="modal-body" style="overflow-y:auto;flex:1;padding:20px;">
-
-      <!-- ── SECTION 1: Basic Info ── -->
-      <div class="set-section">
-        <div class="set-section-title">基本資料</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>套餐名稱（中文）</label>
-            <input type="text" id="s-name-zh" placeholder="例：家餸套餐" style="width:100%">
-          </div>
-          <div class="form-group">
-            <label>Set Name (English)</label>
-            <input type="text" id="s-name-en" placeholder="e.g. Homey Dish Set" style="width:100%">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>套餐描述（客人睇到）</label>
-            <input type="text" id="s-desc" placeholder="例：自選家常菜，配湯一款" style="width:100%">
-          </div>
-        </div>
-        <div class="form-row" style="align-items:end;">
-          <div class="form-group">
-            <label>套餐價錢 £（0 = 按選項計算）</label>
-            <input type="number" id="s-price" placeholder="0.00" min="0" step="0.01" style="width:120px;">
-          </div>
-          <div class="form-group">
-            <label>顯示分類</label>
-            <select id="s-cat" style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);"></select>
-          </div>
-          <div class="form-group">
-            <label>套餐圖片 URL（可選）</label>
-            <input type="text" id="s-image" placeholder="https://..." style="width:100%">
-          </div>
-        </div>
-      </div>
-
-      <!-- ── SECTION 2: Option Groups ── -->
-      <div class="set-section">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div>
-            <div class="set-section-title" style="margin-bottom:2px;">選項分組 Option Groups</div>
-            <div style="font-size:0.72rem;color:var(--muted);">每個分組 = 客人要選嘅一類東西（例：主菜、配菜、湯、飲品）</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="addGroup()">+ 加分組</button>
-        </div>
-
-        <!-- Quick templates -->
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:10px;background:var(--surface2);border-radius:8px;">
-          <div style="font-size:0.72rem;color:var(--muted);width:100%;margin-bottom:4px;">快速結構模板：</div>
-          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('single')">單選（任選1款）</button>
-          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('multi')">多選（自訂數量）</button>
-          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('meal2soup1')">2餸+1湯</button>
-          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('bread6')">任選6款麵包</button>
-          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('maindish')">主菜+配菜+湯+飲品</button>
-        </div>
-
-        <div id="s-groups"></div>
-      </div>
-
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="s-delete-btn" style="display:none;" onclick="deleteSet()">刪除套餐</button>
-      <div style="flex:1;"></div>
-      <button class="btn btn-ghost" onclick="closeModal('set-modal')">取消</button>
-      <button class="btn btn-primary" onclick="saveSet()">儲存套餐</button>
-    </div>
-  </div>
-</div>
-
-</div>
-</div>
-
-
     <!-- VIP CUSTOMERS -->
     <div id="page-vip" style="display:none;">
       <div class="header">
@@ -912,6 +835,94 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
           <button class="btn btn-primary" onclick="saveSettings()">💾 儲存並發佈</button>
         </div>
       </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- SET MODAL -->
+<div class="modal-overlay" id="set-modal">
+  <div class="modal" style="width:720px;max-height:94vh;display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <div class="modal-title" id="set-modal-title">新增套餐</div>
+      <button class="close-btn" onclick="closeModal('set-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;flex:1;padding:20px;">
+
+      <!-- ── SECTION 1: Basic Info ── -->
+      <div class="set-section">
+        <div class="set-section-title">基本資料</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>套餐名稱（中文）</label>
+            <input type="text" id="s-name-zh" placeholder="例：家餸套餐" style="width:100%">
+          </div>
+          <div class="form-group">
+            <label>Set Name (English)</label>
+            <input type="text" id="s-name-en" placeholder="e.g. Homey Dish Set" style="width:100%">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>套餐描述（客人睇到）</label>
+            <input type="text" id="s-desc" placeholder="例：自選家常菜，配湯一款" style="width:100%">
+          </div>
+        </div>
+        <div class="form-row" style="align-items:end;">
+          <div class="form-group">
+            <label>套餐價錢 £（0 = 按選項計算）</label>
+            <input type="number" id="s-price" placeholder="0.00" min="0" step="0.01" style="width:120px;">
+          </div>
+          <div class="form-group">
+            <label>顯示分類</label>
+            <select id="s-cat" style="width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);"></select>
+          </div>
+          <div class="form-group">
+            <label>套餐圖片 URL（可選）</label>
+            <input type="text" id="s-image" placeholder="https://..." style="width:100%">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECTION 2: Option Groups ── -->
+      <div class="set-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div class="set-section-title" style="margin-bottom:2px;">選項分組 Option Groups</div>
+            <div style="font-size:0.72rem;color:var(--muted);">每個分組 = 客人要選嘅一類東西（例：主菜、配菜、湯、飲品）</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="addGroup()">+ 加分組</button>
+        </div>
+
+        <!-- Quick templates -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:10px;background:var(--surface2);border-radius:8px;">
+          <div style="font-size:0.72rem;color:var(--muted);width:100%;margin-bottom:4px;">快速結構模板：</div>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('single')">單選（任選1款）</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('multi')">多選（自訂數量）</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('meal2soup1')">2餸+1湯</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('bread6')">任選6款麵包</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyGroupTemplate('maindish')">主菜+配菜+湯+飲品</button>
+        </div>
+
+        <div id="s-groups"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="s-delete-btn" style="display:none;" onclick="deleteSet()">刪除套餐</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" onclick="closeModal('set-modal')">取消</button>
+      <button class="btn btn-primary" onclick="saveSet()">儲存套餐</button>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+
+
       <div class="content">
         <div class="notice">⚙️ 呢度嘅設定會同步到客戶訂單表格，包括所有文字、字體、聯絡方式。</div>
 
