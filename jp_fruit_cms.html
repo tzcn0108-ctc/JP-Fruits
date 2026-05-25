@@ -3432,21 +3432,60 @@ function renderGroups() {
 
 function filterGroupProducts(gi) {
   const g = editingGroups[gi];
-  const cat = document.getElementById(`g-cat-${gi}`)?.value||'';
-  const q = (document.getElementById(`g-search-${gi}`)?.value||'').toLowerCase();
-  let prods = state.products;
-  if (cat) prods = prods.filter(p=>p.cat===cat);
-  if (q) prods = prods.filter(p=>p.name.toLowerCase().includes(q));
-  prods = prods.slice(0,40);
-  const el = document.getElementById(`g-products-${gi}`);
+  if (!g) return;
+
+  const catEl   = document.getElementById(`g-cat-${gi}`);
+  const searchEl = document.getElementById(`g-search-${gi}`);
+  const el      = document.getElementById(`g-products-${gi}`);
   if (!el) return;
-  const selIds = new Set((g.items||[]).map(i=>i.id));
-  el.innerHTML = prods.map(p=>`
-    <label style="display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:6px;cursor:pointer;border:1px solid ${selIds.has(p.id)?'var(--green)':'var(--border)'};background:${selIds.has(p.id)?'rgba(0,200,150,0.08)':'transparent'};font-size:0.75rem;transition:all 0.1s;">
-      <input type="checkbox" ${selIds.has(p.id)?'checked':''} onchange="toggleGroupItem(${gi},'${p.id}',this.checked)" style="flex-shrink:0;">
-      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.name}">${p.zh||p.name}</span>
-    </label>
-  `).join('') || '<div style="color:var(--muted);font-size:0.78rem;padding:8px;">冇符合產品</div>';
+
+  const cat = catEl?.value || '';
+  const q   = (searchEl?.value || '').toLowerCase().trim();
+
+  // Use all available products
+  let prods = state.products || [];
+
+  // Filter by category
+  if (cat) prods = prods.filter(p => p.cat === cat);
+
+  // Search: check all name fields
+  if (q) prods = prods.filter(p => {
+    const zh = (p.nameZh || p.zh || '').toLowerCase();
+    const en = (p.nameEn || p.name || '').toLowerCase();
+    return zh.includes(q) || en.includes(q);
+  });
+
+  // Only active products
+  prods = prods.filter(p => p.active !== false).slice(0, 60);
+
+  if (!prods.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:0.78rem;padding:8px;grid-column:1/-1;">${cat?'呢個分類冇產品':'搵唔到符合產品'}</div>`;
+    return;
+  }
+
+  const selIds = new Set((g.items || []).map(i => i.id));
+
+  el.innerHTML = prods.map(p => {
+    const nameZh  = p.nameZh || p.zh  || p.name || '(未命名)';
+    const nameEn  = p.nameEn || p.name || '';
+    const showEn  = nameEn && nameEn !== nameZh;
+    const selected = selIds.has(p.id);
+    return `<label style="display:flex;align-items:flex-start;gap:6px;padding:6px 8px;
+      border-radius:6px;cursor:pointer;
+      border:1.5px solid ${selected ? 'var(--green)' : 'var(--border)'};
+      background:${selected ? 'rgba(0,200,150,0.1)' : 'var(--surface3)'};
+      font-size:0.75rem;transition:all 0.15s;min-height:36px;">
+      <input type="checkbox" ${selected ? 'checked' : ''}
+        onchange="toggleGroupItem(${gi},'${p.id}',this.checked)"
+        style="flex-shrink:0;margin-top:2px;">
+      <span style="line-height:1.3;min-width:0;overflow:hidden;">
+        <span style="display:block;font-weight:${selected?'600':'400'};
+          color:var(--text);word-break:break-all;">${nameZh}</span>
+        ${showEn ? `<span style="display:block;color:var(--muted);font-size:0.68rem;
+          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${nameEn.slice(0,25)}</span>` : ''}
+      </span>
+    </label>`;
+  }).join('');
 }
 
 function toggleGroupItem(gi, pid, checked) {
