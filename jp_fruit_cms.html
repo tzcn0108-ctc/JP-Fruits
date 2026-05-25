@@ -3336,29 +3336,35 @@ function renderSetsPage() {
 function openSetModal(id=null) {
   state.editingSetId = id;
   const s = id ? state.sets.find(x=>x.id===id) : null;
-  document.getElementById('set-modal-title').textContent = s ? '編輯套餐' : '新增套餐';
-  document.getElementById('s-delete-btn').style.display = s ? 'block' : 'none';
 
-  // populate category dropdown
-  document.getElementById('s-cat').innerHTML = state.categories.map(c=>
-    `<option value="${c.id}">${c.zh} ${c.name}</option>`
+  // Modal title + delete button
+  document.getElementById('set-modal-title').textContent = s ? '編輯套餐' : '新增套餐';
+  const delBtn = document.getElementById('s-delete-btn');
+  if (delBtn) delBtn.style.display = s ? 'block' : 'none';
+
+  // Populate category dropdown
+  const catSel = document.getElementById('s-cat');
+  if (catSel) catSel.innerHTML = state.categories.map(cat=>
+    `<option value="${cat.id}">${cat.zh} ${cat.name}</option>`
   ).join('');
 
+  // Populate fields (using only fields that exist in modal HTML)
+  const set = (field, val) => { const el = document.getElementById(field); if(el) el.value = val; };
+
   if (s) {
-    document.getElementById('s-name-zh').value = s.nameZh||s.name||'';
-    document.getElementById('s-name-en').value = s.nameEn||'';
-    document.getElementById('s-cat').value = s.cat||'';
-    document.getElementById('s-price').value = s.price||'';
-    document.getElementById('s-emoji').value = s.emoji||'🎁';
-    document.getElementById('s-desc-zh').value = s.descZh||s.desc||'';
-    document.getElementById('s-desc-en').value = s.descEn||'';
+    set('s-name-zh', s.nameZh||s.name||'');
+    set('s-name-en', s.nameEn||'');
+    set('s-cat',     s.cat||'');
+    set('s-price',   s.price||'');
+    set('s-desc',    s.descZh||s.desc||'');
+    set('s-image',   s.image||'');
     editingGroups = JSON.parse(JSON.stringify(s.groups||[]));
   } else {
-    ['s-name-zh','s-name-en','s-price','s-desc-zh','s-desc-en'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('s-emoji').value = '🎁';
-    document.getElementById('s-cat').value = state.categories[0]?.id||'';
+    ['s-name-zh','s-name-en','s-price','s-desc','s-image'].forEach(f => set(f, ''));
+    set('s-cat', state.categories[0]?.id||'');
     editingGroups = [{id:uid3(),nameZh:'選項',nameEn:'Options',min:1,max:1,allowRepeat:false,items:[]}];
   }
+
   renderGroups();
   document.getElementById('set-modal').classList.add('open');
 }
@@ -3506,27 +3512,26 @@ function removeGroup(gi) {
 
 // ─ SAVE / DELETE ─
 function saveSet() {
-  const name = (document.getElementById('s-name-zh').value||document.getElementById('s-name-en').value).trim();
-  if (!name) { alert('請填寫套餐名稱（中文或英文）！'); return; }
+  const nameZh = (document.getElementById('s-name-zh')?.value||'').trim();
+  const nameEn = (document.getElementById('s-name-en')?.value||'').trim();
+  if (!nameZh && !nameEn) { alert('請填寫套餐名稱（中文或英文）！'); return; }
   if (!editingGroups.length) { alert('請至少加一個分組！'); return; }
   const hasEmpty = editingGroups.find(g=>!g.items.length);
   if (hasEmpty) { alert(`「${hasEmpty.nameZh}」分組仲未加任何產品！`); return; }
 
-  const nameZh = document.getElementById('s-name-zh').value.trim();
-  const nameEn = document.getElementById('s-name-en').value.trim();
   const set = {
-    id: state.editingSetId || uid3(),
+    id:     state.editingSetId || uid3(),
     nameZh,
     nameEn,
-    name: nameEn||nameZh,
-    cat: document.getElementById('s-cat').value,
-    price: parseFloat(document.getElementById('s-price').value)||0,
-    emoji: document.getElementById('s-emoji').value.trim()||'🎁',
-    descZh: document.getElementById('s-desc-zh').value.trim(),
-    descEn: document.getElementById('s-desc-en').value.trim(),
-    desc: document.getElementById('s-desc-zh').value.trim(),
+    name:   nameEn||nameZh,
+    cat:    document.getElementById('s-cat')?.value||'',
+    price:  parseFloat(document.getElementById('s-price')?.value)||0,
+    desc:   (document.getElementById('s-desc')?.value||'').trim(),
+    image:  (document.getElementById('s-image')?.value||'').trim(),
+    emoji:  '🎁',
     groups: JSON.parse(JSON.stringify(editingGroups)),
-    isSet: true,
+    isSet:  true,
+    updatedAt: new Date().toISOString(),
   };
 
   if (state.editingSetId) {
@@ -3537,6 +3542,7 @@ function saveSet() {
   saveData();
   closeModal('set-modal');
   renderSetsPage();
+  showToast(`✓ 套餐「${set.nameZh||set.nameEn}」已儲存`);
 }
 
 function deleteSet() {
