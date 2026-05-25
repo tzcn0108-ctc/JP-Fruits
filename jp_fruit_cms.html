@@ -17,7 +17,7 @@
   --plum:#7C5CBF;
 }
 /* Light mode */
-body.light-mode{
+body.light-mode, html.light-mode-pending body{
   --bg:#F4F5F9;
   --surface:#FFFFFF;
   --surface2:#F0F1F7;
@@ -35,7 +35,7 @@ body.light-mode{
 body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
 .app{display:flex;min-height:100vh;}
 .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;}
-.main{flex:1;overflow:auto;}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;}
 .logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
 .logo-title{font-size:1.1rem;font-weight:600;color:var(--green);}
 .logo-sub{font-size:0.7rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
@@ -301,11 +301,34 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
       badge.style.display = newCount > 0 ? 'flex' : 'none';
     }
 
-    // Re-render orders page if visible
+    // Smart refresh: don't blast UI if user is actively editing/searching
     try {
       const ordersPage = document.getElementById('page-orders');
       if (ordersPage && ordersPage.style.display !== 'none') {
-        if (typeof renderOrders === 'function') renderOrders();
+        const isSearching = ['order-search-name','order-search-phone','order-search-postcode']
+          .some(id => (document.getElementById(id)?.value||'').trim() !== '');
+        const isModalOpen = document.querySelector('.modal-overlay.open');
+        const newCount = orders.filter(o => o.status === 'new').length;
+        const prevCount = (window._prevNewOrderCount || 0);
+        const hasNewOrders = newCount > prevCount;
+        window._prevNewOrderCount = newCount;
+
+        if (isSearching || isModalOpen) {
+          // Show gentle notification instead of re-rendering
+          if (hasNewOrders) {
+            let notif = document.getElementById('orders-refresh-notif');
+            if (!notif) {
+              notif = document.createElement('div');
+              notif.id = 'orders-refresh-notif';
+              notif.style.cssText = 'position:sticky;top:0;z-index:50;background:var(--green);color:#000;padding:8px 16px;font-size:0.8rem;font-weight:600;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-radius:0 0 8px 8px;';
+              notif.innerHTML = `🟢 有新訂單！<button onclick="document.getElementById('orders-refresh-notif').remove();renderOrders();" style="background:rgba(0,0,0,0.15);border:none;padding:3px 10px;border-radius:5px;cursor:pointer;font-weight:700;">立即刷新</button>`;
+              ordersPage.prepend(notif);
+            }
+          }
+        } else {
+          document.getElementById('orders-refresh-notif')?.remove();
+          if (typeof renderOrders === 'function') renderOrders();
+        }
       }
     } catch(e) {}
 
@@ -318,6 +341,15 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
   });
 
   document.dispatchEvent(new Event('firebaseReady'));
+</script>
+<script>
+// ── ANTI-FOUC: Apply theme BEFORE DOM renders ──
+(function(){
+  try {
+    const t = localStorage.getItem('jpfruit-cms-theme');
+    if (t === 'light') document.documentElement.classList.add('light-mode-pending');
+  } catch(e) {}
+})();
 </script>
 </head>
 <body>
@@ -1006,7 +1038,26 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
               </select>
             </div>
             <div class="form-group"><label>截單時間 Cutoff Time</label><input type="time" id="st-cutoff-time" value="13:00"></div>
-          </div>
+          
+
+          <!-- ── HOLIDAY MODE ── -->
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+              <div>
+                <div style="font-weight:600;font-size:0.88rem;">🏖️ 暫停接單 Store Pause</div>
+                <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;">開啟後，客戶網站暫停接受新訂單</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="st-store-paused" style="width:18px;height:18px;accent-color:var(--red);cursor:pointer;">
+                <span style="font-size:0.82rem;font-weight:600;color:var(--red);">暫停接單</span>
+              </label>
+            </div>
+            <div style="margin-top:10px;">
+              <label style="font-size:0.75rem;color:var(--muted);">休息提示訊息</label>
+              <input type="text" id="st-pause-msg" placeholder="我哋暫時休息中，敬請期待！"
+                style="width:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);">
+            </div>
+          </div></div>
         </div>
       </div>
     </div>
@@ -1536,7 +1587,7 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 // ── NAVIGATION ───────────────────────────────────────────────
 function showPage(page) {
   ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings','promos','vip'].forEach(p => {
-    document.getElementById('page-'+p).style.display = p===page?'block':'none';
+    const pageEl=document.getElementById('page-'+p); if(pageEl) pageEl.style.display = p===page?'block':'none';
     const el = document.getElementById('nav-'+p);
     if(el) el.classList.toggle('active', p===page);
   });
@@ -1801,16 +1852,35 @@ function saveProduct() {
   const nameZh = document.getElementById('p-name-zh').value.trim();
   const nameEn = document.getElementById('p-name-en').value.trim();
   if (!nameZh && !nameEn) { alert('請至少填寫中文或英文名稱！'); return; }
-  const salePrice = parseFloat(document.getElementById('p-sale-price').value)||null;
+
+  // ── Price validation ──
+  const _priceRaw = document.getElementById('p-price').value.trim();
+  const _price = parseFloat(_priceRaw);
+  if (_priceRaw === '' || isNaN(_price) || _price < 0) {
+    alert('請填寫正確價錢（不可為空、負數或文字）！');
+    document.getElementById('p-price').focus();
+    return;
+  }
+  const _salePriceRaw = document.getElementById('p-sale-price').value.trim();
+  const _salePriceParsed = _salePriceRaw ? parseFloat(_salePriceRaw) : null;
+  if (_salePriceRaw && (isNaN(_salePriceParsed) || _salePriceParsed < 0)) {
+    alert('特價格式錯誤（不可為負數或文字）！');
+    return;
+  }
+  if (_salePriceParsed !== null && _salePriceParsed >= _price) {
+    if (!confirm(`特價 £${_salePriceParsed} 同原價 £${_price} 相同或更高，確認繼續？`)) return;
+  }
+
+  const salePrice = _salePriceParsed;
   const product = {
     id: state.editingProductId || uid(),
     nameZh,
     nameEn,
-    name: nameEn || nameZh,   // fallback for legacy
-    zh: nameZh,               // fallback for legacy
+    name: nameEn || nameZh,
+    zh: nameZh,
     cat: document.getElementById('p-category').value,
     unit: document.getElementById('p-unit').value.trim(),
-    price: parseFloat(document.getElementById('p-price').value)||0,
+    price: _price,
     salePrice,
     saleUntil: document.getElementById('p-sale-until').value||null,
     stock: parseInt(document.getElementById('p-stock').value),
@@ -2095,6 +2165,17 @@ function renderFilteredOrders(filteredOrders) {
         <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;" onclick="event.stopPropagation()">
           ${col.status!=='delivered'&&col.status!=='cancelled'?nextStatusBtn(o):''}
           ${col.status!=='delivered'&&col.status!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>`:''}
+          <select onchange="if(this.value)advanceOrder('${o.id}',this.value);this.value='';"
+            style="font-size:0.68rem;padding:3px 4px;border-radius:5px;border:1px solid var(--border);
+            background:var(--surface2);color:var(--muted);cursor:pointer;margin-top:3px;width:100%;"
+            title="觸控裝置：直接揀狀態">
+            <option value="">📱 改狀態...</option>
+            <option value="pending">待確認</option>
+            <option value="confirmed">已確認</option>
+            <option value="delivering">送緊貨</option>
+            <option value="delivered">已完成</option>
+            <option value="cancelled">取消</option>
+          </select>
         </div>
       </div>`).join('')}
     </div>`;
@@ -2889,9 +2970,18 @@ function renderCategoriesReport(el, orders) {
 
 
 function renderPacksheetReport(el, orders) {
-  // Pick & Pack: list all products needed across all orders
+  // Pick & Pack: ONLY confirmed/delivering orders (exclude cancelled, new, unpaid)
+  const validOrders = orders.filter(o =>
+    o.status !== 'cancelled' &&
+    o.status !== 'new' &&
+    (o.paymentStatus !== 'refunded')
+  );
+  if (!validOrders.length) {
+    el.innerHTML = '<div class="r-empty">冇符合條件嘅訂單（排除咗已取消同新訂單）</div>';
+    return;
+  }
   const packMap = {};
-  orders.forEach(o => {
+  validOrders.forEach(o => {
     if (!Array.isArray(o.items)) return;
     o.items.forEach(item => {
       const name = item.name || '未知產品';
@@ -2907,7 +2997,7 @@ function renderPacksheetReport(el, orders) {
 
   el.innerHTML = `
     <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-size:0.82rem;color:var(--muted);">Pick &amp; Pack 清單 · 共 ${sorted.length} 款產品</div>
+      <div style="font-size:0.82rem;color:var(--muted);">Pick &amp; Pack 清單 · 共 ${sorted.length} 款產品（已排除取消訂單）</div>
       <div style="font-size:0.82rem;font-weight:600;color:var(--green);">總件數：${sorted.reduce((s,r)=>s+r.qty,0)}</div>
     </div>
     <table class="data-table">
@@ -3445,59 +3535,49 @@ function filterGroupProducts(gi) {
   const g = editingGroups[gi];
   if (!g) return;
 
-  const catEl   = document.getElementById(`g-cat-${gi}`);
+  const catEl    = document.getElementById(`g-cat-${gi}`);
   const searchEl = document.getElementById(`g-search-${gi}`);
-  const el      = document.getElementById(`g-products-${gi}`);
+  const el       = document.getElementById(`g-products-${gi}`);
   if (!el) return;
 
   const cat = catEl?.value || '';
   const q   = (searchEl?.value || '').toLowerCase().trim();
 
-  // Use all available products
   let prods = state.products || [];
-
-  // Filter by category
   if (cat) prods = prods.filter(p => p.cat === cat);
-
-  // Search: check all name fields
   if (q) prods = prods.filter(p => {
     const zh = (p.nameZh || p.zh || '').toLowerCase();
     const en = (p.nameEn || p.name || '').toLowerCase();
     return zh.includes(q) || en.includes(q);
   });
-
-  // Only active products
   prods = prods.filter(p => p.active !== false).slice(0, 60);
 
   if (!prods.length) {
-    el.innerHTML = `<div style="color:var(--muted);font-size:0.78rem;padding:8px;grid-column:1/-1;">${cat?'呢個分類冇產品':'搵唔到符合產品'}</div>`;
+    el.innerHTML = `<div style="color:var(--muted);font-size:0.78rem;padding:8px;grid-column:1/-1;">${cat ? '呢個分類冇產品' : (q ? '搵唔到「' + q + '」' : '冇產品')}</div>`;
     return;
   }
 
   const selIds = new Set((g.items || []).map(i => i.id));
 
   el.innerHTML = prods.map(p => {
-    const nameZh  = p.nameZh || p.zh  || p.name || '(未命名)';
-    const nameEn  = p.nameEn || p.name || '';
-    const showEn  = nameEn && nameEn !== nameZh;
+    const name    = p.nameZh || p.zh || p.nameEn || p.name || '(未命名)';
+    const nameSub = (p.nameEn || p.name || '');
     const selected = selIds.has(p.id);
-    return `<label style="display:flex;align-items:flex-start;gap:6px;padding:6px 8px;
-      border-radius:6px;cursor:pointer;
-      border:1.5px solid ${selected ? 'var(--green)' : 'var(--border)'};
-      background:${selected ? 'rgba(0,200,150,0.1)' : 'var(--surface3)'};
-      font-size:0.75rem;transition:all 0.15s;min-height:36px;">
+    const bg  = selected ? '#00C89622' : 'var(--surface2)';
+    const bdr = selected ? '#00C896' : 'var(--border)';
+    const fw  = selected ? '600' : '400';
+    return `<label style="display:flex;align-items:center;gap:6px;padding:6px 8px;
+      border-radius:6px;cursor:pointer;min-height:36px;
+      border:1.5px solid ${bdr};background:${bg};
+      font-size:0.75rem;transition:border-color 0.15s,background 0.15s;">
       <input type="checkbox" ${selected ? 'checked' : ''}
         onchange="toggleGroupItem(${gi},'${p.id}',this.checked)"
-        style="flex-shrink:0;margin-top:2px;">
-      <span style="line-height:1.3;min-width:0;overflow:hidden;">
-        <span style="display:block;font-weight:${selected?'600':'400'};
-          color:var(--text);word-break:break-all;">${nameZh}</span>
-        ${showEn ? `<span style="display:block;color:var(--muted);font-size:0.68rem;
-          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${nameEn.slice(0,25)}</span>` : ''}
-      </span>
+        style="flex-shrink:0;width:15px;height:15px;cursor:pointer;accent-color:var(--green);">
+      <span style="flex:1;font-weight:${fw};line-height:1.3;word-break:break-word;">${name}</span>
     </label>`;
   }).join('');
 }
+
 
 function toggleGroupItem(gi, pid, checked) {
   const g = editingGroups[gi];
@@ -3722,7 +3802,9 @@ function renderPromosPage() {
     return;
   }
 
-  const today = new Date().toISOString().slice(0,10);
+  // Use local date to avoid timezone expiry issues
+const _now = new Date();
+const today = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
   el.innerHTML = `<table class="data-table">
     <thead><tr>
       <th>優惠碼</th><th>類型</th><th>折扣</th><th>最低消費</th><th>使用次數</th><th>有效期</th><th>狀態</th><th></th>
@@ -3765,7 +3847,7 @@ function openPromoModal(id=null) {
 }
 
 function savePromo() {
-  const code = document.getElementById('promo-code').value.trim().toUpperCase();
+  const code = (document.getElementById('promo-code').value.trim()).toUpperCase().replace(/[^A-Z0-9]/g,'');
   if (!code) { alert('請輸入優惠碼！'); return; }
   const promo = {
     id:        state.editingPromoId || 'promo-'+Date.now(),
@@ -3836,6 +3918,10 @@ function initSettings() {
   if (day) day.value = s.cutoffDay || 2;
   const time = document.getElementById('st-cutoff-time');
   if (time) time.value = s.cutoffTime || '13:00';
+  const pauseEl = document.getElementById('st-store-paused');
+  if (pauseEl) pauseEl.checked = !!s.storePaused;
+  const pauseMsgEl = document.getElementById('st-pause-msg');
+  if (pauseMsgEl && s.pauseMessage) pauseMsgEl.value = s.pauseMessage;
 }
 
 function saveSettings() {
@@ -3852,9 +3938,17 @@ function saveSettings() {
     contactZh: gv('st-contact-zh'), contactEn: gv('st-contact-en'),
     cutoffDay: parseInt(document.getElementById('st-cutoff-day')?.value) || 2,
     cutoffTime: gv('st-cutoff-time') || '13:00',
+    // Fix: explicit check prevents £0 being treated as "not set"
+    minFreeDelivery: gv('st-min-free') !== '' ? Number(gv('st-min-free')) : 999999,
+    storePaused: document.getElementById('st-store-paused')?.checked || false,
+    pauseMessage: gv('st-pause-msg') || '我哋暫時休息中，敬請期待！',
   };
   saveData();
-  alert('✅ 設定已儲存！客戶網站下次載入時即時更新。');
+  if(state.settings.storePaused){
+    alert('⚠️ 已開啟「暫停接單」模式！客戶網站現在顯示休息提示。');
+  } else {
+    alert('✅ 設定已儲存！客戶網站下次載入時即時更新。');
+  }
 }
 
 window._cmsState = state;
@@ -3918,6 +4012,8 @@ function initTheme() {
       const btn = document.getElementById('theme-toggle-btn');
       if (btn) btn.textContent = '☀️';
     }
+    // Remove the pre-render pending class
+    document.documentElement.classList.remove('light-mode-pending');
   } catch(e) {}
 }
 

@@ -1528,6 +1528,24 @@ async function loadSeedData() {
 
 function applySettings(s) {
   if(!s) return;
+  // ── Holiday mode: disable ordering if store paused ──
+  if(s.storePaused) {
+    const msg = s.pauseMessage || (lang==='zh'?'我哋暫時休息中，敬請期待！':'We are currently closed. Please check back soon!');
+    const banner = document.getElementById('topbar');
+    if(banner) { banner.style.background='#C0392B'; banner.innerHTML=`⚠️ ${msg}`; }
+    // Disable all add-to-cart buttons
+    document.querySelectorAll('.add-btn,.whatsapp-btn,.cart-btn').forEach(btn=>{
+      btn.disabled=true; btn.style.opacity='0.5'; btn.title=msg;
+    });
+    // Show overlay message
+    const area=document.getElementById('products-area');
+    if(area) {
+      const notice=document.createElement('div');
+      notice.style.cssText='position:sticky;top:0;z-index:100;background:#C0392B;color:white;text-align:center;padding:12px 16px;font-weight:600;border-radius:8px;margin-bottom:12px;';
+      notice.textContent='🏖️ '+msg;
+      area.prepend(notice);
+    }
+  }
   if(s.font) document.body.style.fontFamily=s.font;
   if(s.heroSubZh||s.heroSubEn){ TX.zh.heroSub=s.heroSubZh||TX.zh.heroSub; TX.en.heroSub=s.heroSubEn||TX.en.heroSub; }
   if(s.chip1Zh){ TX.zh.chip1=s.chip1Zh; TX.en.chip1=s.chip1En||TX.en.chip1; }
@@ -2103,12 +2121,23 @@ function sendWA(sfx){
   const name  = document.getElementById('cf-name' +sfx)?.value?.trim();
   const phone = document.getElementById('cf-phone'+sfx)?.value?.trim();
   const addr  = document.getElementById('cf-addr' +sfx)?.value?.trim();
-  const pc    = document.getElementById('cf-post' +sfx)?.value?.trim();
+  const pc    = (document.getElementById('cf-post' +sfx)?.value?.trim()||'').toUpperCase();
   const notes = document.getElementById('cf-notes'+sfx)?.value?.trim();
 
   if(!name||!phone||!addr||!pc){
     showToast(tx('alertFill'));
     return;
+  }
+  // Postcode coverage check
+  const _covered = ['SM','KT','CR','SW','SE','BR','TW','RH','GU','SL','UB'];
+  const _pcOk = _covered.some(p => pc.startsWith(p));
+  if(!_pcOk){
+    const _warn = lang==='zh'
+      ? `⚠️ 郵編 ${pc} 可能不在配送範圍（SM/KT/CR/SW 等南倫敦）。
+如地址正確，按「確認」繼續，我們會聯絡您。`
+      : `⚠️ ${pc} may be outside our delivery zone (SM/KT/CR/SW South London).
+Press OK if correct and we'll be in touch.`;
+    if(!confirm(_warn)) return;
   }
 
   // ── Step 3: Build order data ──
@@ -2207,6 +2236,11 @@ function closeMobileCart(e){if(!e||e.target===document.getElementById('mobile-ov
 
 // ── COUNTDOWN ────────────────────────────────────────────────
 function updateCountdown(){
+  const el=document.getElementById('countdown');
+  // Guard: siteSettings may not be loaded yet from Firebase
+  if(!siteSettings || siteSettings.cutoffDay === undefined){
+    if(el) el.textContent='--'; return;
+  }
   const now=new Date(),day=now.getDay();
   const cutDay=siteSettings.cutoffDay??2, cutTime=siteSettings.cutoffTime||'13:00';
   const [ch,cm]=cutTime.split(':').map(Number);
@@ -2223,14 +2257,18 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 applyTX();updateCart();updateCountdown();
 document.addEventListener('firebaseReady', async ()=>{
   try {
-    const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
+    let pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
     if(pending.length && window._fbDb){
-      for(const o of pending){
-        const r=window._fbPush(window._fbRef(window._fbDb,'orders'));
+      console.log(`Syncing ${pending.length} pending orders...`);
+      // Process one-by-one: remove each AFTER successful push (prevents duplicates on reconnect)
+      while(pending.length > 0){
+        const o = pending[0];
+        const r = window._fbPush(window._fbRef(window._fbDb,'orders'));
         await window._fbSet(r,{...o,firebaseId:r.key});
+        pending.shift(); // only remove AFTER successful push
+        localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
       }
-      localStorage.removeItem('jpfruit-pending');
-      console.log('Flushed pending orders');
+      console.log('All pending orders synced');
     }
   } catch(e){}
 });setInterval(updateCountdown,60000);loadProducts();
