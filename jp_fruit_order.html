@@ -239,12 +239,9 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .cart-items-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 .cart-item-row{padding:9px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
 .cart-item-row:last-child{border-bottom:none;}
-.ci-name{flex:1;font-size:0.79rem;line-height:1.35;font-weight:500;}
-.ci-qty{display:flex;align-items:center;gap:5px;}
 .ci-qbtn{background:var(--peach-l);border:1.5px solid var(--peach-m);width:21px;height:21px;border-radius:50%;cursor:pointer;font-size:0.78rem;display:flex;align-items:center;justify-content:center;color:var(--plum);transition:all 0.15s;}
 .ci-qbtn:hover{background:var(--peach-m);}
 .ci-qnum{font-size:0.82rem;font-weight:700;min-width:17px;text-align:center;color:var(--plum);}
-.ci-price{font-size:0.82rem;font-weight:700;color:var(--plum);min-width:46px;text-align:right;}
 .cart-summary{padding:13px 20px;border-top:1.5px solid var(--border);background:linear-gradient(135deg,var(--peach-l),var(--plum-l));}
 .summary-row{display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:5px;color:var(--muted);}
 .summary-total{display:flex;justify-content:space-between;font-weight:700;font-size:1rem;color:var(--plum);border-top:1.5px solid var(--border);padding-top:10px;margin-top:5px;}
@@ -264,40 +261,6 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .whatsapp-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;transform:none;}
 
 /* ── MOBILE CART FAB BUTTON ── */
-.cart-fab{
-  display:none; /* hidden on desktop */
-  position:fixed;
-  bottom:20px;
-  right:16px;
-  z-index:200;
-  background:var(--plum);
-  color:white;
-  border:none;
-  border-radius:50px;
-  padding:11px 18px;
-  font-family:'Noto Sans HK',sans-serif;
-  font-size:0.82rem;
-  font-weight:600;
-  cursor:pointer;
-  align-items:center;
-  gap:7px;
-  box-shadow:0 4px 20px rgba(107,76,138,0.45);
-  transition:all 0.2s;
-}
-.cart-fab:active{transform:scale(0.96);}
-.cart-fab-count{
-  background:var(--berry);
-  color:white;
-  border-radius:50%;
-  width:20px;
-  height:20px;
-  font-size:0.7rem;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  flex-shrink:0;
-}
 @media(max-width:860px){.cart-fab{display:flex;}}
 
 /* ── MOBILE CART OVERLAY ── */
@@ -669,7 +632,6 @@ body { background: var(--cream, #FFFDF9); }
 @media(max-width: 640px) {
   .pc-body { padding: 8px 10px 10px; }
   .pc-name { font-size: 0.8rem; }
-  .pc-price { font-size: 0.9rem; }
   .product-grid { gap: 10px !important; }
 }
 
@@ -828,10 +790,10 @@ body { background: var(--cream, #FFFDF9); }
   }
   /* Cart item qty buttons */
   .ci-qbtn{
-    width:30px !important;
-    height:30px !important;
-    font-size:1rem !important;
-    border-radius:6px !important;
+    width:34px !important;
+    height:34px !important;
+    font-size:1.05rem !important;
+    border-radius:8px !important;
   }
 }
 
@@ -956,7 +918,7 @@ body { background: var(--cream, #FFFDF9); }
 
 /* ── OVERFLOW GUARDS ── */
 .layout,.cat-nav-wrap{max-width:100%;}
-.products-area{max-width:100%;overflow:visible;}
+.products-area{max-width:100%;min-width:0;overflow:visible;} /* min-width:0 prevents grid blowout */
 .best-scroll-wrap{overflow-x:auto;overflow-y:visible;}
 *{box-sizing:border-box;}
 
@@ -968,14 +930,12 @@ body { background: var(--cream, #FFFDF9); }
 /* ── MOBILE: hide cart sidebar (use sticky bottom bar instead) ── */
 @media(max-width:860px){
   .cart-sidebar{display:none !important;}
+  /* The sticky cart bar is position:fixed at bottom:0 (~58px tall).
+     Reserve space so the footer is never hidden underneath it. */
+  .footer{padding-bottom:84px;}
 }
 
 
-/* ── PRODUCTS AREA: always fills content ── */
-.products-area{
-  min-width:0; /* prevent grid blowout */
-  overflow: visible;
-}
 #products-area{
   min-height:200px;
 }
@@ -1008,88 +968,6 @@ body { background: var(--cream, #FFFDF9); }
   window._fbOnValue = onValue;
   window._firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
-
-
-function savePendingOrder(orderData) {
-  const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
-  pending.push(orderData);
-  localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
-  // Don't block WhatsApp - order still goes through WA
-  // Firebase will sync when connection restored
-  console.warn('Firebase offline - order saved locally, WA still proceeding');
-}
-
-
-// ── PROMO CODE SYSTEM ──────────────────────────────────
-function applyPromo(code, sfx) {
-  const input = document.getElementById('cf-promo'+sfx);
-  const msgEl = document.getElementById('cf-promo-msg'+sfx);
-  if (!code) return;
-
-  const today = new Date().toISOString().slice(0,10);
-  const promo = promos.find(p =>
-    p.code === code.trim().toUpperCase() &&
-    p.active !== false &&
-    (!p.startDate || p.startDate <= today) &&
-    (!p.endDate   || p.endDate   >= today) &&
-    (!p.maxUses   || (p.usedCount||0) < p.maxUses)
-  );
-
-  if (!promo) {
-    appliedPromo = null;
-    if (msgEl) { msgEl.textContent = '❌ 優惠碼無效或已過期'; msgEl.style.color='var(--berry)'; }
-    updateCart();
-    return;
-  }
-
-  const total = getTotal();
-  if (promo.minOrder > 0 && total < promo.minOrder) {
-    appliedPromo = null;
-    if (msgEl) { msgEl.textContent = `最低消費 £${promo.minOrder}，未達到優惠門檻`; msgEl.style.color='var(--berry)'; }
-    updateCart();
-    return;
-  }
-
-  appliedPromo = promo;
-  const discountLabel = promo.type==='percent'
-    ? `${promo.value}% OFF`
-    : promo.type==='fixed'
-      ? `減 £${promo.value}`
-      : '免運費';
-
-  if (msgEl) {
-    msgEl.textContent = `✓ 優惠碼 ${promo.code} 已應用：${discountLabel}`;
-    msgEl.style.color = 'var(--leaf)';
-  }
-  updateCart();
-}
-
-function removePromo(sfx) {
-  appliedPromo = null;
-  const input = document.getElementById('cf-promo'+sfx);
-  const msgEl = document.getElementById('cf-promo-msg'+sfx);
-  if (input) input.value = '';
-  if (msgEl) { msgEl.textContent = ''; }
-  updateCart();
-}
-
-function getDiscount() {
-  if (!appliedPromo) return 0;
-  const subtotal = getTotal();
-  if (appliedPromo.type === 'percent') return parseFloat((subtotal * appliedPromo.value / 100).toFixed(2));
-  if (appliedPromo.type === 'fixed')   return Math.min(appliedPromo.value, subtotal);
-  return 0; // free_delivery: discount shown separately
-}
-
-function getFinalTotal() {
-  return Math.max(0, getTotal() - getDiscount());
-}
-
-function scrollToCart() {
-  if (window.innerWidth <= 860) { toggleMobileCart(); return; }
-  const el = document.getElementById('cart-section');
-  if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
-}
 
 // Cat nav: show left fade when scrolled
 document.addEventListener('DOMContentLoaded', () => {
@@ -2231,13 +2109,44 @@ function searchProducts(q){
 }
 
 // ── MOBILE CART ───────────────────────────────────────────────
-function toggleMobileCart(){document.getElementById('mobile-overlay').classList.toggle('open');renderCart('cart-mobile','-m');}
-function closeMobileCart(e){if(!e||e.target===document.getElementById('mobile-overlay'))document.getElementById('mobile-overlay').classList.remove('open');}
+function toggleMobileCart(){
+  const ov = document.getElementById('mobile-overlay');
+  if (!ov) return;
+  const isOpen = ov.classList.toggle('open');
+  // Lock the page behind the panel so scrolling the panel doesn't scroll the page
+  lockBodyScroll(isOpen);
+  renderCart('cart-mobile','-m');
+}
+
+// Prevents the background page scrolling while a full-screen panel is open.
+// Remembers scroll position because position:fixed resets it.
+let _savedScrollY = 0;
+function lockBodyScroll(lock){
+  if (lock) {
+    _savedScrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${_savedScrollY}px`;
+    document.body.style.width = '100%';
+  } else {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, _savedScrollY);
+  }
+}
+function closeMobileCart(e){
+  const ov = document.getElementById('mobile-overlay');
+  if (!ov) return;
+  // Only close when the backdrop itself is tapped, not the panel inside it
+  if (!e || e.target === ov) {
+    ov.classList.remove('open');
+    lockBodyScroll(false);
+  }
+}
 
 // ── COUNTDOWN ────────────────────────────────────────────────
 function updateCountdown(){
   const el=document.getElementById('countdown');
-  // Guard: siteSettings may not be loaded yet from Firebase
   if(!siteSettings || siteSettings.cutoffDay === undefined){
     if(el) el.textContent='--'; return;
   }
@@ -2247,8 +2156,139 @@ function updateCountdown(){
   const d=(cutDay-day+7)%7||7, tgt=new Date(now);
   tgt.setDate(now.getDate()+d);tgt.setHours(ch,cm,0,0);
   const diff=tgt-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
-  const el=document.getElementById('countdown');if(el)el.textContent=`${h}hr ${m}min`;
+  if(el) el.textContent=`${h}hr ${m}min`;
 }
+
+
+// ══ PROMO CODE + CART HELPERS ══════════════════════════
+// (moved out of the module block: module scope is not global,
+//  so onclick= handlers in HTML could not reach these)
+
+
+function savePendingOrder(orderData) {
+  const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
+  pending.push(orderData);
+  localStorage.setItem('jpfruit-pending', JSON.stringify(pending));
+  // Don't block WhatsApp - order still goes through WA
+  // Firebase will sync when connection restored
+  console.warn('Firebase offline - order saved locally, WA still proceeding');
+}
+
+function applyPromo(code, sfx) {
+  const input = document.getElementById('cf-promo'+sfx);
+  const msgEl = document.getElementById('cf-promo-msg'+sfx);
+  if (!code) return;
+
+  const today = new Date().toISOString().slice(0,10);
+  const promo = promos.find(p =>
+    p.code === code.trim().toUpperCase() &&
+    p.active !== false &&
+    (!p.startDate || p.startDate <= today) &&
+    (!p.endDate   || p.endDate   >= today) &&
+    (!p.maxUses   || (p.usedCount||0) < p.maxUses)
+  );
+
+  if (!promo) {
+    appliedPromo = null;
+    if (msgEl) { msgEl.textContent = '❌ 優惠碼無效或已過期'; msgEl.style.color='var(--berry)'; }
+    updateCart();
+    return;
+  }
+
+  const total = getTotal();
+  if (promo.minOrder > 0 && total < promo.minOrder) {
+    appliedPromo = null;
+    if (msgEl) { msgEl.textContent = `最低消費 £${promo.minOrder}，未達到優惠門檻`; msgEl.style.color='var(--berry)'; }
+    updateCart();
+    return;
+  }
+
+  appliedPromo = promo;
+  const discountLabel = promo.type==='percent'
+    ? `${promo.value}% OFF`
+    : promo.type==='fixed'
+      ? `減 £${promo.value}`
+      : '免運費';
+
+  if (msgEl) {
+    msgEl.textContent = `✓ 優惠碼 ${promo.code} 已應用：${discountLabel}`;
+    msgEl.style.color = 'var(--leaf)';
+  }
+  updateCart();
+}
+
+
+function removePromo(sfx) {
+  appliedPromo = null;
+  const input = document.getElementById('cf-promo'+sfx);
+  const msgEl = document.getElementById('cf-promo-msg'+sfx);
+  if (input) input.value = '';
+  if (msgEl) { msgEl.textContent = ''; }
+  updateCart();
+}
+
+
+function getDiscount() {
+  if (!appliedPromo) return 0;
+  const subtotal = getTotal();
+  if (appliedPromo.type === 'percent') return parseFloat((subtotal * appliedPromo.value / 100).toFixed(2));
+  if (appliedPromo.type === 'fixed')   return Math.min(appliedPromo.value, subtotal);
+  return 0; // free_delivery: discount shown separately
+}
+
+
+function getFinalTotal() {
+  return Math.max(0, getTotal() - getDiscount());
+}
+
+
+function scrollToCart() {
+  if (window.innerWidth <= 860) { toggleMobileCart(); return; }
+  const el = document.getElementById('cart-section');
+  if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+
+// ── SHARE / GROUP-BUY ──────────────────────────────────
+// Called from the "below minimum order" warning: lets the customer
+// share the shop link so a neighbour can top the order up.
+function shareGroupBuy(area, diff) {
+  const url = window.location.origin + window.location.pathname;
+  const msg = lang === 'zh'
+    ? `我喺 JP Fruit 落緊單（${area}），仲差 £${diff} 就夠最低消費。有冇人想一齊夾單？\n${url}`
+    : `I'm ordering from JP Fruit (${area}) and need £${diff} more to hit the minimum. Anyone want to join?\n${url}`;
+
+  // Native share sheet on mobile, clipboard fallback on desktop
+  if (navigator.share) {
+    navigator.share({ title: 'JP Fruit', text: msg, url }).catch(() => {});
+    return;
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg)
+      .then(() => showToast(lang === 'zh' ? '已複製，貼上去 WhatsApp 分享畀街坊' : 'Copied — paste it into WhatsApp'))
+      .catch(() => window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'));
+    return;
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+
+// ── VIEWPORT CHANGES (rotate / resize) ─────────────────
+// The mobile cart panel and sticky bar are only meaningful below 860px.
+// Without this handler, resizing past the breakpoint can leave the page
+// scroll-locked behind a panel that is no longer appropriate.
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    const overlay = document.getElementById('mobile-overlay');
+    if (window.innerWidth > 860 && overlay && overlay.classList.contains('open')) {
+      overlay.classList.remove('open');
+      lockBodyScroll(false);
+    }
+    updateCart();   // re-evaluates sticky bar visibility for the new width
+  }, 150);
+});
 
 // ── TOAST ────────────────────────────────────────────────────
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
