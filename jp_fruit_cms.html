@@ -49,6 +49,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 .sync-indicator{display:flex;align-items:center;gap:6px;font-size:0.72rem;color:var(--muted);}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
 .sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
+.sync-dot.error{background:var(--red);}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 .header{padding:20px 28px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 .page-title{font-size:1.4rem;font-weight:600;letter-spacing:-0.5px;}
@@ -231,6 +232,45 @@ body.light-mode .stat-card{background:var(--surface);box-shadow:0 1px 6px rgba(0
 body.light-mode .modal-overlay{background:rgba(0,0,0,0.4);}
 body.light-mode .sidebar{border-right:1px solid var(--border);}
 
+
+/* ── TOAST ──────────────────────────────────────────────
+   Brief confirmation / error messages. Sits above modals (z 500)
+   so a save failure is still visible while a dialog is open. */
+.toast-host{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  z-index:500;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:center;
+  pointer-events:none;
+  width:max-content;
+  max-width:min(90vw,520px);
+}
+.toast-msg{
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-left:3px solid var(--green);
+  border-radius:8px;
+  padding:10px 16px;
+  font-size:0.82rem;
+  font-family:var(--font);
+  line-height:1.45;
+  box-shadow:0 6px 24px rgba(0,0,0,0.35);
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  text-align:left;
+  word-break:break-word;
+}
+.toast-msg.show{opacity:1;transform:translateY(0);}
+.toast-msg.is-error{border-left-color:var(--red);}
+.toast-msg.is-warn{border-left-color:var(--gold);}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -307,7 +347,9 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
       if (ordersPage && ordersPage.style.display !== 'none') {
         const isSearching = ['order-search-name','order-search-phone','order-search-postcode']
           .some(id => (document.getElementById(id)?.value||'').trim() !== '');
-        const isModalOpen = document.querySelector('.modal-overlay.open');
+        // Covers both the class-based modals and the order-detail modal
+        // (which is built with inline styles and tagged data-modal).
+        const isModalOpen = document.querySelector('.modal-overlay.open, [data-modal]');
         const newCount = orders.filter(o => o.status === 'new').length;
         const prevCount = (window._prevNewOrderCount || 0);
         const hasNewOrders = newCount > prevCount;
@@ -353,6 +395,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 </script>
 </head>
 <body>
+<div class="toast-host" id="toast-host"></div>
 <div class="app">
   <div class="sidebar">
     <div class="logo">
@@ -1558,7 +1601,9 @@ async function saveData() {
   }
   try { localStorage.setItem('jpfruit-v2', data); } catch(e) {}
 
-  // 2. Sync catalogue to Firebase (Order Form reads from here)
+  // 2. Sync catalogue to Firebase (the Order Form reads from here).
+  //    If this fails the customer site keeps serving STALE data, so the
+  //    failure must be surfaced — never report success on a failed push.
   if (window._firebaseReady && window._fbDb) {
     try {
       await window._fbSet(window._fbRef(window._fbDb, 'catalogue'), {
@@ -1570,16 +1615,44 @@ async function saveData() {
         promos:     (state.promos||[]).filter(p=>p.active!==false),
         updatedAt:  new Date().toISOString(),
       });
-    } catch(e) { console.warn('Firebase catalogue sync failed:', e); }
+    } catch(e) {
+      console.error('Firebase catalogue sync failed:', e);
+      setSyncing(false, e.message || String(e));
+      showToast('❌ 未能同步到雲端，客戶網站仲係舊資料。請檢查網絡後再儲存一次。', 6000);
+      return false;
+    }
+  } else {
+    // No Firebase connection at all — local only.
+    setSyncing(false, 'Firebase 未連線');
+    showToast('⚠️ 未連上雲端，改動只儲存喺本機。客戶網站未更新。', 6000);
+    return false;
   }
   setSyncing(false);
+  return true;
 }
 
-function setSyncing(on) {
+// Sync indicator. Three states so a failed cloud push is never reported
+// as success — otherwise the CMS and the live order form silently diverge.
+//   setSyncing(true)      → 同步中
+//   setSyncing(false)     → 已同步
+//   setSyncing(false, msg) → 未同步 (error), stays visible until next save
+function setSyncing(on, errorMsg) {
   const dot = document.getElementById('sync-dot');
   const txt = document.getElementById('sync-text');
-  if (on) { dot.className='sync-dot syncing'; txt.textContent='同步中...'; }
-  else { dot.className='sync-dot'; txt.textContent='已同步 Synced'; }
+  if (!dot || !txt) return;
+  if (on) {
+    dot.className = 'sync-dot syncing';
+    txt.textContent = '同步中...';
+    txt.title = '';
+  } else if (errorMsg) {
+    dot.className = 'sync-dot error';
+    txt.textContent = '⚠️ 未同步';
+    txt.title = errorMsg;
+  } else {
+    dot.className = 'sync-dot';
+    txt.textContent = '已同步 Synced';
+    txt.title = '';
+  }
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
@@ -1931,9 +2004,9 @@ function _renderOrdersKanban() {
             <div class="order-id">#${o.id.slice(-6).toUpperCase()}</div>
             <div style="font-size:0.68rem;color:var(--muted);">${o.createdAt?new Date(o.createdAt).toLocaleString('zh-HK',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>
           </div>
-          <div class="order-name">${o.name||'—'}</div>
+          <div class="order-name">${escapeHTML(o.name)||'—'}</div>
           <div class="order-total">£${parseFloat(o.total||0).toFixed(2)}</div>
-          <div class="order-area">${o.postcode||''} ${o.phone?'· '+o.phone:''}</div>
+          <div class="order-area">${escapeHTML(o.postcode)||''} ${o.phone?'· '+escapeHTML(o.phone):''}</div>
           <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;" onclick="event.stopPropagation()">
             ${col.status!=='delivered'&&col.status!=='cancelled'?nextStatusBtn(o):''}
             ${col.status!=='delivered'&&col.status!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>`:''}
@@ -1992,6 +2065,9 @@ function viewOrder(id) {
     : `<div style="font-size:0.85rem;color:var(--muted);">${escapeHTML(o.items||'—')}</div>`;
 
   const modal = document.createElement('div');
+  // data-modal marks this as an open dialog so the Firebase orders listener
+  // knows not to re-render the board while it is on screen.
+  modal.setAttribute('data-modal', 'order');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `
     <div style="background:var(--surface);border-radius:16px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;">
@@ -2011,10 +2087,10 @@ function viewOrder(id) {
       <div style="padding:20px;">
         <div style="background:var(--plum-l,#EDE6F5);border:1.5px solid var(--plum-m,#9B7AB8);border-radius:10px;padding:14px;margin-bottom:16px;">
           <div style="font-size:0.7rem;color:var(--plum,#6B4C8A);margin-bottom:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;">客人資料</div>
-          <div style="font-size:0.92rem;font-weight:700;color:#1C0F08;">${o.name||'—'}</div>
+          <div style="font-size:0.92rem;font-weight:700;color:#1C0F08;">${escapeHTML(o.name)||'—'}</div>
           <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${escapeHTML(o.phone)||''}</div>
           <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${escapeHTML(o.address)||''}, ${escapeHTML(o.postcode)||''}</div>
-          ${o.notes?`<div style="font-size:0.8rem;color:#3D2B1F;margin-top:8px;padding-top:8px;border-top:1px solid var(--plum-m,#9B7AB8);"><strong>備註：</strong>${o.notes}</div>`:''}
+          ${o.notes?`<div style="font-size:0.8rem;color:#3D2B1F;margin-top:8px;padding-top:8px;border-top:1px solid var(--plum-m,#9B7AB8);"><strong>備註：</strong>${escapeHTML(o.notes)}</div>`:''}
         </div>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">訂購產品</div>
         ${itemsHtml}
@@ -2299,6 +2375,9 @@ function advanceOrder(id, newStatus) {
     if (promo) {
       promo.usedCount = (promo.usedCount||0) + 1;
       o._promoCounted = true;
+      // Persist the flag, otherwise the next Firebase snapshot replaces
+      // state.orders and the same order can be counted again.
+      updates._promoCounted = true;
       // Update promo in Firebase catalogue
       if (window._firebaseReady && window._fbDb) {
         window._fbUpdate(
@@ -2351,10 +2430,7 @@ function debounce(fn, delay=250) {
     t = setTimeout(() => fn(...args), delay);
   };
 }
-const debouncedSearch = debounce(() => {
-  const q = document.getElementById('search-input')?.value || '';
-  filterAndRenderProducts(q);
-}, 200);
+
 
 
 
@@ -2498,6 +2574,32 @@ async function syncSettingsToFirebase() {
       { settings: state.settings, updatedAt: new Date().toISOString() }
     );
   } catch(e) { console.warn('Settings sync failed:', e); }
+}
+
+
+// ── TOAST ──────────────────────────────────────────────
+// Short confirmation / error messages. Called from ~21 places.
+// Tone is picked from the message prefix so call sites stay unchanged.
+function showToast(msg, duration) {
+  const host = document.getElementById('toast-host');
+  if (!host) { console.log('[toast]', msg); return; }
+
+  const el = document.createElement('div');
+  el.className = 'toast-msg';
+  const s = String(msg);
+  if (s.startsWith('❌')) el.classList.add('is-error');
+  else if (s.startsWith('⚠️') || s.startsWith('⚠')) el.classList.add('is-warn');
+  el.textContent = s;
+  host.appendChild(el);
+
+  // next frame so the CSS transition runs
+  requestAnimationFrame(() => el.classList.add('show'));
+
+  const ms = typeof duration === 'number' ? duration : 2600;
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 250);
+  }, ms);
 }
 
 // ── SECURITY: escapeHTML prevents XSS injection ──
@@ -3029,8 +3131,8 @@ function renderOrdersReport(el, orders) {
     <thead><tr><th>訂單號</th><th>客人</th><th>郵編</th><th>總額</th><th>付款</th><th>送貨員</th><th>送貨日期</th><th>狀態</th></tr></thead>
     <tbody>${sorted.map(o=>`<tr>
       <td><span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted)">#${o.id.slice(-4).toUpperCase()}</span></td>
-      <td style="font-weight:500;">${o.name||'—'}</td>
-      <td><span class="cat-chip">${o.postcode||'—'}</span></td>
+      <td style="font-weight:500;">${escapeHTML(o.name)||'—'}</td>
+      <td><span class="cat-chip">${escapeHTML(o.postcode)||'—'}</span></td>
       <td style="font-family:var(--mono);color:var(--green);">£${parseFloat(o.total||0).toFixed(2)}</td>
       <td>${o.payment==='transfer'?'轉數':o.payment==='cash'?'現金':'COD'}</td>
       <td>${o.driver||'—'}</td>
