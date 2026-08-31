@@ -1822,8 +1822,8 @@ function pCard(p){
   const ctrl=oos
     ?`<button class="add-btn" disabled>✕</button>`
     :inCart>0
-      ?`<div class="qty-control"><button class="qty-btn" onclick="chQty('${p.id}',-1)">−</button><div class="qty-num" data-qty-id="${p.id}">${inCart}</div><button class="qty-btn" onclick="chQty('${p.id}',1)">+</button></div>`
-      :`<button class="add-btn" onclick="addCart('${p.id}')">+</button>`;
+      ?`<div class="qty-control"><button class="qty-btn" onclick="chQty('${p.id}',-1,this)">−</button><div class="qty-num" data-qty-id="${p.id}">${inCart}</div><button class="qty-btn" onclick="chQty('${p.id}',1,this)">+</button></div>`
+      :`<button class="add-btn" onclick="addCart('${p.id}',this)">+</button>`;
   const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
   const pNameEn=(lang==='zh'&&(p.nameEn||p.name)!==pName)?`<div class="pc-en">${p.nameEn||p.name}</div>`:'';
 
@@ -1900,30 +1900,26 @@ function addSetToCart(sid){
 }
 
 // ── CART ──────────────────────────────────────────────────────
-function addCart(id){
+function addCart(id, btn){
   cart[id] = (cart[id]||0)+1;
   updateCart();
-  // Update just the button area in-place — avoids full card re-render
-  // (which would reset carousel position and cause scroll jumps)
+  // Walk up from clicked element to find THIS card — avoids the duplicate-id bug
+  // where the same product appears in both 本店熱賣 and the category grid
   const qty = cart[id];
-  const card = document.getElementById('card-'+id);
-  if (!card) { refreshCard(id); }
-  else {
-    const footer = card.querySelector('.pc-footer');
-    if (footer) {
-      const existing = footer.querySelector('.qty-control,.add-btn');
-      if (existing) {
-        existing.outerHTML = `<div class="qty-control">
-          <button class="qty-btn" onclick="chQty('${id}',-1)">−</button>
-          <div class="qty-num" data-qty-id="${id}">${qty}</div>
-          <button class="qty-btn" onclick="chQty('${id}',1)">+</button>
-        </div>`;
-      }
-    }
-  }
+  const card = btn ? btn.closest('.product-card') : document.getElementById('card-'+id);
+  if (!card) { refreshCard(id); return; }
+  const footer = card.querySelector('.pc-footer');
+  if (!footer) { refreshCard(id); return; }
+  const existing = footer.querySelector('.qty-control,.add-btn');
+  if (!existing) { refreshCard(id); return; }
+  existing.outerHTML = `<div class="qty-control">
+    <button class="qty-btn" onclick="chQty('${id}',-1,this)">−</button>
+    <div class="qty-num" data-qty-id="${id}">${qty}</div>
+    <button class="qty-btn" onclick="chQty('${id}',1,this)">+</button>
+  </div>`;
   showToast(lang==='zh'?'已加入 ✓':'Added ✓');
 }
-function chQty(id,d){
+function chQty(id,d,btn){
   cart[id]=Math.max(0,(cart[id]||0)+d);
   if(!cart[id]) delete cart[id];
 
@@ -1956,16 +1952,16 @@ function chQty(id,d){
 
   updateCart();
 
-  // Surgically update the product card button (avoid full re-render / carousel reset)
+  // Walk up from clicked element to find THIS card — avoids duplicate-id bug
   const qty2 = cart[id]||0;
-  const card = document.getElementById('card-'+id);
+  const card = btn ? btn.closest('.product-card') : document.getElementById('card-'+id);
   if (card) {
     const footer = card.querySelector('.pc-footer');
     if (footer) {
       const existing = footer.querySelector('.qty-control, .add-btn');
       if (!existing) { refreshCard(id); return; }
       if (qty2 <= 0) {
-        existing.outerHTML = `<button class="add-btn" onclick="addCart('${id}')">+</button>`;
+        existing.outerHTML = `<button class="add-btn" onclick="addCart('${id}',this)">+</button>`;
       } else {
         const qEl = existing.querySelector('.qty-num');
         if (qEl) { qEl.textContent = qty2; }
