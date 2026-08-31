@@ -940,6 +940,71 @@ body { background: var(--cream, #FFFDF9); }
   min-height:200px;
 }
 
+
+/* ── MINIMUM-ORDER SUGGESTIONS ──────────────────────────
+   Sits inside .min-warning. Each chip is one tap to add.
+   Touch targets are 38px tall so they work on a phone. */
+.mw-suggest{
+  margin-top:9px;
+  padding-top:9px;
+  border-top:1px dashed var(--peach-m,#F2C4A0);
+}
+.mw-suggest-title{
+  font-size:0.7rem;
+  font-weight:700;
+  color:#8B4020;
+  margin-bottom:6px;
+  letter-spacing:0.2px;
+}
+.mw-sug{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  min-height:38px;
+  margin-bottom:5px;
+  padding:6px 10px;
+  background:white;
+  border:1.5px solid var(--peach-m,#F2C4A0);
+  border-radius:8px;
+  cursor:pointer;
+  font-family:var(--font);
+  font-size:0.76rem;
+  color:var(--ink-2,#3D2B1F);
+  text-align:left;
+  transition:border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+.mw-sug:last-child{margin-bottom:0;}
+.mw-sug:hover{border-color:var(--peach,#F4A97F);background:#FFF9F4;}
+.mw-sug:active{transform:scale(0.985);}
+/* Highlighted when this single item is enough to clear the minimum */
+.mw-sug-enough{border-color:var(--leaf,#3D6B35);}
+.mw-sug-enough .mw-sug-add{background:var(--leaf,#3D6B35);}
+.mw-sug-name{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:500;
+}
+.mw-sug-price{font-weight:700;color:var(--plum,#6B4C8A);flex-shrink:0;}
+.mw-sug-add{
+  flex-shrink:0;
+  width:22px;height:22px;
+  border-radius:6px;
+  background:var(--peach,#F4A97F);
+  color:white;
+  font-weight:700;
+  font-size:0.95rem;
+  line-height:22px;
+  text-align:center;
+}
+@media(max-width:640px){
+  .mw-sug{min-height:42px;font-size:0.78rem;}
+  .mw-sug-add{width:26px;height:26px;line-height:26px;}
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -1830,6 +1895,87 @@ function getMin(pc){
   if(/^(KT20|CR8|CR5)/.test(c))return{min:60,area:lang==='zh'?'你的地區':'your area'};
   return null;
 }
+
+// ══ MINIMUM-ORDER SUGGESTIONS ═══════════════════════════
+// When a cart is below the postcode's minimum, suggest items that close
+// the gap. Grocery baskets are filled by breadth, not depth, so we favour
+// categories the customer has not picked from yet, then popularity.
+// No co-purchase data exists yet, so this is deliberately rule-based.
+function priceOf(p){ return (p.salePrice != null ? p.salePrice : p.price) || 0; }
+
+function suggestForMinimum(shortfall, limit){
+  limit = limit || 3;
+  const inCart     = new Set(Object.keys(cart));
+  const cartCats   = new Set(Object.keys(cart)
+                       .map(id => (products.find(p => p.id === id) || {}).cat)
+                       .filter(Boolean));
+
+  const scored = products
+    .filter(p => p.active !== false && p.stock !== 0 && priceOf(p) > 0 && !inCart.has(p.id))
+    .map(p => {
+      const pr = priceOf(p);
+      return {
+        p, pr,
+        closes: pr >= shortfall,          // one tap reaches the minimum
+        gap:    Math.abs(pr - shortfall), // how neatly it fits
+        newCat: !cartCats.has(p.cat),     // widens the basket
+        pop:    p.historicSold || 0,
+      };
+    });
+
+  scored.sort((a, b) => {
+    if (a.closes !== b.closes) return a.closes ? -1 : 1;
+    if (Math.abs(a.gap - b.gap) > 2) return a.gap - b.gap;  // £2 tolerance
+    if (a.newCat !== b.newCat) return a.newCat ? -1 : 1;
+    return b.pop - a.pop;
+  });
+
+  // One per category first, so the three suggestions never look repetitive
+  const out = [], usedCats = new Set();
+  for (const s of scored){
+    if (usedCats.has(s.p.cat)) continue;
+    usedCats.add(s.p.cat);
+    out.push(s.p);
+    if (out.length >= limit) return out;
+  }
+  for (const s of scored){
+    if (out.indexOf(s.p) === -1) out.push(s.p);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function suggestionHTML(shortfall){
+  const picks = suggestForMinimum(parseFloat(shortfall), 3);
+  if (!picks.length) return '';
+  const heading = lang === 'zh' ? '加呢啲就夠：' : 'Add one of these to reach it:';
+  return `<div class="mw-suggest">
+    <div class="mw-suggest-title">${heading}</div>
+    ${picks.map(p => {
+      const nm = lang === 'zh' ? (p.nameZh || p.zh || p.name) : (p.nameEn || p.name);
+      const pr = priceOf(p);
+      const enough = pr >= parseFloat(shortfall);
+      return `<button class="mw-sug${enough ? ' mw-sug-enough' : ''}"
+        onclick="addCart('${p.id}')" title="${nm}">
+        <span class="mw-sug-name">${nm}</span>
+        <span class="mw-sug-price">£${pr.toFixed(2)}</span>
+        <span class="mw-sug-add">+</span>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+
+
+// Refresh the shortfall warning in BOTH carts (desktop + mobile).
+// Previously this only ran on postcode input, so the "£X more needed"
+// figure went stale as soon as the customer changed a quantity.
+function refreshMinWarnings(){
+  ['', '-m'].forEach(sfx => {
+    const field = document.getElementById('cf-post' + sfx);
+    if (field && field.value.trim()) updateMinWarning(field.value, sfx);
+  });
+}
+
 function updateMinWarning(pc, sfx) {
   // Only update the warning div - don't re-render cart
   const total = getTotal();
@@ -1859,6 +2005,7 @@ function updateMinWarning(pc, sfx) {
             ${lang==='zh'?'揪鄰居夾單':'Share with neighbours'}
           </button>
         </div>
+        ${suggestionHTML(diff)}
       </div>`;
     } else {
       el.innerHTML = '';
@@ -1877,6 +2024,7 @@ function updateCart(){
   document.getElementById('cart-count-label').textContent=n+tx('items');
   renderCart('cart-section','');
   renderCart('cart-mobile','-m');
+  refreshMinWarnings();   // keep the shortfall figure in step with the cart
   // Update sticky bottom cart (class-based, CSS handles responsive)
   const sticky=document.getElementById('mobile-sticky-cart');
   if(sticky){
