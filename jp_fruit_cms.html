@@ -2775,30 +2775,8 @@ function debounceSlotPreview(i, url) {
 }
 
 // Called when upload button is used — adds uploaded image as a new slot
-async function handleProductImageUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (!file.type.startsWith('image/')) { showToast('請選擇圖片檔案'); return; }
-  if (file.size > 10 * 1024 * 1024) { showToast('圖片太大！請選擇 10MB 以下'); return; }
-  if (editingImages.length >= MAX_IMAGES) { showToast(`最多 ${MAX_IMAGES} 張圖`); return; }
+// handleProductImageUpload defined below (multi-image version)
 
-  const statusEl = document.getElementById('p-image-upload-status');
-  const productId = document.getElementById('p-id')?.value || 'product';
-  statusEl.textContent = '上傳中...';
-  statusEl.style.color = 'var(--muted)';
-
-  try {
-    const url = await uploadToGitHub(file, productId);
-    addProductImageSlot(url);
-    statusEl.textContent = '✓ 上傳成功！';
-    statusEl.style.color = 'var(--green)';
-    setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
-  } catch(e) {
-    statusEl.textContent = '✗ ' + e.message;
-    statusEl.style.color = 'var(--red)';
-  }
-  input.value = '';
-}
 
 function saveGHToken() {
   const val = document.getElementById('gh-token-display')?.value?.trim();
@@ -4085,7 +4063,7 @@ function deleteSet() {
 
 
 
-async // ── IMAGE UPLOAD → GITHUB ──────────────────────────────────
+// ── IMAGE UPLOAD → GITHUB ──────────────────────────────────
 // Firebase Storage is on the free Spark plan (5 GB quota, easily exceeded).
 // Instead we upload images directly to the GitHub repo's images/ folder
 // using the GitHub Contents API. The resulting raw URL is stable and free.
