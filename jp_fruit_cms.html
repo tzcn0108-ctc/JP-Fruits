@@ -1571,9 +1571,20 @@ let editingGroups = [];
 
 // ── STORAGE ──────────────────────────────────────────────────
 async function dbGet() {
-  if (typeof window.storage !== 'undefined') {
-    try { const r = await window.storage.get('jpfruit-v2',true); if(r) return JSON.parse(r.value); } catch(e) {}
+  // Priority: Firebase catalogue (freshest) → localStorage cache (offline fallback)
+  // Firebase is only available AFTER the firebaseReady event fires, so we wait for it.
+  if (window._firebaseReady && window._fbDb) {
+    try {
+      const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue'));
+      if (snap.exists()) {
+        const data = snap.val();
+        // Cache locally so next cold-open is fast
+        try { localStorage.setItem('jpfruit-v2', JSON.stringify(data)); } catch(e) {}
+        return data;
+      }
+    } catch(e) { console.warn('Firebase read failed, falling back to localStorage:', e.message); }
   }
+  // Offline / Firebase not ready: use localStorage cache
   try { const raw = localStorage.getItem('jpfruit-v2'); return raw ? JSON.parse(raw) : null; } catch(e) { return null; }
 }
 
@@ -1628,10 +1639,8 @@ async function loadData() {
   }
   setSyncing(false);
   renderAll();
-  // Push the Excel-corrected products/categories straight to Firebase, so the
-  // customer-facing Order Form (which reads Firebase directly) reflects any
-  // Excel update as soon as an admin opens the CMS — without a manual save.
-  if (saved) saveData();
+  // Hint shown on first run when there is no saved data anywhere
+  if (!saved) showToast('首次使用 — 請喺各頁面設定好內容後撳「儲存」', 4000);
 }
 
 async function saveData() {
@@ -4251,7 +4260,12 @@ function initTheme() {
 }
 
 initTheme();
-loadData();
+// Wait for Firebase to be ready before loading, so dbGet can read the catalogue.
+// If Firebase never fires (e.g. offline), fall back after 4 s.
+let _loadCalled = false;
+function _doLoad() { if (!_loadCalled) { _loadCalled = true; loadData(); } }
+document.addEventListener('firebaseReady', _doLoad);
+setTimeout(_doLoad, 4000);   // offline fallback
 </script>
 </body>
 </html>
