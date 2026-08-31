@@ -271,6 +271,14 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 .toast-msg.is-error{border-left-color:var(--red);}
 .toast-msg.is-warn{border-left-color:var(--gold);}
 
+
+/* ── Multi-image slots ───────────────────── */
+.img-slot{display:flex;gap:8px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
+.img-slot img{width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;}
+.img-slot input{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.75rem;}
+.img-slot-badge{font-size:0.6rem;background:var(--plum-l);color:var(--plum);padding:1px 5px;border-radius:3px;flex-shrink:0;}
+.img-slot-del{background:none;border:1px solid var(--border);color:var(--red);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.8rem;flex-shrink:0;}
+.img-slot-del:hover{background:var(--red);color:#fff;}
 </style>
 
 <!-- Firebase SDK -->
@@ -1223,24 +1231,23 @@ class="form-group">
         </div>
       </div>
 
-      <!-- IMAGE -->
+      <!-- IMAGE: multi-image manager (max 5) -->
       <div class="form-group">
-        <label>產品圖片</label>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-          <input type="text" id="p-image" placeholder="https://... 或使用右方上傳" style="flex:1;" oninput="previewProductImg(this.value)">
-          <label class="btn btn-primary btn-sm" style="cursor:pointer;white-space:nowrap;margin:0;display:flex;align-items:center;gap:5px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            上傳
-            <input type="file" id="p-image-upload" accept="image/*" style="display:none;" onchange="handleProductImageUpload(this)">
-          </label>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label style="margin:0;">產品圖片（最多 5 張）</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;font-size:0.75rem;">
+              ⬆ 上傳
+              <input type="file" id="p-image-upload" accept="image/*" style="display:none;" onchange="handleProductImageUpload(this)">
+            </label>
+            <button class="btn btn-primary btn-sm" onclick="addProductImageSlot()" id="p-add-img-btn">+ 加 URL</button>
+          </div>
         </div>
-        <div id="p-image-preview" style="display:none;margin-top:8px;display:flex;align-items:center;gap:10px;">
-          <img id="p-image-preview-img" src="" style="height:72px;width:72px;border-radius:8px;border:1.5px solid var(--border);object-fit:cover;" alt="預覽">
-          <span id="p-image-upload-status" style="font-size:0.72rem;color:var(--muted);"></span>
-        </div>
+        <div id="p-images-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div id="p-image-upload-status" style="font-size:0.72rem;color:var(--muted);margin-top:4px;min-height:16px;"></div>
       </div>
 
-      <!-- TOGGLES -->
+            <!-- TOGGLES -->
       <div class="form-group">
         <div class="toggle">
           <span style="color:var(--text);font-size:0.85rem;">上架</span>
@@ -1629,6 +1636,7 @@ async function loadData() {
         return {
           ...sp,
           image:        saved_p.image    || sp.image    || '',
+          images:       (saved_p.images  && saved_p.images.length) ? saved_p.images : (sp.images||[]),
           desc:         saved_p.desc     || sp.desc     || '',
           featured:     saved_p.featured ?? sp.featured ?? false,
         };
@@ -1990,7 +1998,15 @@ function openProductModal(id=null) {
     document.getElementById('p-stock').value = p.stock!=null?p.stock:-1;
     document.getElementById('p-desc-zh').value = p.descZh||p.desc||'';
     document.getElementById('p-desc-en').value = p.descEn||'';
-    document.getElementById('p-image').value = p.image||'';
+    // Multi-image: build editingImages from p.images[] + p.image fallback
+    editingImages = [];
+    if (p) {
+      const imgs = Array.isArray(p.images) ? p.images.filter(u=>u) : [];
+      const main = p.image || '';
+      editingImages = imgs.length ? [...imgs] : (main ? [main] : []);
+    }
+    if (!editingImages.length) editingImages = [''];
+    renderProductImageSlots();
   // Show existing image preview
   const prevDiv = document.getElementById('p-image-preview');
   const prevImg = document.getElementById('p-image-preview-img');
@@ -2051,7 +2067,9 @@ function saveProduct() {
     descZh: document.getElementById('p-desc-zh').value.trim(),
     descEn: document.getElementById('p-desc-en').value.trim(),
     desc: document.getElementById('p-desc-zh').value.trim(), // fallback
-    image: document.getElementById('p-image').value.trim(),
+    // Build images[] from editingImages (filter empty), image = first non-empty
+  images: editingImages.filter(u=>u&&u.trim()),
+  image: (editingImages.filter(u=>u&&u.trim())[0])||'',
     active: document.getElementById('p-active').checked,
     featured: document.getElementById('p-featured').checked,
     historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
@@ -2702,6 +2720,86 @@ async function syncSettingsToFirebase() {
 }
 
 
+
+
+// ══ MULTI-IMAGE MANAGEMENT (CMS product modal) ════════════════
+const MAX_IMAGES = 5;
+let editingImages = [];   // ['url1','url2',...] — current product's image list
+
+function renderProductImageSlots() {
+  const list = document.getElementById('p-images-list');
+  const addBtn = document.getElementById('p-add-img-btn');
+  if (!list) return;
+  list.innerHTML = editingImages.map((url, i) => `
+    <div class="img-slot" id="img-slot-${i}">
+      <span class="img-slot-badge">${i === 0 ? '主圖' : `副圖${i}`}</span>
+      ${url ? `<img src="${url}" onerror="this.style.display='none'">` : '<div style="width:52px;height:52px;border-radius:6px;border:1px dashed var(--border);"></div>'}
+      <input type="text" value="${url}" placeholder="圖片 URL..."
+        oninput="editingImages[${i}]=this.value; debounceSlotPreview(${i}, this.value)">
+      <button class="img-slot-del" onclick="removeProductImageSlot(${i})" title="刪除">✕</button>
+    </div>
+  `).join('');
+  if (addBtn) addBtn.style.display = editingImages.length >= MAX_IMAGES ? 'none' : '';
+}
+
+function addProductImageSlot(url) {
+  if (editingImages.length >= MAX_IMAGES) { showToast(`最多 ${MAX_IMAGES} 張圖`); return; }
+  editingImages.push(url || '');
+  renderProductImageSlots();
+  // Focus the new input
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#p-images-list input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }, 50);
+}
+
+function removeProductImageSlot(i) {
+  editingImages.splice(i, 1);
+  renderProductImageSlots();
+}
+
+let _slotPreviewTimer;
+function debounceSlotPreview(i, url) {
+  clearTimeout(_slotPreviewTimer);
+  _slotPreviewTimer = setTimeout(() => {
+    const slot = document.getElementById(`img-slot-${i}`);
+    if (!slot) return;
+    const img = slot.querySelector('img');
+    if (url && url.startsWith('http')) {
+      if (img) { img.src = url; img.style.display = ''; }
+      else {
+        const div = slot.querySelector('div[style]');
+        if (div) { div.outerHTML = `<img src="${url}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display='none'">`; }
+      }
+    } else if (img) { img.style.display = 'none'; }
+  }, 400);
+}
+
+// Called when upload button is used — adds uploaded image as a new slot
+async function handleProductImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('請選擇圖片檔案'); return; }
+  if (file.size > 10 * 1024 * 1024) { showToast('圖片太大！請選擇 10MB 以下'); return; }
+  if (editingImages.length >= MAX_IMAGES) { showToast(`最多 ${MAX_IMAGES} 張圖`); return; }
+
+  const statusEl = document.getElementById('p-image-upload-status');
+  const productId = document.getElementById('p-id')?.value || 'product';
+  statusEl.textContent = '上傳中...';
+  statusEl.style.color = 'var(--muted)';
+
+  try {
+    const url = await uploadToGitHub(file, productId);
+    addProductImageSlot(url);
+    statusEl.textContent = '✓ 上傳成功！';
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+  } catch(e) {
+    statusEl.textContent = '✗ ' + e.message;
+    statusEl.style.color = 'var(--red)';
+  }
+  input.value = '';
+}
 
 function saveGHToken() {
   const val = document.getElementById('gh-token-display')?.value?.trim();

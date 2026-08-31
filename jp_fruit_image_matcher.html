@@ -135,16 +135,19 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
   </div>
 </div>
 
-<!-- URL Modal -->
+<!-- Multi-image Modal -->
 <div class="modal-bg" id="url-modal">
-  <div class="modal">
-    <h2 id="modal-title">設定圖片 URL</h2>
+  <div class="modal" style="width:520px;">
+    <h2 id="modal-title">管理圖片</h2>
     <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;" id="modal-product"></p>
-    <input type="text" id="modal-url" placeholder="https://..." oninput="previewModalImg()">
-    <img id="modal-preview" src="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:none;margin-bottom:10px;">
-    <div class="modal-actions">
+    <div id="modal-img-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+    <button onclick="addModalImgSlot()" id="modal-add-btn"
+      style="width:100%;padding:8px;border:1.5px dashed var(--plum);border-radius:8px;background:var(--plum-l);color:var(--plum);cursor:pointer;font-size:0.82rem;">
+      + 加圖片（最多 5 張）
+    </button>
+    <div class="modal-actions" style="margin-top:14px;">
       <button class="btn-ghost" onclick="closeModal()">取消</button>
-      <button class="btn-primary" onclick="saveModalUrl()">確認</button>
+      <button class="btn-primary" onclick="saveModalImages()">儲存</button>
     </div>
   </div>
 </div>
@@ -161,8 +164,9 @@ const IMG_FOLDER = 'images';
 
 let products = [];
 let categories = [];
-let edits = {};      // id → new image url
+let edits = {};         // id → { images: ['url1','url2',...] }
 let activeProduct = null;
+const MAX_IMGS = 5;
 
 // ── Firebase imports (same module pattern as CMS) ──
 const FIREBASE_CFG = {
@@ -232,7 +236,12 @@ function buildCatFilter(){
   });
 }
 
-function currentUrl(p){ return edits[p.id] !== undefined ? edits[p.id] : (p.image||''); }
+function currentImages(p) {
+  if (edits[p.id]) return edits[p.id].images || [];
+  const imgs = Array.isArray(p.images) ? p.images.filter(u=>u) : [];
+  return imgs.length ? imgs : (p.image ? [p.image] : []);
+}
+function currentUrl(p){ const imgs=currentImages(p); return imgs[0]||''; }
 
 function renderAll(){
   const q    = document.getElementById('search').value.toLowerCase();
@@ -287,27 +296,24 @@ function renderAll(){
 }
 
 function productCard(p){
-  const url = currentUrl(p);
-  const hasImg = !!url;
+  const imgs = currentImages(p);
+  const hasImg = imgs.length > 0;
+  const firstImg = imgs[0]||'';
   return `<div class="card ${hasImg?'matched':'pending'}">
     <div class="img-area" onclick="openModal('${p.id}')">
       ${hasImg
-        ? `<img src="${url}" alt="${p.nameZh||''}" loading="lazy">`
+        ? `<img src="${firstImg}" alt="${p.nameZh||''}" loading="lazy" onerror="this.style.display='none'">`
         : `<span class="img-placeholder">🖼</span>`}
+      ${imgs.length>1?`<div style="position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:10px;">×${imgs.length}</div>`:''}
       ${hasImg ? `<div class="badge-matched">✓</div>` : ''}
       <div class="img-overlay">
-        <button class="overlay-btn" onclick="event.stopPropagation();openModal('${p.id}')">🔗 設 URL</button>
-        ${hasImg ? `<button class="overlay-btn" onclick="event.stopPropagation();clearImg('${p.id}')">✕ 清除</button>` : ''}
+        <button class="overlay-btn" onclick="event.stopPropagation();openModal('${p.id}')">🖼 管理圖片</button>
       </div>
     </div>
     <div class="card-body">
       <div class="card-name">${p.nameZh||'—'}</div>
       <div class="card-en">${p.nameEn||''}</div>
-      <div class="card-id">${p.id}</div>
-      <input type="text" class="url-input" placeholder="貼圖片 URL..."
-        value="${url}"
-        oninput="setEdit('${p.id}',this.value)"
-        onclick="event.stopPropagation()">
+      <div class="card-id">${p.id} · ${imgs.length} 張</div>
     </div>
   </div>`;
 }
@@ -315,20 +321,10 @@ function productCard(p){
 // ════════════════════════════════════════════════════════
 // EDITING
 // ════════════════════════════════════════════════════════
+// setEdit kept for GitHub upload auto-link compatibility
 function setEdit(id, url){
-  const p = products.find(x=>x.id===id);
-  if (!p) return;
-  edits[id] = url.trim();
-  // Update card border live
-  const cards = document.querySelectorAll('.card');
-  // Just re-render the stats
-  const withImg = products.filter(p=>currentUrl(p)).length;
-  const changed = Object.keys(edits).length;
-  document.getElementById('stats-bar').innerHTML =
-    `<span>總共 <strong>${products.length}</strong> 款</span>
-     <span>已有圖片 <strong>${withImg}</strong></span>
-     <span>未有圖片 <strong>${products.length-withImg}</strong></span>
-     ${changed ? `<span style="color:var(--gold)">⚡ <strong>${changed}</strong> 項未儲存</span>` : ''}`;
+  if (!edits[id]) edits[id] = { images: [...currentImages(products.find(p=>p.id===id)||{})] };
+  if (url && !edits[id].images.includes(url)) edits[id].images.push(url);
 }
 
 function clearImg(id){
@@ -343,9 +339,13 @@ async function applyAll(){
   if (!Object.keys(edits).length){ showToast('冇更改'); return; }
 
   // Apply edits to products array
-  Object.entries(edits).forEach(([id,url])=>{
+  Object.entries(edits).forEach(([id,edit])=>{
     const p = products.find(x=>x.id===id);
-    if (p) p.image = url;
+    if (!p) return;
+    const imgs = typeof edit === 'string' ? [edit] : (edit.images||[]);
+    const clean = imgs.filter(u=>u&&u.trim());
+    p.images = clean;
+    p.image  = clean[0]||'';
   });
 
   showToast('儲存中...');
@@ -374,31 +374,76 @@ function exportJSON(){
 }
 
 // ════════════════════════════════════════════════════════
-// URL MODAL
+// MULTI-IMAGE MODAL
 // ════════════════════════════════════════════════════════
+let modalImgs = [];
+
 function openModal(id){
   activeProduct = products.find(p=>p.id===id);
   if (!activeProduct) return;
-  const url = currentUrl(activeProduct);
-  document.getElementById('modal-title').textContent = `設定圖片 — ${activeProduct.nameZh||activeProduct.nameEn}`;
-  document.getElementById('modal-product').textContent = `ID: ${activeProduct.id}  ·  ${activeProduct.nameEn||''}`;
-  document.getElementById('modal-url').value = url;
-  const prev = document.getElementById('modal-preview');
-  if (url){ prev.src=url; prev.style.display='block'; }
-  else { prev.style.display='none'; }
+  modalImgs = [...currentImages(activeProduct)];
+  if (!modalImgs.length) modalImgs = [''];
+  document.getElementById('modal-title').textContent = `圖片管理 — ${activeProduct.nameZh||activeProduct.nameEn}`;
+  document.getElementById('modal-product').textContent = `ID: ${activeProduct.id}  ·  ${activeProduct.nameEn||''}  ·  最多 ${MAX_IMGS} 張`;
+  renderModalImgs();
   document.getElementById('url-modal').classList.add('open');
 }
-function closeModal(){ document.getElementById('url-modal').classList.remove('open'); activeProduct=null; }
-function previewModalImg(){
-  const url = document.getElementById('modal-url').value.trim();
-  const prev = document.getElementById('modal-preview');
-  if (url){ prev.src=url; prev.style.display='block'; }
-  else { prev.style.display='none'; }
+
+function renderModalImgs(){
+  const list = document.getElementById('modal-img-list');
+  const addBtn = document.getElementById('modal-add-btn');
+  list.innerHTML = modalImgs.map((url,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;background:#F8F7F5;border:1px solid #DDD;border-radius:8px;padding:8px 10px;">
+      <span style="font-size:0.65rem;background:var(--plum-l);color:var(--plum);padding:1px 6px;border-radius:3px;flex-shrink:0;">${i===0?'主圖':'副圖'+i}</span>
+      ${url?`<img src="${url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #DDD;flex-shrink:0;" onerror="this.style.display='none'">`
+           :`<div style="width:48px;height:48px;border-radius:6px;border:1.5px dashed #DDD;flex-shrink:0;"></div>`}
+      <input type="text" value="${url}" placeholder="圖片 URL..."
+        oninput="modalImgs[${i}]=this.value;debounceModalPreview(${i},this.value)"
+        style="flex:1;padding:6px 8px;border:1px solid #DDD;border-radius:6px;font-size:0.75rem;">
+      <button onclick="removeModalImg(${i})"
+        style="background:none;border:1px solid #DDD;color:#CC2222;border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">✕</button>
+    </div>
+  `).join('');
+  addBtn.style.display = modalImgs.length >= MAX_IMGS ? 'none' : '';
 }
-function saveModalUrl(){
+
+function addModalImgSlot(){
+  if (modalImgs.length >= MAX_IMGS) return;
+  modalImgs.push('');
+  renderModalImgs();
+  setTimeout(()=>{
+    const inputs = document.querySelectorAll('#modal-img-list input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  },50);
+}
+
+function removeModalImg(i){
+  modalImgs.splice(i,1);
+  if (!modalImgs.length) modalImgs=[''];
+  renderModalImgs();
+}
+
+let _modalPreviewTimer;
+function debounceModalPreview(i, url){
+  clearTimeout(_modalPreviewTimer);
+  _modalPreviewTimer = setTimeout(()=>{
+    const rows = document.querySelectorAll('#modal-img-list > div');
+    const row = rows[i]; if (!row) return;
+    const img = row.querySelector('img');
+    const ph  = row.querySelector('div[style*="dashed"]');
+    if (url&&url.startsWith('http')){
+      if (img){ img.src=url; img.style.display=''; }
+      else if (ph){ ph.outerHTML=`<img src="${url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #DDD;flex-shrink:0;" onerror="this.style.display='none'">`; }
+    } else if (img){ img.style.display='none'; }
+  },400);
+}
+
+function closeModal(){ document.getElementById('url-modal').classList.remove('open'); activeProduct=null; }
+
+function saveModalImages(){
   if (!activeProduct) return;
-  const url = document.getElementById('modal-url').value.trim();
-  edits[activeProduct.id] = url;
+  const clean = modalImgs.filter(u=>u&&u.trim());
+  edits[activeProduct.id] = { images: clean };
   closeModal();
   renderAll();
 }
@@ -454,7 +499,10 @@ async function handleFiles(files){
         (p.nameZh||'').includes(stem) ||
         (p.nameEn||'').toLowerCase().includes(stem.toLowerCase())
       );
-      if (matched_p){ edits[matched_p.id]=rawUrl; }
+      if (matched_p){
+        if (!edits[matched_p.id]) edits[matched_p.id]={ images:[...currentImages(matched_p)] };
+        if (!edits[matched_p.id].images.includes(rawUrl)) edits[matched_p.id].images.push(rawUrl);
+      }
 
       row.querySelector('span:last-child').innerHTML =
         `<span class="ok">✓ ${rawUrl.slice(0,40)}...</span>`;

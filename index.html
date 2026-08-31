@@ -1005,6 +1005,29 @@ body { background: var(--cream, #FFFDF9); }
   .mw-sug-add{width:26px;height:26px;line-height:26px;}
 }
 
+
+/* ── Product image carousel ─────────────── */
+.pc-carousel{position:relative;width:100%;aspect-ratio:1;overflow:hidden;border-radius:var(--radius,8px) var(--radius,8px) 0 0;background:var(--cream,#FFFDF9);}
+.pc-carousel-track{display:flex;height:100%;transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);}
+.pc-carousel-track img{height:100%;object-fit:cover;flex-shrink:0;}
+.pc-carousel-prev,.pc-carousel-next{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(0,0,0,0.38);color:#fff;border:none;
+  width:28px;height:28px;border-radius:50%;cursor:pointer;
+  font-size:1rem;line-height:28px;text-align:center;
+  opacity:0;transition:opacity 0.15s;z-index:2;padding:0;
+}
+.pc-carousel:hover .pc-carousel-prev,
+.pc-carousel:hover .pc-carousel-next{opacity:1;}
+.pc-carousel-prev{left:4px;}
+.pc-carousel-next{right:4px;}
+.pc-carousel-dots{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:2;}
+.pc-carousel-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.55);cursor:pointer;transition:background 0.15s;}
+.pc-carousel-dot.active{background:#fff;}
+@media(max-width:640px){
+  .pc-carousel-prev,.pc-carousel-next{opacity:0.7;width:24px;height:24px;font-size:0.85rem;line-height:24px;}
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -1791,12 +1814,24 @@ function pCard(p){
   const pName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
   const pNameEn=(lang==='zh'&&(p.nameEn||p.name)!==pName)?`<div class="pc-en">${p.nameEn||p.name}</div>`:'';
 
-  // Image: use pc-img-wrap for consistent 1:1 aspect ratio
-  // onerror fallback: if supplier blocks hotlinking, show SVG icon instead
+  // Multi-image carousel — falls back to single image or emoji
   const fallbackSvg = EMOJI[p.cat] || '';
-  const imgSection=img
-    ?`<div class="pc-img-wrap"><img src="${p.image}" alt="${pName}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.innerHTML='<div class=\"pc-emoji\">${fallbackSvg.replace(/"/g,'\\"')}</div>';this.onerror=null;"></div>`
-    :`<div class="pc-img-wrap"><div class="pc-emoji">${EMOJI[p.cat]||''}</div></div>`;
+  const allImgs = [
+    ...((p.images||[]).filter(u=>u&&u.startsWith('http'))),
+    ...(p.image&&p.image.startsWith('http')&&!(p.images||[]).includes(p.image)?[p.image]:[])
+  ];
+  const imgSection = allImgs.length > 1
+    ? `<div class="pc-carousel" id="car-${p.id}">
+        <div class="pc-carousel-track" style="width:${allImgs.length*100}%">
+          ${allImgs.map(u=>`<img src="${u}" alt="${pName}" loading="lazy" style="width:${100/allImgs.length}%;" referrerpolicy="no-referrer" onerror="this.style.display='none'">`).join('')}
+        </div>
+        <button class="pc-carousel-prev" onclick="carSlide('${p.id}',-1,${allImgs.length},event)">&#8249;</button>
+        <button class="pc-carousel-next" onclick="carSlide('${p.id}',1,${allImgs.length},event)">&#8250;</button>
+        <div class="pc-carousel-dots">${allImgs.map((_,i)=>`<div class="pc-carousel-dot${i===0?' active':''}" onclick="carGo('${p.id}',${i},${allImgs.length},event)"></div>`).join('')}</div>
+      </div>`
+    : allImgs.length === 1
+    ? `<div class="pc-img-wrap"><img src="${allImgs[0]}" alt="${pName}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.innerHTML='<div class=\"pc-emoji\">${fallbackSvg}</div>';this.onerror=null;"></div>`
+    : `<div class="pc-img-wrap"><div class="pc-emoji">${EMOJI[p.cat]||''}</div></div>`;
 
   return`<div class="product-card" onclick="if(!event.target.closest('button')){}">
     ${badge}
@@ -2019,6 +2054,28 @@ function updateMinWarning(pc, sfx) {
   const n = getCount();
   document.getElementById('cart-count').textContent = n;
   document.getElementById('cart-count-label').textContent = n + tx('items');
+}
+
+
+// ── Image carousel controls ──────────────────────────────────────
+const _carIdx = {};
+function carSlide(id, dir, total, e) {
+  e && e.stopPropagation();
+  _carIdx[id] = ((_carIdx[id]||0) + dir + total) % total;
+  carApply(id, total);
+}
+function carGo(id, idx, total, e) {
+  e && e.stopPropagation();
+  _carIdx[id] = idx;
+  carApply(id, total);
+}
+function carApply(id, total) {
+  const car = document.getElementById('car-'+id);
+  if (!car) return;
+  const i = _carIdx[id] || 0;
+  const track = car.querySelector('.pc-carousel-track');
+  if (track) track.style.transform = `translateX(-${i*(100/total)}%)`;
+  car.querySelectorAll('.pc-carousel-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
 }
 
 function updateCart(){
