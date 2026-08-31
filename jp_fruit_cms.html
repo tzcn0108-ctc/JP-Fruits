@@ -930,6 +930,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
   <div class="modal" style="width:720px;max-height:94vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title" id="set-modal-title">新增套餐</div>
+        <span id="set-modal-id" style="font-family:var(--mono);font-size:0.72rem;color:var(--plum);background:var(--plum-l);padding:2px 8px;border-radius:4px;display:none;"></span>
       <button class="close-btn" onclick="closeModal('set-modal')">✕</button>
     </div>
     <div class="modal-body" style="overflow-y:auto;flex:1;padding:20px;">
@@ -938,7 +939,27 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
       <div class="set-section">
         <div class="set-section-title">基本資料</div>
         <div class="form-row">
-          <div class="form-group">
+          <div 
+          <!-- GitHub Token for image uploads -->
+          <div class="form-group" style="margin-bottom:16px;">
+            <label style="font-weight:600;">🔑 GitHub Token（圖片上傳用）</label>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+              <input type="password" id="gh-token-display"
+                placeholder="ghp_xxxxxx（留空即設定）"
+                style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;"
+                value="">
+              <button class="btn btn-primary btn-sm" onclick="saveGHToken()">儲存</button>
+              <button class="btn btn-ghost btn-sm" onclick="clearGHToken()">清除</button>
+            </div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:4px;">
+              Token 儲存喺瀏覽器本機，唔會上傳到任何伺服器。
+              需要 <code>repo</code> 權限。
+              <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--plum);">建立 Token ↗</a>
+            </div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin-bottom:16px;">
+
+class="form-group">
             <label>套餐名稱（中文）</label>
             <input type="text" id="s-name-zh" placeholder="例：家餸套餐" style="width:100%">
           </div>
@@ -1133,6 +1154,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="product-modal-title">新增產品</div>
+        <span id="product-modal-id" style="font-family:var(--mono);font-size:0.72rem;color:var(--plum);background:var(--plum-l);padding:2px 8px;border-radius:4px;display:none;"></span>
       <button class="close-btn" onclick="closeModal('product-modal')">✕</button>
     </div>
     <div class="modal-body">
@@ -1780,7 +1802,10 @@ function renderDashboard() {
     const priceDisplay = p.price?`<span style="font-family:var(--mono)">£${p.price.toFixed(2)}</span>`:`<span style="color:var(--gold)">未填</span>`;
     return `<tr>
       <td>
-        <div style="font-size:0.85rem;font-weight:500;">${p.nameZh||p.zh||p.name}</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:1px;">
+          <span style="font-family:var(--mono);font-size:0.68rem;color:var(--plum);background:var(--plum-l);padding:1px 5px;border-radius:4px;flex-shrink:0;">${p.id}</span>
+          <span style="font-size:0.85rem;font-weight:500;">${p.nameZh||p.zh||p.name}</span>
+        </div>
         <div style="font-size:0.72rem;color:var(--muted);">${p.nameEn||''}</div>
       </td>
       <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
@@ -1902,7 +1927,13 @@ function renderInventory() {
     const label = p.stock===-1?'無限':p.stock===0?'售罄':p.stock<=3?'庫存不足':'充足';
     const pct = p.stock===-1?100:p.stock===0?0:Math.min(100,p.stock/20*100);
     return `<tr>
-      <td><div style="font-size:0.83rem;max-width:280px;">${p.name}</div><div style="font-size:0.72rem;color:var(--muted)">${p.unit||''}</div></td>
+      <td>
+        <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
+          <span style="font-family:var(--mono);font-size:0.68rem;color:var(--plum);background:var(--plum-l);padding:1px 5px;border-radius:4px;flex-shrink:0;">${p.id}</span>
+          <span style="font-size:0.83rem;max-width:280px;">${p.nameZh||p.name}</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted)">${p.unit||''}</div>
+      </td>
       <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
       <td style="font-family:var(--mono);font-size:1rem;color:${color}">${p.stock===-1?'∞':p.stock}</td>
       <td>
@@ -1944,6 +1975,8 @@ function openProductModal(id=null) {
   state.editingProductId = id;
   const p = id ? state.products.find(x=>x.id===id) : null;
   document.getElementById('product-modal-title').textContent = p?'編輯產品':'新增產品';
+  const idBadge = document.getElementById('product-modal-id');
+  if (idBadge) { idBadge.textContent = p ? p.id : ''; idBadge.style.display = p ? 'inline' : 'none'; }
   document.getElementById('p-delete-btn').style.display = p?'block':'none';
   populateCategoryDropdowns();
   if (p) {
@@ -2668,6 +2701,29 @@ async function syncSettingsToFirebase() {
   } catch(e) { console.warn('Settings sync failed:', e); }
 }
 
+
+
+function saveGHToken() {
+  const val = document.getElementById('gh-token-display')?.value?.trim();
+  if (val) {
+    localStorage.setItem('jp-gh-token', val);
+    showToast('✓ GitHub Token 已儲存');
+    document.getElementById('gh-token-display').value = '';
+    document.getElementById('gh-token-display').placeholder = '已設定 (點擊輸入新 Token)';
+  }
+}
+function clearGHToken() {
+  localStorage.removeItem('jp-gh-token');
+  if (document.getElementById('gh-token-display')) {
+    document.getElementById('gh-token-display').value = '';
+    document.getElementById('gh-token-display').placeholder = 'ghp_xxxxxx（留空即設定）';
+  }
+  showToast('GitHub Token 已清除');
+}
+function initGHTokenDisplay() {
+  const el = document.getElementById('gh-token-display');
+  if (el && getGHToken()) el.placeholder = '已設定 (點擊輸入新 Token)';
+}
 
 // ── TOAST ──────────────────────────────────────────────
 // Short confirmation / error messages. Called from ~21 places.
@@ -3649,7 +3705,10 @@ function renderSetsPage() {
     return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:14px;">
       <div style="font-size:2rem;line-height:1;flex-shrink:0;">${s.emoji||'🎁'}</div>
       <div style="flex:1;">
-        <div style="font-weight:500;font-size:0.95rem;margin-bottom:3px;">${s.name}</div>
+        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:3px;">
+          <span style="font-family:var(--mono);font-size:0.68rem;color:var(--plum);background:var(--plum-l);padding:1px 6px;border-radius:4px;flex-shrink:0;">${s.id}</span>
+          <span style="font-weight:500;font-size:0.95rem;">${s.nameZh||s.name}</span>
+        </div>
         <div style="font-size:0.78rem;color:var(--muted);margin-bottom:6px;">${s.desc||''}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <span class="badge badge-blue">${cat?cat.zh:'未分類'}</span>
@@ -3674,6 +3733,8 @@ function openSetModal(id=null) {
 
   // Modal title + delete button
   document.getElementById('set-modal-title').textContent = s ? '編輯套餐' : '新增套餐';
+  const setIdBadge = document.getElementById('set-modal-id');
+  if (setIdBadge) { setIdBadge.textContent = s ? s.id : ''; setIdBadge.style.display = s ? 'inline' : 'none'; }
   const delBtn = document.getElementById('s-delete-btn');
   if (delBtn) delBtn.style.display = s ? 'block' : 'none';
 
@@ -3927,60 +3988,99 @@ function deleteSet() {
 
 
 
-async function uploadProductImage(file, productId) {
-  if (!window._fbStorage) {
-    alert('Firebase Storage 未準備好，請稍後再試');
-    return null;
+async // ── IMAGE UPLOAD → GITHUB ──────────────────────────────────
+// Firebase Storage is on the free Spark plan (5 GB quota, easily exceeded).
+// Instead we upload images directly to the GitHub repo's images/ folder
+// using the GitHub Contents API. The resulting raw URL is stable and free.
+const GH_REPO_OWNER = 'tzcn0108-ctc';
+const GH_REPO_NAME  = 'JP-Fruits';
+const GH_IMG_FOLDER = 'images';
+
+function getGHToken() {
+  return localStorage.getItem('jp-gh-token') || '';
+}
+
+async function uploadToGitHub(file, productId) {
+  const token = getGHToken();
+  if (!token) {
+    const t = prompt(
+      'GitHub Personal Access Token 未設定\n\n' +
+      '請去 GitHub → Settings → Developer settings → Personal access tokens (classic)\n' +
+      '建立一個有 repo 權限的 token，然後貼入下面：'
+    );
+    if (!t) return null;
+    localStorage.setItem('jp-gh-token', t.trim());
   }
-  if (!file.type.startsWith('image/')) {
-    alert('請選擇圖片檔案（JPG、PNG、WebP）');
-    return null;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    alert('圖片太大！請選擇 5MB 以下的圖片');
-    return null;
-  }
+
+  const ghToken = getGHToken();
+  const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const name = `${productId}-${Date.now()}.${ext}`;
+  const path = `${GH_IMG_FOLDER}/${name}`;
+  const apiUrl = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${path}`;
+
+  // Convert file to base64
+  const b64 = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+
+  // Check if file already exists (get sha for update)
+  let sha = '';
   try {
-    const compressed = await compressImage(file, 800, 0.82);
-    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-    const path = `products/${productId}/${Date.now()}.${ext}`;
-    const storageRef = window._fbSRef(window._fbStorage, path);
-    const snapshot = await window._fbUpload(storageRef, compressed);
-    const url = await window._fbGetURL(snapshot.ref);
-    return url;
-  } catch(e) {
-    console.error('Upload failed:', e);
-    alert('上傳失敗：' + e.message);
-    return null;
+    const check = await fetch(apiUrl, { headers: { Authorization: `token ${ghToken}` } });
+    if (check.ok) { const j = await check.json(); sha = j.sha; }
+  } catch(e) {}
+
+  const body = { message: `Add product image: ${name}`, content: b64 };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: { Authorization: `token ${ghToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      localStorage.removeItem('jp-gh-token');
+      throw new Error('GitHub Token 無效或過期，請重試');
+    }
+    throw new Error(err.message || `HTTP ${res.status}`);
   }
+  const j = await res.json();
+  // Use GitHub Pages URL (served via jpfruitsutton.uk) rather than raw.githubusercontent.com
+  return `https://jpfruitsutton.uk/${path}`;
 }
 
 async function handleProductImageUpload(input) {
   const file = input.files[0];
   if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('請選擇圖片檔案（JPG、PNG、WebP）'); return; }
+  if (file.size > 10 * 1024 * 1024) { showToast('圖片太大！請選擇 10MB 以下'); return; }
 
-  const productId = document.getElementById('p-id')?.value || 'temp-' + Date.now();
-  const statusEl = document.getElementById('p-image-upload-status');
-  const previewDiv = document.getElementById('p-image-preview');
-  const previewImg = document.getElementById('p-image-preview-img');
+  const productId = document.getElementById('p-id')?.value || 'product';
+  const statusEl  = document.getElementById('p-image-upload-status');
+  const previewDiv= document.getElementById('p-image-preview');
+  const previewImg= document.getElementById('p-image-preview-img');
 
-  // Show preview immediately
-  previewDiv.style.display = 'block';
+  previewDiv.style.display = 'flex';
   previewImg.src = URL.createObjectURL(file);
-  statusEl.textContent = '上傳中...';
+  statusEl.textContent = '上傳到 GitHub 中...';
   statusEl.style.color = 'var(--muted)';
 
-  // Upload
-  const url = await uploadProductImage(file, productId);
-
-  if (url) {
+  try {
+    const url = await uploadToGitHub(file, productId);
     document.getElementById('p-image').value = url;
-    statusEl.textContent = '✓ 上傳成功！';
+    statusEl.textContent = '✓ 已上傳！';
     statusEl.style.color = 'var(--green)';
-  } else {
-    statusEl.textContent = '✗ 上傳失敗';
+    showToast('✓ 圖片已上傳到 GitHub');
+  } catch(e) {
+    statusEl.textContent = '✗ 上傳失敗：' + e.message;
     statusEl.style.color = 'var(--red)';
-    previewDiv.style.display = 'none';
+    showToast('❌ ' + e.message, 5000);
+    console.error('GitHub upload failed:', e);
   }
 }
 
