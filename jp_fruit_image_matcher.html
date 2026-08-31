@@ -76,6 +76,15 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 /* Toast */
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 18px;border-radius:8px;font-size:0.8rem;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:300;}
 #toast.show{opacity:1;}
+
+/* GitHub scan results */
+.gh-img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.gh-img-item{border:2px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;}
+.gh-img-item:hover{border-color:var(--plum);}
+.gh-img-item.used{border-color:var(--green);}
+.gh-img-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.gh-img-name{font-size:0.6rem;color:var(--muted);padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#fafafa;}
+.scan-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -131,6 +140,32 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 
     <div style="margin-top:16px;padding:12px;background:var(--gold-l);border-radius:8px;font-size:0.75rem;color:#6B4A00;">
       <strong>上傳後：</strong>圖片會儲存到 GitHub repo 嘅 <code>images/</code> 資料夾，URL 會自動填入產品。
+    </div>
+
+    <div class="scan-section">
+      <h3>📂 掃描 GitHub 現有圖片</h3>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">
+        列出 repo 入面 <code>images/</code> 資料夾嘅所有圖片，撳圖片然後選擇配對邊個產品。
+      </div>
+      <button class="btn-primary" onclick="scanGitHubImages()" style="width:100%;padding:9px;">
+        🔍 掃描 GitHub images/ 資料夾
+      </button>
+      <div id="scan-status" style="font-size:0.75rem;color:var(--muted);margin-top:6px;"></div>
+      <div id="gh-img-grid" class="gh-img-grid"></div>
+    </div>
+
+    <!-- Assign modal: pick which product gets this GitHub image -->
+    <div id="assign-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:12px;width:360px;max-width:95vw;max-height:85vh;overflow:auto;padding:18px;">
+        <h3 style="font-size:0.95rem;margin-bottom:4px;" id="assign-img-name">選擇圖片</h3>
+        <img id="assign-preview" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;margin-bottom:12px;" src="">
+        <input type="text" id="assign-search" placeholder="搜尋產品名..." oninput="renderAssignList()"
+          style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.8rem;margin-bottom:8px;">
+        <div id="assign-list" style="max-height:260px;overflow-y:auto;border:1px solid #eee;border-radius:6px;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+          <button onclick="closeAssign()" style="padding:7px 16px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff;">取消</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -527,6 +562,137 @@ function fileToBase64(file){
     r.onerror=rej;
     r.readAsDataURL(file);
   });
+}
+
+
+// ════════════════════════════════════════════════════════
+// GITHUB IMAGE SCANNER
+// ════════════════════════════════════════════════════════
+let _scannedImgs = [];   // [{name, url, used}]
+let _assignUrl   = '';   // URL being assigned
+
+async function scanGitHubImages() {
+  const token = document.getElementById('gh-token').value.trim() ||
+                localStorage.getItem('jp-gh-token') || '';
+  if (!token) { showToast('請先填入 GitHub Token'); return; }
+
+  const statusEl = document.getElementById('scan-status');
+  const gridEl   = document.getElementById('gh-img-grid');
+  statusEl.textContent = '掃描中...';
+  gridEl.innerHTML = '';
+
+  try {
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${IMG_FOLDER}`;
+    const res = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+    if (!res.ok) {
+      if (res.status === 404) {
+        statusEl.textContent = 'images/ 資料夾未存在，先上傳圖片建立佢。';
+      } else if (res.status === 401) {
+        statusEl.textContent = '❌ Token 無效或過期';
+      } else {
+        statusEl.textContent = `❌ 錯誤 ${res.status}`;
+      }
+      return;
+    }
+    const files = await res.json();
+    const imgs = files.filter(f => /\.(jpe?g|png|webp|gif)$/i.test(f.name));
+
+    if (!imgs.length) {
+      statusEl.textContent = 'images/ 資料夾入面未有圖片。';
+      return;
+    }
+
+    // Build set of already-used URLs
+    const usedUrls = new Set(products.flatMap(p => {
+      const imgs2 = currentImages(p);
+      return imgs2;
+    }));
+
+    _scannedImgs = imgs.map(f => ({
+      name: f.name,
+      url:  `https://jpfruitsutton.uk/${IMG_FOLDER}/${f.name}`,
+      used: usedUrls.has(`https://jpfruitsutton.uk/${IMG_FOLDER}/${f.name}`)
+    }));
+
+    statusEl.textContent = `找到 ${imgs.length} 張圖片，已配對 ${_scannedImgs.filter(i=>i.used).length} 張，未配對 ${_scannedImgs.filter(i=>!i.used).length} 張`;
+
+    renderGHGrid();
+  } catch(e) {
+    statusEl.textContent = '❌ 掃描失敗：' + e.message;
+  }
+}
+
+function renderGHGrid() {
+  const grid = document.getElementById('gh-img-grid');
+  grid.innerHTML = _scannedImgs.map((img, i) => `
+    <div class="gh-img-item ${img.used?'used':''}" onclick="openAssign('${img.url}','${img.name.replace(/'/g,"\'")}',${i})" title="${img.name}">
+      <img src="${img.url}" loading="lazy" onerror="this.parentElement.style.display='none'">
+      <div class="gh-img-name">${img.name}</div>
+    </div>
+  `).join('');
+}
+
+// ── Assign modal ──
+function openAssign(url, name, idx) {
+  _assignUrl = url;
+  document.getElementById('assign-img-name').textContent = name;
+  document.getElementById('assign-preview').src = url;
+  document.getElementById('assign-search').value = '';
+  document.getElementById('assign-overlay').style.display = 'flex';
+  renderAssignList();
+}
+
+function closeAssign() {
+  document.getElementById('assign-overlay').style.display = 'none';
+  _assignUrl = '';
+}
+
+function renderAssignList() {
+  const q = document.getElementById('assign-search').value.toLowerCase();
+  const list = document.getElementById('assign-list');
+  const filtered = products.filter(p =>
+    !q ||
+    (p.nameZh||'').includes(q) ||
+    (p.nameEn||'').toLowerCase().includes(q) ||
+    (p.id||'').toLowerCase().includes(q)
+  ).slice(0, 40);
+
+  list.innerHTML = filtered.map(p => {
+    const imgs = currentImages(p);
+    const hasThisImg = imgs.includes(_assignUrl);
+    return `<div onclick="assignImgTo('${p.id}')"
+      style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #f0f0f0;
+             background:${hasThisImg?'#e8f5e9':''};"
+      onmouseover="this.style.background='${hasThisImg?'#c8e6c9':'#f5f0ff'}'"
+      onmouseout="this.style.background='${hasThisImg?'#e8f5e9':''}'">
+      ${imgs[0]?`<img src="${imgs[0]}" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
+               :`<div style="width:36px;height:36px;border-radius:5px;background:#eee;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">${SEED_IMAGES[p.id]?'📷':'🖼'}</div>`}
+      <div>
+        <div style="font-size:0.8rem;font-weight:600;">${p.nameZh||'—'}</div>
+        <div style="font-size:0.68rem;color:#888;">${p.id} · ${imgs.length} 張圖 ${hasThisImg?'· ✓ 已配對':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function assignImgTo(productId) {
+  if (!_assignUrl) return;
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+
+  // Add to this product's images
+  if (!edits[productId]) edits[productId] = { images: [...currentImages(p)] };
+  if (!edits[productId].images.includes(_assignUrl)) {
+    edits[productId].images.push(_assignUrl);
+  }
+
+  // Mark as used in scan grid
+  const item = _scannedImgs.find(i => i.url === _assignUrl);
+  if (item) { item.used = true; renderGHGrid(); }
+
+  showToast(`✓ 已配對到 ${p.nameZh||productId}`);
+  closeAssign();
+  renderAll();
 }
 
 // ════════════════════════════════════════════════════════
