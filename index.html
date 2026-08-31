@@ -1029,6 +1029,17 @@ body { background: var(--cream, #FFFDF9); }
   .pc-carousel-prev,.pc-carousel-next{opacity:0.7;width:24px;height:24px;font-size:0.85rem;line-height:24px;}
 }
 
+
+/* iOS Safari: prevent auto-zoom on input focus (requires font-size >= 16px) */
+@media (max-width:860px){
+  input, textarea, select,
+  .cf-input, .url-input, .url-input-small,
+  [type="text"], [type="tel"], [type="email"],
+  [type="number"], [type="password"], [type="search"] {
+    font-size: 16px !important;
+  }
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -1643,13 +1654,14 @@ const TX = {
 };
 
 // ── STATE ──────────────────────────────────────────────────────
-let lang='zh', products=[], categories=[], sets=[], promos=[], cart={}, appliedPromo=null, searchQuery='', activeCat='all';
+let lang=localStorage.getItem('jpfruit-lang')||'zh', products=[], categories=[], sets=[], promos=[], cart={}, appliedPromo=null, searchQuery='', activeCat='all';
 let siteSettings={};
 const setSelections={};
 
 // ── LANGUAGE ──────────────────────────────────────────────────
 function setLang(l){
   lang=l;
+  localStorage.setItem('jpfruit-lang',l);
   document.getElementById('btn-zh').classList.toggle('active',l==='zh');
   document.getElementById('btn-en').classList.toggle('active',l==='en');
   document.documentElement.lang=l==='zh'?'zh-HK':'en';
@@ -1822,7 +1834,7 @@ function pCard(p){
     ...(p.image&&p.image.startsWith('http')&&!(p.images||[]).includes(p.image)?[p.image]:[])
   ];
   const imgSection = allImgs.length > 1
-    ? `<div class="pc-carousel" id="car-${p.id}">
+    ? `<div class="pc-carousel" id="car-${p.id}" ontouchstart="carTouchStart('${p.id}',event)" ontouchend="carTouchEnd('${p.id}',${allImgs.length},event)">
         <div class="pc-carousel-track" style="width:${allImgs.length*100}%">
           ${allImgs.map(u=>`<img src="${u}" alt="${pName}" loading="lazy" style="width:${100/allImgs.length}%;" referrerpolicy="no-referrer" onerror="this.style.display='none'">`).join('')}
         </div>
@@ -2099,6 +2111,8 @@ function updateMinWarning(pc, sfx) {
 
 // ── Image carousel controls ──────────────────────────────────────
 const _carIdx = {};
+const _carTouch = {};  // touch start coords per carousel
+
 function carSlide(id, dir, total, e) {
   e && e.stopPropagation();
   _carIdx[id] = ((_carIdx[id]||0) + dir + total) % total;
@@ -2116,6 +2130,23 @@ function carApply(id, total) {
   const track = car.querySelector('.pc-carousel-track');
   if (track) track.style.transform = `translateX(-${i*(100/total)}%)`;
   car.querySelectorAll('.pc-carousel-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
+}
+
+// Swipe support: attach once per carousel on first touch
+function carTouchStart(id, e) {
+  _carTouch[id] = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}
+function carTouchEnd(id, total, e) {
+  const start = _carTouch[id];
+  if (!start) return;
+  const dx = e.changedTouches[0].clientX - start.x;
+  const dy = e.changedTouches[0].clientY - start.y;
+  // Only trigger if horizontal swipe > 40px and more horizontal than vertical
+  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+    e.preventDefault();
+    carSlide(id, dx < 0 ? 1 : -1, total, e);
+  }
+  delete _carTouch[id];
 }
 
 function updateCart(){
@@ -2365,6 +2396,13 @@ Press OK if correct and we'll be in touch.`;
   }catch(e){}
 
   // ── Step 6: Open WhatsApp ──
+  // Disable WA buttons for 8s to prevent duplicate orders on double-tap
+  document.querySelectorAll('.whatsapp-btn').forEach(btn=>{
+    btn.disabled=true; btn.style.opacity='0.6';
+    const orig=btn.textContent;
+    btn.textContent=lang==='zh'?'傳送中...':'Sending...';
+    setTimeout(()=>{btn.disabled=false;btn.style.opacity='';btn.textContent=orig;},8000);
+  });
   window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
