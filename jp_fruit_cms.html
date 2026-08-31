@@ -2008,8 +2008,7 @@ function openProductModal(id=null) {
     if (!editingImages.length) editingImages = [''];
     renderProductImageSlots();
   // Show existing image preview
-  const prevDiv = document.getElementById('p-image-preview');
-  const prevImg = document.getElementById('p-image-preview-img');
+  // (p-image-preview removed — multi-image slots handle previews now)
   if(prevDiv && prevImg && p.image) {
     prevDiv.style.display = 'block';
     prevImg.src = p.image;
@@ -2020,7 +2019,7 @@ function openProductModal(id=null) {
     document.getElementById('p-active').checked = p.active!==false;
     document.getElementById('p-featured').checked = p.featured||false;
   } else {
-    ['p-name-zh','p-name-en','p-unit','p-price','p-sale-price','p-sale-until','p-desc-zh','p-desc-en','p-image'].forEach(id=>document.getElementById(id).value='');
+    ['p-name-zh','p-name-en','p-unit','p-price','p-sale-price','p-sale-until','p-desc-zh','p-desc-en'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('p-stock').value=-1;
     document.getElementById('p-active').checked=true;
     document.getElementById('p-featured').checked=false;
@@ -4170,7 +4169,14 @@ async function handleProductImageUpload(input) {
 
   try {
     const url = await uploadToGitHub(file, productId);
-    document.getElementById('p-image').value = url;
+    // Add the uploaded image to the multi-image slot list
+    if (editingImages.length < MAX_IMAGES) {
+      editingImages.push(url);
+    } else {
+      // Replace the last empty slot, or add if under limit
+      editingImages[editingImages.length-1] = url;
+    }
+    renderProductImageSlots();
     statusEl.textContent = '✓ 已上傳！';
     statusEl.style.color = 'var(--green)';
     showToast('✓ 圖片已上傳到 GitHub');
@@ -4216,17 +4222,7 @@ function compressImage(file, maxWidth, quality) {
   });
 }
 
-function previewProductImg(url) {
-  const prevDiv = document.getElementById('p-image-preview');
-  const prevImg = document.getElementById('p-image-preview-img');
-  if (!prevDiv || !prevImg) return;
-  if (url && url.startsWith('http')) {
-    prevDiv.style.display = 'flex';
-    prevImg.src = url;
-  } else {
-    prevDiv.style.display = 'none';
-  }
-}
+// previewProductImg removed — multi-image slots handle previews now
 
 
 // ══════════════════════════════════════════════════════
