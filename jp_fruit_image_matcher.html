@@ -185,6 +185,10 @@ async function loadFromFirebase(){
   return snap.val();
 }
 
+// Seed image URLs (from SEED_PRODUCTS) — used as fallback when Firebase
+// catalogue has not yet been updated with the latest image assignments.
+const SEED_IMAGES = {"GU02": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_155840.png?v=1689087567", "GU03": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_160124.png?v=1689087748", "DS01": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_220210.png?v=1689022956", "DS02": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_162103.png?v=1689002526", "DS03": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_134234.png?v=1689079375", "DS04": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_135247.png?v=1688993904", "DS05": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_131458.png?v=1689077779", "DS06": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_142235.png?v=1689081779", "DS07": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_103020.png?v=1689068149", "DS08": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_140153.png?v=1725004320", "DS09": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_105045.png?v=1689069067", "DS10": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_123351.png?v=1688991168", "DS11": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_134739.png?v=1689079741", "DS12": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_140617.png?v=1689080823", "DS13": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_131848.png?v=1689077912", "DS14": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pork_trotters.jpg?v=1723081667", "DS19": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kujibeefballlogo.jpg?v=1719952743", "DS20": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_171039.png?v=1689091856", "DS21": "https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_161313.png?v=1689088436", "HP04": "https://www.halifa-bobo.com/wp-content/uploads/2018/11/Handmade-Fried-Tau-Kee-300x300.jpg", "HP05": "https://www.halifa-bobo.com/wp-content/uploads/2018/11/Small-Ngoh-Hiang-300x300.jpg", "HP06": "https://www.halifa-bobo.com/wp-content/uploads/2018/11/XiDao-Fried-Fish-Ball-300x300.jpg", "HP07": "https://www.halifa-bobo.com/wp-content/uploads/2018/11/Cuttlefish-Ball-300x300.jpg", "HP08": "https://www.halifa-bobo.com/wp-content/uploads/2018/11/Seafood-Tofu-300x300.jpg", "HP10": "https://www.halifa-bobo.com/wp-content/uploads/2018/11/Fried-Bean-Curd-with-Fish-Paste-300x300.jpg", "HP11": "https://www.halifa-bobo.com/wp-content/uploads/2018/11/Fried-Wan-Tan-300x300.jpg", "KU01": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_dumpling_mood_shoot.jpg?v=1723949163", "KU02": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_dumpling_mood_shoot.jpg?v=1723949163", "KU03": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_wonton_mood_shoot.jpg?v=1723949163", "KU04": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_chvie_mood_shoot.jpg?v=1723949163", "KU05": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_dumpling_mood_shoot.jpg?v=1723949163", "KU06": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_meatball_platter_35998ab4-cf6e-4091-ad54-7871d21dc80c.jpg?v=1730084225", "KU07": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kujiblacktrufflepateporkball2.jpg?v=1719953317", "KU08": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pig_ear.jpg?v=1723081664", "KU09": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_tendon_plate.jpg?v=1723081666", "KU10": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_tripe_plate.jpg?v=1723081665", "KU11": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pork_end_bf5259a9-e894-45b0-b2e8-a5ef540ce56f.jpg?v=1723128033", "KU12": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kujifbbeefoffal.jpg?v=1724158814", "KU13": "https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pork_end_bf5259a9-e894-45b0-b2e8-a5ef540ce56f.jpg?v=1723128033"};
+
 async function init(){
   document.getElementById('load-status').textContent = '讀取 Firebase...';
   try {
@@ -192,7 +196,14 @@ async function init(){
     if (data && data.products && data.products.length) {
       products   = data.products;
       categories = data.categories || [];
-      document.getElementById('load-status').textContent = `${products.length} 款產品`;
+      // Merge: for any product whose Firebase image is empty but SEED has one,
+      // use the SEED image. This covers the window between re-linking images
+      // in the file and the first CMS save that pushes them to Firebase.
+      products.forEach(p => {
+        if (!p.image && SEED_IMAGES[p.id]) p.image = SEED_IMAGES[p.id];
+      });
+      const withImg = products.filter(p=>p.image).length;
+      document.getElementById('load-status').textContent = `${products.length} 款產品 · ${withImg} 已有圖片`;
     } else {
       document.getElementById('load-status').textContent = 'Firebase 無資料 — 請先開啟 CMS';
       document.getElementById('main-content').innerHTML =
