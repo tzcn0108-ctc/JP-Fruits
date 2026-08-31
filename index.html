@@ -1834,7 +1834,7 @@ function pCard(p){
     ? `<div class="pc-img-wrap"><img src="${allImgs[0]}" alt="${pName}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div>`
     : `<div class="pc-img-wrap"><div class="pc-emoji">${EMOJI[p.cat]||''}</div></div>`;
 
-  return`<div class="product-card" onclick="if(!event.target.closest('button')){}">
+  return`<div class="product-card" id="card-${p.id}" onclick="if(!event.target.closest('button')){}">
     ${badge}
     ${imgSection}
     <div class="pc-body">
@@ -1888,7 +1888,29 @@ function addSetToCart(sid){
 }
 
 // ── CART ──────────────────────────────────────────────────────
-function addCart(id){cart[id]=(cart[id]||0)+1;updateCart();refreshCard(id);showToast(lang==='zh'?'已加入 ✓':'Added ✓');}
+function addCart(id){
+  cart[id] = (cart[id]||0)+1;
+  updateCart();
+  // Update just the button area in-place — avoids full card re-render
+  // (which would reset carousel position and cause scroll jumps)
+  const qty = cart[id];
+  const card = document.getElementById('card-'+id);
+  if (!card) { refreshCard(id); }
+  else {
+    const footer = card.querySelector('.pc-footer');
+    if (footer) {
+      const existing = footer.querySelector('.qty-control,.add-btn');
+      if (existing) {
+        existing.outerHTML = `<div class="qty-control">
+          <button class="qty-btn" onclick="chQty('${id}',-1)">−</button>
+          <div class="qty-num" data-qty-id="${id}">${qty}</div>
+          <button class="qty-btn" onclick="chQty('${id}',1)">+</button>
+        </div>`;
+      }
+    }
+  }
+  showToast(lang==='zh'?'已加入 ✓':'Added ✓');
+}
 function chQty(id,d){
   cart[id]=Math.max(0,(cart[id]||0)+d);
   if(!cart[id]) delete cart[id];
@@ -1921,7 +1943,24 @@ function chQty(id,d){
   });
 
   updateCart();
-  refreshCard(id);
+
+  // Surgically update the product card button (avoid full re-render / carousel reset)
+  const qty2 = cart[id]||0;
+  const card = document.getElementById('card-'+id);
+  if (card) {
+    const footer = card.querySelector('.pc-footer');
+    if (footer) {
+      const existing = footer.querySelector('.qty-control, .add-btn');
+      if (!existing) { refreshCard(id); return; }
+      if (qty2 <= 0) {
+        existing.outerHTML = `<button class="add-btn" onclick="addCart('${id}')">+</button>`;
+      } else {
+        const qEl = existing.querySelector('.qty-num');
+        if (qEl) { qEl.textContent = qty2; }
+        else { refreshCard(id); }
+      }
+    } else { refreshCard(id); }
+  } else { refreshCard(id); }
 }
 function rmSetItem(id){delete cart[id];updateCart();}
 function refreshCard(id){const p=products.find(x=>x.id===id);if(!p)return;const el=document.getElementById('card-'+id);if(el)el.outerHTML=pCard(p);}
@@ -2263,7 +2302,8 @@ Press OK if correct and we'll be in touch.`;
     notes: notes||'',
     lang,
     createdAt: new Date().toISOString(),
-    source: 'web'
+    source: 'web',
+    paymentStatus: 'unpaid'  // always starts unpaid; mark paid in CMS after bank transfer confirmed
   };
 
   // Save to Firebase (async, don't block WhatsApp)
@@ -2271,7 +2311,32 @@ Press OK if correct and we'll be in touch.`;
     try{
       const newRef = window._fbPush(window._fbRef(window._fbDb,'orders'));
       window._fbSet(newRef, {...orderData, firebaseId: newRef.key})
-        .then(()=>console.log('Order saved to Firebase'))
+        .then(async ()=>{
+          console.log('Order saved to Firebase');
+          // Deduct stock for tracked products (stock > 0, not -1)
+          // Writes back to Firebase catalogue so other sessions see updated stock
+          const stockUpdates = {};
+          orderData.items.forEach(item => {
+            if (item.type==='set' || !item.productId) return;
+            const p = products.find(x=>x.id===item.productId);
+            if (!p || p.stock===-1) return;
+            const newStock = Math.max(0, p.stock - (item.qty||1));
+            p.stock = newStock;  // update local state so the page reflects it
+            stockUpdates[item.productId] = newStock;
+          });
+          if (Object.keys(stockUpdates).length) {
+            // Fetch current products from Firebase, apply deductions, write back
+            const snap = await window._fbGet(window._fbRef(window._fbDb,'catalogue/products'));
+            if (snap.exists()) {
+              const fbProds = snap.val();
+              Object.entries(stockUpdates).forEach(([pid, newQty]) => {
+                const idx = (Array.isArray(fbProds)?fbProds:[]).findIndex(p=>p&&p.id===pid);
+                if (idx>=0) fbProds[idx].stock = newQty;
+              });
+              await window._fbSet(window._fbRef(window._fbDb,'catalogue/products'), fbProds);
+            }
+          }
+        })
         .catch(e=>{
           // Offline: save locally
           const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');

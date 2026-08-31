@@ -2143,7 +2143,7 @@ function saveOrder() {
     items:document.getElementById('o-items').value.trim(),total:parseFloat(document.getElementById('o-total').value)||0,
     payment:document.getElementById('o-payment').value,driver:document.getElementById('o-driver').value,
     deliveryDate:document.getElementById('o-delivery-date').value,notes:document.getElementById('o-notes').value.trim(),
-    status:'pending',createdAt:Date.now()};
+    status:'pending',paymentStatus:'unpaid',createdAt:Date.now()};
   state.orders.unshift(order); saveData(); closeModal('order-modal'); renderOrders(); renderDashboard();
 }
 
@@ -2480,6 +2480,13 @@ ${statusMsg}
 function advanceOrder(id, newStatus) {
   const o = state.orders.find(x => x.id === id);
   if (!o) return;
+  const oldStatus = o.status;
+
+  // Stock: restore when cancelled (order form already deducted at submission time)
+  if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
+    applyStockDelta(o, +1);
+  }
+
   o.status = newStatus;
 
   const updates = { status: newStatus, updatedAt: new Date().toISOString() };
@@ -2530,6 +2537,9 @@ function deleteOrder(id) {
       .then(() => showToast('已從雲端永久刪除'))
       .catch(e => { console.warn('Firebase delete failed:', e); showToast('❌ 雲端刪除失敗，本機已移除'); });
   }
+
+  // Restore stock if deleting a confirmed order
+  if (o && o.status === 'confirmed') applyStockDelta(o, +1);
 
   // Remove from local state
   state.orders = state.orders.filter(x => x.id !== id);
