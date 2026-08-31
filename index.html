@@ -2168,6 +2168,11 @@ function updateCart(){
 }
 
 
+
+// getBumpItem: returns a suggested add-on product shown at checkout.
+// Returns null to disable the feature (no upsell item shown).
+function getBumpItem() { return null; }
+
 function renderCart(cid,sfx){
   const el=document.getElementById(cid);if(!el)return;
   const items=Object.entries(cart).map(([id,val])=>({id,val,p:val&&val.isSet?{name:val.name}:products.find(x=>x.id===id)})).filter(x=>x.p);
