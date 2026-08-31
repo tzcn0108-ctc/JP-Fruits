@@ -1556,8 +1556,9 @@ async function dbGet() {
 
 async function loadData() {
   setSyncing(true);
+  let saved = null;
   try {
-    const saved = await dbGet();
+    saved = await dbGet();
     if (saved) {
       // Products always come from SEED_PRODUCTS (the Excel file is the source of truth).
       // We preserve per-product edits (image, desc, featured) made inside the CMS
@@ -1578,7 +1579,14 @@ async function loadData() {
       });
       // Non-product data: always restore from saved
       state.orders     = saved.orders   || [];
-      state.categories = saved.categories || SEED_CATEGORIES;
+      // Category NAMES always come from SEED_CATEGORIES (the Excel file) — same
+      // reasoning as products above. But categories created manually in the CMS's
+      // own "Categories" page (not present in the Excel) are preserved, so this
+      // doesn't wipe out category management done inside the CMS itself.
+      state.categories = SEED_CATEGORIES.map(sc => ({...sc}));
+      (saved.categories || []).forEach(sv => {
+        if (!SEED_CATEGORIES.find(sc => sc.id === sv.id)) state.categories.push(sv);
+      });
       state.banner     = saved.banner   || {...DEFAULT_BANNER};
       state.sets       = saved.sets     || [];
       state.promos     = saved.promos   || [];
@@ -1597,6 +1605,10 @@ async function loadData() {
   }
   setSyncing(false);
   renderAll();
+  // Push the Excel-corrected products/categories straight to Firebase, so the
+  // customer-facing Order Form (which reads Firebase directly) reflects any
+  // Excel update as soon as an admin opens the CMS — without a manual save.
+  if (saved) saveData();
 }
 
 async function saveData() {
