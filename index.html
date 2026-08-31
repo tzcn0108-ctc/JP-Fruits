@@ -2520,7 +2520,18 @@ document.addEventListener('firebaseReady', async ()=>{
       console.log('All pending orders synced');
     }
   } catch(e){}
-});setInterval(updateCountdown,60000);loadProducts();
+});setInterval(updateCountdown,60000);
+
+// Wait for Firebase before loading products so we get the freshest
+// catalogue (including images). Falls back after 3 s if Firebase never fires.
+let _productsLoaded = false;
+function _doLoadProducts() {
+  if (_productsLoaded) return;
+  _productsLoaded = true;
+  loadProducts();
+}
+document.addEventListener('firebaseReady', _doLoadProducts);
+setTimeout(_doLoadProducts, 3000);
 </script>
 
 

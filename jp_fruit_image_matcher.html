@@ -179,11 +179,21 @@ const FIREBASE_CFG = {
 // ════════════════════════════════════════════════════════
 // LOAD from Firebase catalogue
 // ════════════════════════════════════════════════════════
+// Shared Firebase instances — initialised once, reused everywhere
+let _fbApp = null, _fbDb2 = null, _fbRef2 = null, _fbUpdate2 = null, _fbGet2 = null;
+
+async function getFirebase(){
+  if (_fbDb2) return { db:_fbDb2, ref:_fbRef2, update:_fbUpdate2, get:_fbGet2 };
+  const {initializeApp, getApps, getApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const {getDatabase,ref,get,update} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+  _fbApp   = getApps().find(a=>a.name==='matcher') || initializeApp(FIREBASE_CFG,'matcher');
+  _fbDb2   = getDatabase(_fbApp);
+  _fbRef2  = ref; _fbUpdate2 = update; _fbGet2 = get;
+  return { db:_fbDb2, ref, get, update };
+}
+
 async function loadFromFirebase(){
-  const {initializeApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-  const {getDatabase,ref,get} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
-  const app = initializeApp(FIREBASE_CFG, 'matcher');
-  const db  = getDatabase(app);
+  const { db, ref, get } = await getFirebase();
   const snap = await get(ref(db,'catalogue'));
   if (!snap.exists()) return null;
   return snap.val();
@@ -350,12 +360,7 @@ async function applyAll(){
 
   showToast('儲存中...');
   try {
-    const {initializeApp,getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const {getDatabase,ref,update} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
-    const apps = getApps();
-    const app = apps.find(a=>a.name==='matcher') ||
-                initializeApp(FIREBASE_CFG,'matcher');
-    const db  = getDatabase(app);
+    const { db, ref, update } = await getFirebase();
     await update(ref(db,'catalogue'),{products, updatedAt:new Date().toISOString()});
     edits = {};
     showToast(`✓ 已儲存到 Firebase！Order Form 圖片已更新。`);
