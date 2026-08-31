@@ -2,409 +2,478 @@
 <html lang="zh-HK">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JP Fruit — 圖片管理工具</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JP Fruit — Image Matcher</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Noto Sans HK',Helvetica,sans-serif;background:#f5f0eb;color:#1C0F08;font-size:14px;}
-.header{background:linear-gradient(135deg,#4A2060,#8B2333);color:white;padding:16px 24px;}
-.header h1{font-size:1.1rem;font-weight:600;margin-bottom:4px;}
-.header p{font-size:0.78rem;color:rgba(255,255,255,0.75);}
-.tabs{display:flex;background:white;border-bottom:2px solid #e0d8d0;}
-.tab-btn{padding:12px 24px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:0.82rem;color:#9A8880;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;}
-.tab-btn.active{color:#6B4C8A;border-bottom-color:#6B4C8A;font-weight:600;}
-.tab-content{display:none;padding:20px;max-width:1200px;margin:0 auto;}
-.tab-content.active{display:block;}
-
-/* SUPPLIER IMAGES TAB */
-.supplier-section{background:white;border-radius:12px;padding:16px;margin-bottom:16px;border:1.5px solid #e0d8d0;}
-.supplier-title{font-size:0.9rem;font-weight:600;color:#4A2060;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e0d8d0;display:flex;align-items:center;gap:8px;}
-.supplier-badge{background:#EDE6F5;color:#6B4C8A;font-size:0.68rem;padding:2px 8px;border-radius:10px;font-weight:500;}
-.img-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
-.img-card{border:1.5px solid #e0d8d0;border-radius:10px;overflow:hidden;background:white;transition:all 0.15s;}
-.img-card:hover{box-shadow:0 4px 16px rgba(107,76,138,0.15);border-color:#9B7AB8;}
-.img-card.assigned{border-color:#3D6B35;background:#F0F8EE;}
-.img-thumb{height:110px;overflow:hidden;position:relative;background:#f5f0eb;}
-.img-thumb img{width:100%;height:100%;object-fit:cover;}
-.img-thumb .no-img{display:flex;align-items:center;justify-content:center;height:100%;color:#9A8880;font-size:0.75rem;text-align:center;padding:8px;}
-.img-info{padding:8px;}
-.img-prod-name{font-size:0.75rem;font-weight:600;color:#1C0F08;line-height:1.3;margin-bottom:2px;}
-.img-prod-en{font-size:0.65rem;color:#9A8880;line-height:1.3;margin-bottom:5px;}
-.img-status{font-size:0.65rem;padding:2px 7px;border-radius:8px;display:inline-block;font-weight:500;}
-.status-matched{background:#E8F5E9;color:#2E7D32;}
-.status-unmatched{background:#FFF3E0;color:#E65100;}
-.img-url{font-size:0.58rem;color:#9B7AB8;word-break:break-all;margin-top:4px;display:none;}
-
-/* YOUR PHOTOS TAB */
-.upload-zone{border:2px dashed #9B7AB8;border-radius:12px;padding:32px;text-align:center;background:white;cursor:pointer;transition:all 0.2s;margin-bottom:16px;}
-.upload-zone:hover{background:#EDE6F5;border-color:#6B4C8A;}
-.upload-zone h3{font-size:0.9rem;font-weight:600;color:#6B4C8A;margin-bottom:6px;}
-.upload-zone p{font-size:0.78rem;color:#9A8880;}
-.your-photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:16px;}
-.your-photo-card{border:1.5px solid #e0d8d0;border-radius:10px;overflow:hidden;background:white;position:relative;}
-.your-photo-card img{width:100%;height:100px;object-fit:cover;display:block;}
-.your-photo-info{padding:6px 8px;}
-.your-photo-name{font-size:0.7rem;color:#9A8880;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.your-photo-match{font-size:0.65rem;color:#3D6B35;font-weight:600;}
-.match-select{width:100%;font-size:0.68rem;padding:3px 4px;border:1px solid #e0d8d0;border-radius:4px;margin-top:4px;font-family:inherit;}
-
-/* EXPORT TAB */
-.export-section{background:white;border-radius:12px;padding:20px;margin-bottom:16px;border:1.5px solid #e0d8d0;}
-.export-section h3{font-size:0.88rem;font-weight:600;color:#4A2060;margin-bottom:12px;}
-.code-box{background:#1a1a2e;color:#e0e0ff;border-radius:8px;padding:14px;font-family:monospace;font-size:0.72rem;line-height:1.6;overflow-x:auto;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;}
-.btn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:600;transition:all 0.15s;}
-.btn-primary{background:#6B4C8A;color:white;}
-.btn-primary:hover{background:#9B7AB8;}
-.btn-green{background:#3D6B35;color:white;}
-.btn-green:hover{background:#4E8A42;}
-.btn-ghost{background:white;border:1.5px solid #e0d8d0;color:#1C0F08;}
-.btn-ghost:hover{border-color:#9B7AB8;color:#6B4C8A;}
-.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
-
-/* GitHub guide */
-.github-steps{counter-reset:step;}
-.github-step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0e4dc;}
-.github-step:last-child{border-bottom:none;}
-.step-num{background:#6B4C8A;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-top:2px;}
-.step-content{flex:1;}
-.step-title{font-size:0.82rem;font-weight:600;margin-bottom:3px;}
-.step-desc{font-size:0.74rem;color:#9A8880;line-height:1.5;}
-.code-inline{background:#f0e8ff;color:#6B4C8A;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:0.75rem;}
-
-/* Stats bar */
-.stats-bar{background:white;border-bottom:1.5px solid #e0d8d0;padding:10px 24px;display:flex;gap:20px;font-size:0.78rem;color:#9A8880;}
-.stat{display:flex;align-items:center;gap:5px;}
-.stat strong{color:#6B4C8A;}
-
-/* Notice */
-.notice{background:#FEF3D0;border:1.5px solid #D4A017;border-radius:8px;padding:10px 14px;font-size:0.78rem;color:#8B5E00;margin-bottom:14px;line-height:1.5;}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --plum:#6B4C8A;--plum-l:#EDE6F5;--plum-d:#4A2060;
+  --green:#3D6B35;--green-l:#E8F5E9;
+  --gold:#C4960A;--gold-l:#FFF9E1;
+  --border:#DDD;--bg:#F8F7F5;--surface:#FFFFFF;
+  --text:#1A1A1A;--muted:#777;--red:#CC2222;
+  --font:'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:var(--plum-d);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+header h1{font-size:1rem;font-weight:600;}
+header span{font-size:0.75rem;opacity:0.7;}
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.toolbar button{padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:0.8rem;font-family:var(--font);}
+.btn-primary{background:var(--plum);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn-ghost{background:transparent;border:1px solid var(--border)!important;color:var(--text);}
+.btn-primary:hover{background:var(--plum-d);}
+.toolbar input[type=text]{padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;width:220px;}
+.toolbar select{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;background:#fff;}
+.stats-bar{background:var(--plum-l);padding:8px 20px;font-size:0.78rem;display:flex;gap:20px;flex-wrap:wrap;}
+.stats-bar span{color:var(--plum-d);}
+.stats-bar strong{color:var(--plum);}
+main{padding:16px 20px;max-width:1400px;margin:0 auto;}
+.cat-section{margin-bottom:28px;}
+.cat-header{font-size:0.85rem;font-weight:700;color:var(--plum-d);padding:8px 0 6px;border-bottom:2px solid var(--plum-l);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.cat-count{background:var(--plum-l);color:var(--plum);font-size:0.7rem;padding:2px 8px;border-radius:20px;font-weight:600;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.card{background:var(--surface);border:2px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.15s;}
+.card.matched{border-color:var(--green);}
+.card.pending{border-color:var(--border);}
+.img-area{position:relative;aspect-ratio:1;background:#F0EBF5;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;}
+.img-area img{width:100%;height:100%;object-fit:cover;}
+.img-placeholder{font-size:2rem;opacity:0.3;}
+.img-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding:8px;}
+.img-area:hover .img-overlay{display:flex;}
+.overlay-btn{background:rgba(255,255,255,0.9);border:none;border-radius:5px;padding:5px 8px;font-size:0.7rem;cursor:pointer;font-family:var(--font);}
+.badge-matched{position:absolute;top:5px;right:5px;background:var(--green);color:#fff;font-size:0.6rem;padding:2px 6px;border-radius:10px;}
+.card-body{padding:8px 10px 10px;}
+.card-name{font-size:0.8rem;font-weight:600;line-height:1.3;margin-bottom:2px;}
+.card-en{font-size:0.68rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card-id{font-size:0.65rem;color:var(--muted);margin-top:4px;}
+.url-input{width:100%;margin-top:6px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.7rem;color:var(--text);background:#fafafa;}
+.url-input:focus{outline:none;border-color:var(--plum);}
+/* Upload panel */
+.panel{position:fixed;right:0;top:0;bottom:0;width:380px;background:var(--surface);border-left:1px solid var(--border);transform:translateX(100%);transition:transform 0.25s;z-index:100;display:flex;flex-direction:column;}
+.panel.open{transform:none;}
+.panel-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-head h2{font-size:0.95rem;font-weight:600;}
+.panel-body{flex:1;overflow-y:auto;padding:16px;}
+.panel-body h3{font-size:0.8rem;font-weight:700;margin:14px 0 6px;color:var(--plum-d);}
+.step{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;font-size:0.78rem;line-height:1.6;}
+.step code{background:var(--plum-l);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:0.85em;}
+.drop-zone{border:2px dashed var(--plum);border-radius:10px;padding:24px;text-align:center;background:var(--plum-l);cursor:pointer;margin:10px 0;}
+.drop-zone:hover{background:#E0D6F0;}
+.github-token{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.78rem;margin:4px 0 8px;}
+.progress-item{font-size:0.72rem;padding:3px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;}
+.progress-item .ok{color:var(--green);}
+.progress-item .err{color:var(--red);}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:12px;width:480px;max-width:95vw;max-height:90vh;overflow:auto;padding:20px;}
+.modal h2{font-size:1rem;font-weight:600;margin-bottom:14px;}
+.modal input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;margin-bottom:10px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 18px;border-radius:8px;font-size:0.8rem;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:300;}
+#toast.show{opacity:1;}
 </style>
 </head>
 <body>
+<header>
+  <h1>🖼 JP Fruit — Image Matcher</h1>
+  <span id="load-status">正在讀取產品...</span>
+</header>
 
-<div class="header">
-  <h1>JP Fruit 圖片管理工具</h1>
-  <p>管理供應商圖片配對 · 上傳自家相片 · 匯出更新代碼</p>
+<div class="toolbar">
+  <input type="text" id="search" placeholder="搜尋產品名..." oninput="renderAll()">
+  <select id="cat-filter" onchange="renderAll()"><option value="">所有分類</option></select>
+  <select id="img-filter" onchange="renderAll()">
+    <option value="">全部產品</option>
+    <option value="matched">已有圖片</option>
+    <option value="missing">未有圖片</option>
+  </select>
+  <button class="btn-primary" onclick="applyAll()">💾 儲存所有更改</button>
+  <button class="btn-gold" onclick="openPanel()">⬆ 上傳圖片到 GitHub</button>
+  <button class="btn-ghost" onclick="exportJSON()">📋 複製 JSON</button>
 </div>
 
-<div class="stats-bar">
-  <div class="stat">供應商圖片：<strong id="stat-supplier">42</strong> 張</div>
-  <div class="stat">已配對：<strong id="stat-matched">0</strong> 款</div>
-  <div class="stat">你的相片：<strong id="stat-yours">0</strong> 張</div>
-  <div class="stat">總覆蓋：<strong id="stat-total">0</strong> / 219 款</div>
-</div>
+<div class="stats-bar" id="stats-bar">載入中...</div>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('supplier')">📦 供應商圖片（42張）</button>
-  <button class="tab-btn" onclick="switchTab('yours')">📷 你的相片</button>
-  <button class="tab-btn" onclick="switchTab('github')">🔧 上傳 GitHub 指南</button>
-  <button class="tab-btn" onclick="switchTab('export')">⬇ 匯出代碼</button>
-</div>
+<main id="main-content">
+  <div style="text-align:center;padding:60px;color:var(--muted);">連接中...</div>
+</main>
 
-<!-- TAB 1: SUPPLIER IMAGES -->
-<div id="tab-supplier" class="tab-content active">
-  <div class="notice">
-    ⚠️ 呢啲圖片係直接從供應商網站載入。如果瀏覽器顯示圖片，代表可以用；如果顯示不到，你需要先下載再上傳去 GitHub（見「上傳 GitHub 指南」）。
+<!-- Upload Panel -->
+<div class="panel" id="upload-panel">
+  <div class="panel-head">
+    <h2>⬆ 上傳圖片到 GitHub</h2>
+    <button onclick="closePanel()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;">✕</button>
   </div>
-  <div id="supplier-content"></div>
-</div>
-
-<!-- TAB 2: YOUR PHOTOS -->
-<div id="tab-yours" class="tab-content">
-  <div class="notice">
-    上傳你的產品相片後，選擇對應產品配對。完成後去「匯出代碼」頁面。
-  </div>
-  <div class="upload-zone" onclick="document.getElementById('file-input').click()">
-    <h3>點擊或拖放上傳相片</h3>
-    <p>支援 JPG、PNG、WebP · 可一次選多張</p>
-    <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handleUpload(this.files)">
-  </div>
-  <div id="your-photos-grid" class="your-photos-grid"></div>
-</div>
-
-<!-- TAB 3: GITHUB GUIDE -->
-<div id="tab-github" class="tab-content">
-  <div class="export-section">
-    <h3>為何要用 GitHub 放圖片？</h3>
-    <p style="font-size:0.8rem;color:#9A8880;line-height:1.7;margin-bottom:14px;">
-      供應商圖片（HK Dim Sum、Kuji、Bobo）可能因為 CORS 政策而無法喺客戶網站顯示。
-      將圖片放喺你自己嘅 GitHub repository 最穩定可靠，而且永遠免費（1GB 空間）。
-    </p>
-    <div class="github-steps">
-      <div class="github-step">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <div class="step-title">喺 GitHub 建立 images 資料夾</div>
-          <div class="step-desc">去 <code class="code-inline">github.com/tzcn0108-ctc/JP-Fruits</code> → 撳「Add file」→「Create new file」→ 輸入 <code class="code-inline">images/.gitkeep</code> → Commit</div>
-        </div>
-      </div>
-      <div class="github-step">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <div class="step-title">下載供應商圖片</div>
-          <div class="step-desc">撳下面「下載供應商圖片清單」按鈕，逐個右鍵圖片「另存新檔」到你電腦一個資料夾，建議命名為中文產品名（例如：燒賣.jpg）</div>
-        </div>
-      </div>
-      <div class="github-step">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <div class="step-title">上傳到 GitHub images 資料夾</div>
-          <div class="step-desc">去 <code class="code-inline">github.com/tzcn0108-ctc/JP-Fruits/tree/main/images</code> → 「Add file」→「Upload files」→ 選擇全部圖片 → Commit</div>
-        </div>
-      </div>
-      <div class="github-step">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <div class="step-title">圖片連結格式</div>
-          <div class="step-desc">上傳後，圖片連結格式係：<br><code class="code-inline">https://tzcn0108-ctc.github.io/JP-Fruits/images/燒賣.jpg</code><br>可以直接貼入 CMS 產品圖片欄位。</div>
-        </div>
-      </div>
-      <div class="github-step">
-        <div class="step-num">5</div>
-        <div class="step-content">
-          <div class="step-title">用配對工具（你的相片 Tab）更新連結</div>
-          <div class="step-desc">上傳相片後在「你的相片」Tab 配對產品，然後匯出代碼更新網站。</div>
-        </div>
-      </div>
+  <div class="panel-body">
+    <h3>GitHub Personal Access Token</h3>
+    <div class="step">
+      1. 去 <code>github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</code><br>
+      2. Generate new token → 勾選 <code>repo</code> 權限<br>
+      3. 複製 token 貼落下面
     </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="downloadImageList()">📋 下載供應商圖片清單 (CSV)</button>
+    <input type="password" class="github-token" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxx">
+
+    <h3>選擇圖片上傳</h3>
+    <div class="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div style="font-size:1.5rem;margin-bottom:6px;">📁</div>
+      <div style="font-size:0.82rem;color:var(--plum-d);">點擊選擇圖片</div>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">支援 JPG、PNG、WebP（可多選）</div>
+    </div>
+    <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handleFiles(this.files)">
+
+    <h3>上傳進度</h3>
+    <div id="upload-progress" style="font-size:0.75rem;color:var(--muted);">未開始</div>
+
+    <div style="margin-top:16px;padding:12px;background:var(--gold-l);border-radius:8px;font-size:0.75rem;color:#6B4A00;">
+      <strong>上傳後：</strong>圖片會儲存到 GitHub repo 嘅 <code>images/</code> 資料夾，URL 會自動填入產品。
     </div>
   </div>
 </div>
 
-<!-- TAB 4: EXPORT -->
-<div id="tab-export" class="tab-content">
-  <div class="export-section">
-    <h3>匯出產品圖片更新代碼</h3>
-    <p style="font-size:0.78rem;color:#9A8880;margin-bottom:12px;">複製下面嘅 JSON，發俾 Claude，佢會幫你一次過更新 CMS 同 Order Form 入面所有產品圖片。</p>
-    <div class="code-box" id="export-json">點擊「生成代碼」先</div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="generateExport()">生成代碼</button>
-      <button class="btn btn-green" onclick="copyExport()">複製 JSON</button>
+<!-- URL Modal -->
+<div class="modal-bg" id="url-modal">
+  <div class="modal">
+    <h2 id="modal-title">設定圖片 URL</h2>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;" id="modal-product"></p>
+    <input type="text" id="modal-url" placeholder="https://..." oninput="previewModalImg()">
+    <img id="modal-preview" src="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:none;margin-bottom:10px;">
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn-primary" onclick="saveModalUrl()">確認</button>
     </div>
   </div>
-
-  <div class="export-section">
-    <h3>已配對圖片總覽</h3>
-    <div id="export-summary" style="font-size:0.8rem;color:#9A8880;">點擊「生成代碼」查看</div>
-  </div>
 </div>
+
+<div id="toast"></div>
 
 <script>
-// ── SUPPLIER IMAGE DATABASE ────────────────────────────────
-const SUPPLIER_IMAGES = {
-  "HK Dim Sum": [
-    {name:"豬蝦燒賣 20粒", nameEn:"Siu Mai (Prawn & Pork) 20pcs", prodId:"p100", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_220210.png?v=1689022956"},
-    {name:"魚肉燒賣 20粒", nameEn:"Fish Siu Mai 20pcs", prodId:"p101", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_162103.png?v=1689002526"},
-    {name:"牛肉燒賣 20粒", nameEn:"Beef Siu Mai 20pcs", prodId:"p102", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_134234.png?v=1689079375"},
-    {name:"蝦餃 12粒", nameEn:"Shrimp Dumplings 12pcs", prodId:"p106", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_135247.png?v=1688993904"},
-    {name:"鮮竹捲 10條", nameEn:"Bean Curd Roll 10pcs", prodId:"p104", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_131458.png?v=1689077779"},
-    {name:"珍珠雞 4件", nameEn:"Mini Glutinous Rice 4pcs", prodId:"p105", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_142235.png?v=1689081779"},
-    {name:"叉燒包 6個", nameEn:"BBQ Pork Bun 6pcs", prodId:"p107", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_140153.png?v=1725004320"},
-    {name:"雞包 6個", nameEn:"Chicken Bun 6pcs", prodId:"p108", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_105045.png?v=1689069067"},
-    {name:"奶黃包 6個", nameEn:"Custard Bun 6pcs", prodId:"p109", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_103020.png?v=1689068149"},
-    {name:"小籠包 12個", nameEn:"Siu Loong Bao 12pcs", prodId:"p110", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_123351.png?v=1688991168"},
-    {name:"水晶餃 15粒", nameEn:"Crystal Dumplings 15pcs", prodId:"p124", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230710_135247.png?v=1688993904"},
-    {name:"豉汁排骨 410g", nameEn:"Black Bean Sauce Spare Ribs 410g", prodId:"p111", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_134739.png?v=1689079741"},
-    {name:"豉汁鳳爪 410g", nameEn:"Black Bean Sauce Chicken Feet 410g", prodId:"p112", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_140617.png?v=1689080823"},
-    {name:"黑椒金錢肚 400g", nameEn:"Black Pepper Beef Tripe 400g", prodId:"p127", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_131848.png?v=1689077912"},
-    {name:"叉燒 500g", nameEn:"BBQ Roast Pork 500g", prodId:"p138", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_171039.png?v=1689091856"},
-    {name:"烤鴨 1隻 850g", nameEn:"Roast Duck 850g", prodId:"p139", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_161313.png?v=1689088436"},
-    {name:"師父港式滷味 BIG", nameEn:"HK Lomei Big", prodId:"p140", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_155840.png?v=1689087567"},
-    {name:"咖喱魚蛋豬皮", nameEn:"HK Curry Fish Ball & Pork Crunch", prodId:"p142", url:"https://hkdimsum.co.uk/cdn/shop/files/PhotoRoom-20230711_160124.png?v=1689087748"},
-  ],
-  "Kuji Asian Cuisine": [
-    {name:"鮮蝦雲吞 12粒", nameEn:"Fresh Prawn Wonton 12pcs", prodId:"p119", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_wonton_mood_shoot.jpg?v=1723949163"},
-    {name:"韮菜餃 12粒", nameEn:"Chive Dumplings 12pcs", prodId:"p120", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_chvie_mood_shoot.jpg?v=1723949163"},
-    {name:"鳳城水餃 12粒", nameEn:"Fengcheng Boiled Dumplings 12pcs", prodId:"p121", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_dumpling_mood_shoot.jpg?v=1723949163"},
-    {name:"羊肉餃 12粒", nameEn:"Lamb Dumplings 12pcs", prodId:"p122", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_dumpling_mood_shoot.jpg?v=1723949163"},
-    {name:"洋蔥牛肉餃 12粒", nameEn:"Onion Beef Dumplings 12pcs", prodId:"p125", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_dumpling_mood_shoot.jpg?v=1723949163"},
-    {name:"四寶丸 16粒", nameEn:"Four Treasure Balls 16pcs", prodId:"p123", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_fb_meatball_platter_35998ab4-cf6e-4091-ad54-7871d21dc80c.jpg?v=1730084225"},
-    {name:"黑松露豬肉丸 12粒", nameEn:"Black Truffle Pork Balls 12pcs", prodId:"p126", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kujiblacktrufflepateporkball2.jpg?v=1719953317"},
-    {name:"陳皮牛肉丸 200g", nameEn:"Chenpi Beef Ball 200g", prodId:"p116", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kujibeefballlogo.jpg?v=1719952743"},
-    {name:"豬肉丸 200g", nameEn:"Pork Ball 200g", prodId:"p117", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kujiporkballwithmushroom2.jpg?v=1719953012"},
-    {name:"潮式香滑牛筋", nameEn:"Teochew Braised Beef Tendon", prodId:"p160", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_tendon_plate.jpg?v=1723081666"},
-    {name:"潮式五香牛肚 260g", nameEn:"Teochew Five-Spice Beef Tripe 260g", prodId:"p161", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_tripe_plate.jpg?v=1723081665"},
-    {name:"潮式滷水豬大腸 260g", nameEn:"Teochew Braised Pork Intestine 260g", prodId:"p162", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pork_end_bf5259a9-e894-45b0-b2e8-a5ef540ce56f.jpg?v=1723128033"},
-    {name:"潮式秘制牛雜 410g", nameEn:"Teochew Braised Mixed Beef Offal 410g", prodId:"p163", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kujifbbeefoffal.jpg?v=1724158814"},
-    {name:"潮式秘製崩沙腩 290g", nameEn:"Teochew Braised Pork Belly 290g", prodId:"p164", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pork_end_bf5259a9-e894-45b0-b2e8-a5ef540ce56f.jpg?v=1723128033"},
-    {name:"潮式滷水豬耳 300g", nameEn:"Teochew Braised Pig Ear 300g", prodId:"p159", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pig_ear.jpg?v=1723081664"},
-    {name:"南乳豬手 500g", nameEn:"Pork Trotters with Red Bean Curd", prodId:"p157", url:"https://www.kujiasiancuisine.co.uk/cdn/shop/files/kuji_pork_trotters.jpg?v=1723081667"},
-  ],
-  "Bobo (Halifa)": [
-    {name:"Bobo 魚皮餃 200g", nameEn:"Bobo Fish Dumplings 200g", prodId:"p129", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/Handmade-Fried-Tau-Kee-300x300.jpg"},
-    {name:"Bobo 小五香魚卷 250g", nameEn:"Bobo Five Spices Fish Rolls 250g", prodId:"p130", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/Small-Ngoh-Hiang-300x300.jpg"},
-    {name:"Bobo 白魚蛋 200g", nameEn:"Bobo White Fish Ball 200g", prodId:"p131", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/XiDao-Fried-Fish-Ball-300x300.jpg"},
-    {name:"Bobo 墨魚丸 250g", nameEn:"Bobo Cuttlefish Ball 250g", prodId:"p132", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/Cuttlefish-Ball-300x300.jpg"},
-    {name:"BOBO 炸魚腐竹卷 500g", nameEn:"BOBO Fried Fish Bean Curd Roll 500g", prodId:"p134", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/Fried-Bean-Curd-with-Fish-Paste-300x300.jpg"},
-    {name:"BOBO 娘惹香辣炸魚腐竹卷 250g", nameEn:"BOBO Nyonya Spicy Fried Fish Roll 250g", prodId:"p135", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/Fried-Bean-Curd-with-Fish-Paste-300x300.jpg"},
-    {name:"BOBO 頂級炸魚雲吞", nameEn:"BOBO Premium Fried Fish Wonton", prodId:"p136", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/Fried-Wan-Tan-300x300.jpg"},
-    {name:"Bobo 一品鍋", nameEn:"Bobo Mix Combo Hotpot", prodId:"p133", url:"https://www.halifa-bobo.com/wp-content/uploads/2018/11/Seafood-Tofu-300x300.jpg"},
-  ]
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+const REPO_OWNER = 'tzcn0108-ctc';
+const REPO_NAME  = 'JP-Fruits';
+const IMG_FOLDER = 'images';
+
+let products = [];
+let categories = [];
+let edits = {};      // id → new image url
+let activeProduct = null;
+
+// ── Firebase imports (same module pattern as CMS) ──
+const FIREBASE_CFG = {
+  apiKey:"AIzaSyBw9aUAk0SzTGTZnA7S5M-ehFBnRO0dcuo",
+  authDomain:"jp-fruits.firebaseapp.com",
+  databaseURL:"https://jp-fruits-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"jp-fruits",storageBucket:"jp-fruits.appspot.com",messagingSenderId:"248770350591",appId:"1:248770350591:web:demo"
 };
 
-// Track all matched images: prodId -> url
-let allMatches = {};
-
-// Initialize supplier images as pre-matched
-Object.values(SUPPLIER_IMAGES).flat().forEach(img => {
-  allMatches[img.prodId] = img.url;
-});
-
-// Your uploaded photos
-let yourPhotos = []; // {file, url, prodId}
-
-// ── INIT ──
-function init() {
-  renderSupplierImages();
-  updateStats();
+// ════════════════════════════════════════════════════════
+// LOAD from Firebase catalogue
+// ════════════════════════════════════════════════════════
+async function loadFromFirebase(){
+  const {initializeApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const {getDatabase,ref,get} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+  const app = initializeApp(FIREBASE_CFG, 'matcher');
+  const db  = getDatabase(app);
+  const snap = await get(ref(db,'catalogue'));
+  if (!snap.exists()) return null;
+  return snap.val();
 }
 
-function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
-  if (name === 'export') generateExport();
+async function init(){
+  document.getElementById('load-status').textContent = '讀取 Firebase...';
+  try {
+    const data = await loadFromFirebase();
+    if (data && data.products && data.products.length) {
+      products   = data.products;
+      categories = data.categories || [];
+      document.getElementById('load-status').textContent = `${products.length} 款產品`;
+    } else {
+      document.getElementById('load-status').textContent = 'Firebase 無資料 — 請先開啟 CMS';
+      document.getElementById('main-content').innerHTML =
+        '<div style="text-align:center;padding:60px;color:#888;font-size:0.9rem;">未能讀取產品。<br>請先打開 CMS 讓佢同步一次，然後重新整理此頁面。</div>';
+      return;
+    }
+  } catch(e) {
+    document.getElementById('load-status').textContent = '讀取失敗';
+    document.getElementById('main-content').innerHTML =
+      `<div style="text-align:center;padding:60px;color:#888;">Firebase 讀取失敗：${e.message}</div>`;
+    return;
+  }
+  buildCatFilter();
+  renderAll();
 }
 
-function renderSupplierImages() {
-  const container = document.getElementById('supplier-content');
-  container.innerHTML = Object.entries(SUPPLIER_IMAGES).map(([supplier, imgs]) => `
-    <div class="supplier-section">
-      <div class="supplier-title">
-        ${supplier}
-        <span class="supplier-badge">${imgs.length} 張圖片</span>
-      </div>
-      <div class="img-cards">
-        ${imgs.map(img => `
-          <div class="img-card assigned" id="card-${img.prodId}">
-            <div class="img-thumb">
-              <img src="${img.url}" alt="${img.name}"
-                onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'>圖片無法載入<br><small>需上傳到 GitHub</small></div>'"
-                loading="lazy">
-            </div>
-            <div class="img-info">
-              <div class="img-prod-name">${img.name}</div>
-              <div class="img-prod-en">${img.nameEn}</div>
-              <span class="img-status status-matched">已配對 ${img.prodId}</span>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
-}
-
-// ── YOUR PHOTOS ──
-function handleUpload(files) {
-  Array.from(files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      yourPhotos.push({file, url: e.target.result, prodId: null, name: file.name});
-      renderYourPhotos();
-      updateStats();
-    };
-    reader.readAsDataURL(file);
+// ════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════
+function buildCatFilter(){
+  const sel = document.getElementById('cat-filter');
+  categories.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.zh || c.name;
+    sel.appendChild(o);
   });
 }
 
-function renderYourPhotos() {
-  const grid = document.getElementById('your-photos-grid');
-  if (!yourPhotos.length) { grid.innerHTML = ''; return; }
-  // Build product options
-  const allProds = getAllProducts();
-  grid.innerHTML = yourPhotos.map((photo, i) => `
-    <div class="your-photo-card">
-      <img src="${photo.url}" alt="${photo.name}">
-      <div class="your-photo-info">
-        <div class="your-photo-name" title="${photo.name}">${photo.name}</div>
-        ${photo.prodId ? `<div class="your-photo-match">✓ ${photo.prodId}</div>` : ''}
-        <select class="match-select" onchange="matchPhoto(${i}, this.value)">
-          <option value="">-- 選擇產品 --</option>
-          ${allProds.map(p => `<option value="${p.id}" ${photo.prodId===p.id?'selected':''}>${p.nameZh}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-  `).join('');
-}
+function currentUrl(p){ return edits[p.id] !== undefined ? edits[p.id] : (p.image||''); }
 
-function matchPhoto(i, prodId) {
-  yourPhotos[i].prodId = prodId;
-  if (prodId) allMatches[prodId] = yourPhotos[i].url;
-  renderYourPhotos();
-  updateStats();
-}
+function renderAll(){
+  const q    = document.getElementById('search').value.toLowerCase();
+  const cat  = document.getElementById('cat-filter').value;
+  const imgF = document.getElementById('img-filter').value;
 
-function getAllProducts() {
-  // Placeholder - in real use would read from localStorage
-  return Object.values(SUPPLIER_IMAGES).flat().map(i => ({id: i.prodId, nameZh: i.name}));
-}
+  let prods = products;
+  if (q)   prods = prods.filter(p=>(p.nameZh||'').includes(q)||(p.nameEn||'').toLowerCase().includes(q));
+  if (cat) prods = prods.filter(p=>p.cat===cat);
+  if (imgF==='matched') prods = prods.filter(p=>currentUrl(p));
+  if (imgF==='missing') prods = prods.filter(p=>!currentUrl(p));
 
-// ── STATS ──
-function updateStats() {
-  const supplierCount = Object.values(SUPPLIER_IMAGES).flat().length;
-  const matchedCount = Object.keys(allMatches).length;
-  const yoursCount = yourPhotos.length;
-  document.getElementById('stat-supplier').textContent = supplierCount;
-  document.getElementById('stat-matched').textContent = matchedCount;
-  document.getElementById('stat-yours').textContent = yoursCount;
-  document.getElementById('stat-total').textContent = matchedCount;
-}
+  // Stats
+  const total   = products.length;
+  const withImg = products.filter(p=>currentUrl(p)).length;
+  const changed = Object.keys(edits).length;
+  document.getElementById('stats-bar').innerHTML =
+    `<span>總共 <strong>${total}</strong> 款</span>
+     <span>已有圖片 <strong>${withImg}</strong></span>
+     <span>未有圖片 <strong>${total-withImg}</strong></span>
+     ${changed ? `<span style="color:var(--gold)">⚡ <strong>${changed}</strong> 項未儲存</span>` : ''}`;
 
-// ── EXPORT ──
-function generateExport() {
-  const json = JSON.stringify(allMatches, null, 2);
-  document.getElementById('export-json').textContent = json;
-
-  // Summary
-  const bySupplier = {};
-  Object.entries(SUPPLIER_IMAGES).forEach(([sup, imgs]) => {
-    bySupplier[sup] = imgs.filter(i => allMatches[i.prodId]).length + '/' + imgs.length;
+  // Group by category
+  const byCat = {};
+  prods.forEach(p=>{
+    const cid = p.cat||'others';
+    (byCat[cid]||(byCat[cid]=[])).push(p);
   });
-  const yourMatched = yourPhotos.filter(p => p.prodId).length;
 
-  document.getElementById('export-summary').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:8px;">
-      ${Object.entries(bySupplier).map(([sup, count]) => `
-        <div style="background:#f5f0eb;border-radius:8px;padding:10px;">
-          <div style="font-size:0.75rem;font-weight:600;color:#4A2060;">${sup}</div>
-          <div style="font-size:1.1rem;font-weight:700;color:#6B4C8A;">${count}</div>
-        </div>
-      `).join('')}
-      <div style="background:#f5f0eb;border-radius:8px;padding:10px;">
-        <div style="font-size:0.75rem;font-weight:600;color:#4A2060;">你的相片</div>
-        <div style="font-size:1.1rem;font-weight:700;color:#3D6B35;">${yourMatched} 已配對</div>
+  const catOrder = categories.map(c=>c.id);
+  const sortedCats = Object.keys(byCat).sort((a,b)=>catOrder.indexOf(a)-catOrder.indexOf(b));
+
+  if (!sortedCats.length){
+    document.getElementById('main-content').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--muted);">冇符合產品</div>';
+    return;
+  }
+
+  document.getElementById('main-content').innerHTML = sortedCats.map(cid=>{
+    const catObj = categories.find(c=>c.id===cid);
+    const catName = catObj ? (catObj.zh||catObj.name) : cid;
+    const catEn   = catObj ? catObj.name : '';
+    const ps = byCat[cid];
+    return `<div class="cat-section">
+      <div class="cat-header">
+        ${catName} <span style="font-weight:400;color:var(--muted);font-size:0.78rem;">${catEn}</span>
+        <span class="cat-count">${ps.filter(p=>currentUrl(p)).length} / ${ps.length}</span>
+      </div>
+      <div class="grid">${ps.map(productCard).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function productCard(p){
+  const url = currentUrl(p);
+  const hasImg = !!url;
+  return `<div class="card ${hasImg?'matched':'pending'}">
+    <div class="img-area" onclick="openModal('${p.id}')">
+      ${hasImg
+        ? `<img src="${url}" alt="${p.nameZh||''}" loading="lazy">`
+        : `<span class="img-placeholder">🖼</span>`}
+      ${hasImg ? `<div class="badge-matched">✓</div>` : ''}
+      <div class="img-overlay">
+        <button class="overlay-btn" onclick="event.stopPropagation();openModal('${p.id}')">🔗 設 URL</button>
+        ${hasImg ? `<button class="overlay-btn" onclick="event.stopPropagation();clearImg('${p.id}')">✕ 清除</button>` : ''}
       </div>
     </div>
-    <p style="margin-top:12px;font-size:0.78rem;color:#9A8880;">
-      將上面嘅 JSON 複製，發俾 Claude，佢會幫你一次過更新 CMS 同 Order Form！
-    </p>
-  `;
+    <div class="card-body">
+      <div class="card-name">${p.nameZh||'—'}</div>
+      <div class="card-en">${p.nameEn||''}</div>
+      <div class="card-id">${p.id}</div>
+      <input type="text" class="url-input" placeholder="貼圖片 URL..."
+        value="${url}"
+        oninput="setEdit('${p.id}',this.value)"
+        onclick="event.stopPropagation()">
+    </div>
+  </div>`;
 }
 
-function copyExport() {
-  const json = document.getElementById('export-json').textContent;
-  navigator.clipboard.writeText(json).then(() => {
-    alert('✅ JSON 已複製！\n\n貼入對話發俾 Claude，佢會自動更新所有產品圖片。');
+// ════════════════════════════════════════════════════════
+// EDITING
+// ════════════════════════════════════════════════════════
+function setEdit(id, url){
+  const p = products.find(x=>x.id===id);
+  if (!p) return;
+  edits[id] = url.trim();
+  // Update card border live
+  const cards = document.querySelectorAll('.card');
+  // Just re-render the stats
+  const withImg = products.filter(p=>currentUrl(p)).length;
+  const changed = Object.keys(edits).length;
+  document.getElementById('stats-bar').innerHTML =
+    `<span>總共 <strong>${products.length}</strong> 款</span>
+     <span>已有圖片 <strong>${withImg}</strong></span>
+     <span>未有圖片 <strong>${products.length-withImg}</strong></span>
+     ${changed ? `<span style="color:var(--gold)">⚡ <strong>${changed}</strong> 項未儲存</span>` : ''}`;
+}
+
+function clearImg(id){
+  edits[id] = '';
+  renderAll();
+}
+
+// ════════════════════════════════════════════════════════
+// SAVE — write back to Firebase
+// ════════════════════════════════════════════════════════
+async function applyAll(){
+  if (!Object.keys(edits).length){ showToast('冇更改'); return; }
+
+  // Apply edits to products array
+  Object.entries(edits).forEach(([id,url])=>{
+    const p = products.find(x=>x.id===id);
+    if (p) p.image = url;
+  });
+
+  showToast('儲存中...');
+  try {
+    const {initializeApp,getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const {getDatabase,ref,update} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    const apps = getApps();
+    const app = apps.find(a=>a.name==='matcher') ||
+                initializeApp(FIREBASE_CFG,'matcher');
+    const db  = getDatabase(app);
+    await update(ref(db,'catalogue'),{products, updatedAt:new Date().toISOString()});
+    edits = {};
+    showToast(`✓ 已儲存到 Firebase！Order Form 圖片已更新。`);
+    renderAll();
+  } catch(e){
+    showToast('❌ 儲存失敗：'+e.message);
+  }
+}
+
+function exportJSON(){
+  const out = {};
+  products.filter(p=>p.image).forEach(p=>{ out[p.id]=p.image; });
+  Object.entries(edits).forEach(([id,url])=>{ if(url) out[id]=url; });
+  navigator.clipboard.writeText(JSON.stringify(out,null,2))
+    .then(()=>showToast('✓ JSON 已複製'));
+}
+
+// ════════════════════════════════════════════════════════
+// URL MODAL
+// ════════════════════════════════════════════════════════
+function openModal(id){
+  activeProduct = products.find(p=>p.id===id);
+  if (!activeProduct) return;
+  const url = currentUrl(activeProduct);
+  document.getElementById('modal-title').textContent = `設定圖片 — ${activeProduct.nameZh||activeProduct.nameEn}`;
+  document.getElementById('modal-product').textContent = `ID: ${activeProduct.id}  ·  ${activeProduct.nameEn||''}`;
+  document.getElementById('modal-url').value = url;
+  const prev = document.getElementById('modal-preview');
+  if (url){ prev.src=url; prev.style.display='block'; }
+  else { prev.style.display='none'; }
+  document.getElementById('url-modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('url-modal').classList.remove('open'); activeProduct=null; }
+function previewModalImg(){
+  const url = document.getElementById('modal-url').value.trim();
+  const prev = document.getElementById('modal-preview');
+  if (url){ prev.src=url; prev.style.display='block'; }
+  else { prev.style.display='none'; }
+}
+function saveModalUrl(){
+  if (!activeProduct) return;
+  const url = document.getElementById('modal-url').value.trim();
+  edits[activeProduct.id] = url;
+  closeModal();
+  renderAll();
+}
+
+// ════════════════════════════════════════════════════════
+// GITHUB UPLOAD
+// ════════════════════════════════════════════════════════
+function openPanel(){ document.getElementById('upload-panel').classList.add('open'); }
+function closePanel(){ document.getElementById('upload-panel').classList.remove('open'); }
+
+async function handleFiles(files){
+  const token = document.getElementById('gh-token').value.trim();
+  if (!token){ alert('請先填入 GitHub Token！'); return; }
+
+  const progressEl = document.getElementById('upload-progress');
+  progressEl.innerHTML = '';
+
+  for (const file of files){
+    const row = document.createElement('div');
+    row.className = 'progress-item';
+    row.innerHTML = `<span>${file.name}</span><span>上傳中...</span>`;
+    progressEl.appendChild(row);
+
+    try {
+      // Read file as base64
+      const b64 = await fileToBase64(file);
+      const path = `${IMG_FOLDER}/${file.name}`;
+      const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+
+      // Check if file exists (to get sha for update)
+      let sha = '';
+      try {
+        const check = await fetch(apiUrl, {headers:{Authorization:`token ${token}`}});
+        if (check.ok){ const j=await check.json(); sha=j.sha; }
+      } catch(e){}
+
+      const body = {message:`Add image: ${file.name}`, content:b64};
+      if (sha) body.sha = sha;
+
+      const res = await fetch(apiUrl, {
+        method:'PUT',
+        headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(res.status+' '+res.statusText);
+      const j = await res.json();
+      const rawUrl = j.content.download_url;
+
+      // Auto-match to a product by filename (strip extension)
+      const stem = file.name.replace(/\.[^.]+$/,'');
+      const matched_p = products.find(p=>
+        p.id===stem ||
+        (p.nameZh||'').includes(stem) ||
+        (p.nameEn||'').toLowerCase().includes(stem.toLowerCase())
+      );
+      if (matched_p){ edits[matched_p.id]=rawUrl; }
+
+      row.querySelector('span:last-child').innerHTML =
+        `<span class="ok">✓ ${rawUrl.slice(0,40)}...</span>`;
+    } catch(e){
+      row.querySelector('span:last-child').innerHTML =
+        `<span class="err">❌ ${e.message}</span>`;
+    }
+  }
+
+  if (Object.keys(edits).length){ renderAll(); showToast('圖片已上傳，記得撳「儲存所有更改」！'); }
+}
+
+function fileToBase64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result.split(',')[1]);
+    r.onerror=rej;
+    r.readAsDataURL(file);
   });
 }
 
-// ── DOWNLOAD IMAGE LIST ──
-function downloadImageList() {
-  const rows = ['產品中文名,英文名,產品ID,圖片URL,供應商'];
-  Object.entries(SUPPLIER_IMAGES).forEach(([sup, imgs]) => {
-    imgs.forEach(img => {
-      rows.push(`"${img.name}","${img.nameEn}","${img.prodId}","${img.url}","${sup}"`);
-    });
-  });
-  const csv = rows.join('\n');
-  const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'jp_fruit_supplier_images.csv';
-  a.click();
+// ════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════
+let _toastT;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(_toastT);
+  _toastT=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
 init();
