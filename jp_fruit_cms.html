@@ -2007,15 +2007,6 @@ function openProductModal(id=null) {
     }
     if (!editingImages.length) editingImages = [''];
     renderProductImageSlots();
-  // Show existing image preview
-  // (p-image-preview removed — multi-image slots handle previews now)
-  if(prevDiv && prevImg && p.image) {
-    prevDiv.style.display = 'block';
-    prevImg.src = p.image;
-    document.getElementById('p-image-upload-status').textContent = '';
-  } else if(prevDiv) {
-    prevDiv.style.display = 'none';
-  }
     document.getElementById('p-active').checked = p.active!==false;
     document.getElementById('p-featured').checked = p.featured||false;
   } else {
