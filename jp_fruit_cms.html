@@ -663,6 +663,15 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
             <thead><tr><th style="width:40px;">推介</th><th>產品名稱</th><th>分類</th><th>歷史銷量</th><th>價錢</th><th>庫存</th></tr></thead>
             <tbody id="featured-table"></tbody>
           </table>
+
+          <!-- Sets subsection -->
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-size:0.88rem;font-weight:700;color:var(--text);">🎁 套餐推介 Set Meals</div>
+              <span style="font-size:0.78rem;color:var(--muted);">已推介 <strong id="feat-set-count">0</strong> 個套餐</span>
+            </div>
+            <div id="featured-sets"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -956,6 +965,20 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
           <div class="form-group">
             <label>套餐圖片 URL（可選）</label>
             <input type="text" id="s-image" placeholder="https://..." style="width:100%">
+          </div>
+
+          <!-- Active + Featured toggles -->
+          <div style="display:flex;gap:24px;padding:10px 0;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.85rem;">
+              <input type="checkbox" id="s-active" checked
+                style="width:16px;height:16px;accent-color:var(--green);cursor:pointer;">
+              <span>上架 Active</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.85rem;">
+              <input type="checkbox" id="s-featured"
+                style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">
+              <span>⭐ 推介 Featured</span>
+            </label>
           </div>
         </div>
       </div>
@@ -2180,6 +2203,13 @@ function viewOrder(id) {
           </button>
           <button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}');this.closest('[style*=fixed]').remove()">取消訂單</button>
         </div>`:''}
+        <!-- Permanent delete — always available -->
+        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">
+          <button class="btn btn-sm" onclick="deleteOrder('${o.id}');this.closest('[data-modal]').remove()"
+            style="background:transparent;border:1px solid var(--red);color:var(--red);font-size:0.75rem;">
+            🗑 永久刪除此訂單
+          </button>
+        </div>
       </div>
     </div>`;
   modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
@@ -2424,6 +2454,33 @@ function advanceOrder(id, newStatus) {
 
   renderOrders();
   renderDashboard();
+}
+
+
+// ── PERMANENT ORDER DELETE ──────────────────────────
+function deleteOrder(id) {
+  const o = (window._firebaseOrders || state.orders).find(x => x.id === id);
+  const label = o ? `#${id.slice(-6).toUpperCase()} (${o.name||'—'}, £${parseFloat(o.total||0).toFixed(2)})` : `#${id}`;
+  if (!confirm(`永久刪除訂單 ${label}？
+
+此操作不可撤銷，訂單將從系統完全移除。`)) return;
+
+  // Remove from Firebase using the already-exposed _fbRemove function
+  if (window._firebaseReady && window._fbDb && o?.firebaseId) {
+    window._fbRemove(window._fbRef(window._fbDb, 'orders/' + o.firebaseId))
+      .then(() => showToast('已從雲端永久刪除'))
+      .catch(e => { console.warn('Firebase delete failed:', e); showToast('❌ 雲端刪除失敗，本機已移除'); });
+  }
+
+  // Remove from local state
+  state.orders = state.orders.filter(x => x.id !== id);
+  if (window._firebaseOrders) window._firebaseOrders = window._firebaseOrders.filter(x => x.id !== id);
+
+  // Close modal and refresh
+  document.querySelectorAll('[data-modal]').forEach(el => el.remove());
+  renderOrders();
+  renderDashboard();
+  showToast(`訂單 ${label} 已刪除`);
 }
 
 function cancelOrder(id) {
@@ -2808,6 +2865,7 @@ function saveBanner() {
 function renderFeaturedPage() {
   populateFeaturedCatFilter();
   renderFeaturedTable();
+  renderFeaturedSets();
   updateFeaturedStats();
 }
 
@@ -2886,10 +2944,47 @@ function toggleFeatured(id, checked) {
 function updateFeaturedStats() {
   const featCount = state.products.filter(p=>p.featured).length;
   const autoCount = Math.max(0, 10 - featCount);
+  const setCount  = (state.sets||[]).filter(s=>s.featured).length;
   document.getElementById('feat-count').textContent = featCount;
-  document.getElementById('feat-auto').textContent = featCount < 10 ? autoCount : 0;
+  document.getElementById('feat-auto').textContent  = featCount < 10 ? autoCount : 0;
   document.getElementById('feat-total').textContent = Math.min(10, featCount + (featCount<10?autoCount:0));
-  document.getElementById('feat-count').className = 'stat-value ' + (featCount>=10?'gold':'green');
+  document.getElementById('feat-count').className   = 'stat-value ' + (featCount>=10?'gold':'green');
+  const setEl = document.getElementById('feat-set-count');
+  if (setEl) setEl.textContent = setCount;
+}
+
+function toggleSetFeatured(id, checked) {
+  const s = (state.sets||[]).find(x=>x.id===id);
+  if (!s) return;
+  s.featured = checked;
+  saveData();
+  updateFeaturedStats();
+  renderFeaturedSets();
+}
+
+function renderFeaturedSets() {
+  const el = document.getElementById('featured-sets');
+  if (!el) return;
+  const sets = state.sets || [];
+  if (!sets.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0;">仲未有套餐 — 喺「套餐管理」先建立套餐</div>';
+    return;
+  }
+  el.innerHTML = `<table class="data-table"><thead><tr>
+    <th>套餐名稱</th><th>分類</th><th>價錢</th><th>推介</th>
+  </tr></thead><tbody>` +
+  sets.map(s => {
+    const cat = state.categories.find(cc=>cc.id===s.cat);
+    return `<tr>
+      <td><strong>${escapeHTML(s.nameZh||s.name||'—')}</strong><br><span style="font-size:0.72rem;color:var(--muted);">${escapeHTML(s.nameEn||'')}</span></td>
+      <td>${cat?cat.zh:'—'}</td>
+      <td>£${parseFloat(s.price||0).toFixed(2)}</td>
+      <td style="text-align:center;">
+        <input type="checkbox" ${s.featured?'checked':''} onchange="toggleSetFeatured('${s.id}',this.checked)"
+          style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">
+      </td>
+    </tr>`;
+  }).join('') + '</tbody></table>';
 }
 
 function clearAllFeatured() {
@@ -3550,6 +3645,8 @@ function renderSetsPage() {
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <span class="badge badge-blue">${cat?cat.zh:'未分類'}</span>
           <span class="badge badge-green">£${parseFloat(s.price||0).toFixed(2)}</span>
+          ${s.active===false?'<span class="badge badge-gray">下架</span>':'<span class="badge" style="background:var(--green-dim);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.7rem;">上架</span>'}
+          ${s.featured?'<span class="badge" style="background:var(--gold);color:#000;padding:2px 8px;border-radius:4px;font-size:0.7rem;">⭐ 推介</span>':''}
           ${(s.groups||[]).map(g=>`<span class="badge badge-gray">${g.nameZh} x${g.min}${g.max>g.min?'-'+g.max:''}</span>`).join('')}
         </div>
         <div style="font-size:0.75rem;color:var(--muted);margin-top:6px;">${(s.groups||[]).reduce((t,g)=>t+(g.items||[]).length,0)} 款可選產品</div>
@@ -3593,6 +3690,12 @@ function openSetModal(id=null) {
     set('s-cat', state.categories[0]?.id||'');
     editingGroups = [{id:uid3(),nameZh:'選項',nameEn:'Options',min:1,max:1,allowRepeat:false,items:[]}];
   }
+
+  // active + featured
+  const activeEl = document.getElementById('s-active');
+  if (activeEl) activeEl.checked = s ? (s.active !== false) : true;
+  const featEl = document.getElementById('s-featured');
+  if (featEl) featEl.checked = s ? (s.featured === true) : false;
 
   renderGroups();
   document.getElementById('set-modal').classList.add('open');
@@ -3787,6 +3890,8 @@ function saveSet() {
     desc:   (document.getElementById('s-desc')?.value||'').trim(),
     image:  (document.getElementById('s-image')?.value||'').trim(),
     emoji:  '🎁',
+    active: document.getElementById('s-active')?.checked ?? true,
+    featured: document.getElementById('s-featured')?.checked ?? false,
     groups: JSON.parse(JSON.stringify(editingGroups)),
     isSet:  true,
     updatedAt: new Date().toISOString(),
