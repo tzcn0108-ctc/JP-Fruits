@@ -927,6 +927,111 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
         <div class="header-actions">
           <button class="btn btn-primary" onclick="saveSettings()">💾 儲存並發佈</button>
         </div>
+      
+      <div class="content">
+        <div class="notice">⚙️ 呢度嘅設定會同步到客戶訂單表格，包括所有文字、字體、聯絡方式。</div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🖋 字體 Font</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>主要字體 Main Font</label>
+              <select id="st-font">
+                <option value="'Noto Sans HK',sans-serif">Noto Sans HK（現用）</option>
+                <option value="'Noto Serif HK',serif">Noto Serif HK（書法感）</option>
+                <option value="Arial,sans-serif">Arial（簡潔）</option>
+                <option value="Georgia,serif">Georgia（優雅）</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>標題字體 Heading Font</label>
+              <select id="st-heading-font">
+                <option value="'Pacifico',cursive">Pacifico（現用手寫感）</option>
+                <option value="'Playfair Display',serif">Playfair Display（高端）</option>
+                <option value="inherit">與主要字體相同</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🏪 聯絡資料 Contact</div>
+          <div class="form-row">
+            <div class="form-group"><label>WhatsApp 號碼（落單用）</label><input type="text" id="st-whatsapp" placeholder="447700900000"></div>
+            <div class="form-group"><label>Facebook 連結</label><input type="text" id="st-facebook" placeholder="https://www.facebook.com/jpfruitsuk"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Instagram 連結</label><input type="text" id="st-instagram" placeholder="https://www.instagram.com/jp_fruit_swlondon"></div>
+            <div class="form-group"><label>WhatsApp 群組連結</label><input type="text" id="st-wagroup" placeholder="https://chat.whatsapp.com/..."></div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🦸 Hero 區域文字</div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 副標題（中文）</label><input type="text" id="st-hero-sub-zh" placeholder="精選日本時令水果、港式美食..."></div>
+            <div class="form-group"><label>🇬🇧 Subheading (EN)</label><input type="text" id="st-hero-sub-en" placeholder="Premium Japanese fruits, HK flavours..."></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 Chip 1</label><input type="text" id="st-chip1-zh" placeholder="✈️ 日本直送"></div>
+            <div class="form-group"><label>🇬🇧 Chip 1</label><input type="text" id="st-chip1-en" placeholder="✈️ Direct from Japan"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 Chip 2</label><input type="text" id="st-chip2-zh" placeholder="🏠 South London 送貨"></div>
+            <div class="form-group"><label>🇬🇧 Chip 2</label><input type="text" id="st-chip2-en" placeholder="🏠 South London Delivery"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 Chip 3</label><input type="text" id="st-chip3-zh" placeholder="💳 貨到付款"></div>
+            <div class="form-group"><label>🇬🇧 Chip 3</label><input type="text" id="st-chip3-en" placeholder="💳 Pay on Delivery"></div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🚚 送貨資訊（底部）</div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 送貨安排（中文）</label><textarea id="st-del-zh" rows="3" placeholder="逢週五送貨..."></textarea></div>
+            <div class="form-group"><label>🇬🇧 Delivery Info (EN)</label><textarea id="st-del-en" rows="3" placeholder="Delivery every Friday..."></textarea></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>🇭🇰 聯絡我們（中文）</label><textarea id="st-contact-zh" rows="3" placeholder="截單後 WhatsApp 確認..."></textarea></div>
+            <div class="form-group"><label>🇬🇧 Contact Us (EN)</label><textarea id="st-contact-en" rows="3" placeholder="We'll confirm via WhatsApp..."></textarea></div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
+          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">⏰ 截單設定</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>截單日 Cutoff Day</label>
+              <select id="st-cutoff-day">
+                <option value="2">週二 Tuesday</option>
+                <option value="1">週一 Monday</option>
+                <option value="3">週三 Wednesday</option>
+                <option value="4">週四 Thursday</option>
+              </select>
+            </div>
+            <div class="form-group"><label>截單時間 Cutoff Time</label><input type="time" id="st-cutoff-time" value="13:00"></div>
+          
+
+          <!-- ── HOLIDAY MODE ── -->
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+              <div>
+                <div style="font-weight:600;font-size:0.88rem;">🏖️ 暫停接單 Store Pause</div>
+                <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;">開啟後，客戶網站暫停接受新訂單</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="st-store-paused" style="width:18px;height:18px;accent-color:var(--red);cursor:pointer;">
+                <span style="font-size:0.82rem;font-weight:600;color:var(--red);">暫停接單</span>
+              </label>
+            </div>
+            <div style="margin-top:10px;">
+              <label style="font-size:0.75rem;color:var(--muted);">休息提示訊息</label>
+              <input type="text" id="st-pause-msg" placeholder="我哋暫時休息中，敬請期待！"
+                style="width:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);">
+            </div>
+          </div></div>
+        </div>
       </div>
 
     </div>
@@ -1051,111 +1156,7 @@ class="form-group">
 
 
 
-      <div class="content">
-        <div class="notice">⚙️ 呢度嘅設定會同步到客戶訂單表格，包括所有文字、字體、聯絡方式。</div>
-
-        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
-          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🖋 字體 Font</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>主要字體 Main Font</label>
-              <select id="st-font">
-                <option value="'Noto Sans HK',sans-serif">Noto Sans HK（現用）</option>
-                <option value="'Noto Serif HK',serif">Noto Serif HK（書法感）</option>
-                <option value="Arial,sans-serif">Arial（簡潔）</option>
-                <option value="Georgia,serif">Georgia（優雅）</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>標題字體 Heading Font</label>
-              <select id="st-heading-font">
-                <option value="'Pacifico',cursive">Pacifico（現用手寫感）</option>
-                <option value="'Playfair Display',serif">Playfair Display（高端）</option>
-                <option value="inherit">與主要字體相同</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
-          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🏪 聯絡資料 Contact</div>
-          <div class="form-row">
-            <div class="form-group"><label>WhatsApp 號碼（落單用）</label><input type="text" id="st-whatsapp" placeholder="447700900000"></div>
-            <div class="form-group"><label>Facebook 連結</label><input type="text" id="st-facebook" placeholder="https://www.facebook.com/jpfruitsuk"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Instagram 連結</label><input type="text" id="st-instagram" placeholder="https://www.instagram.com/jp_fruit_swlondon"></div>
-            <div class="form-group"><label>WhatsApp 群組連結</label><input type="text" id="st-wagroup" placeholder="https://chat.whatsapp.com/..."></div>
-          </div>
-        </div>
-
-        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
-          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🦸 Hero 區域文字</div>
-          <div class="form-row">
-            <div class="form-group"><label>🇭🇰 副標題（中文）</label><input type="text" id="st-hero-sub-zh" placeholder="精選日本時令水果、港式美食..."></div>
-            <div class="form-group"><label>🇬🇧 Subheading (EN)</label><input type="text" id="st-hero-sub-en" placeholder="Premium Japanese fruits, HK flavours..."></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>🇭🇰 Chip 1</label><input type="text" id="st-chip1-zh" placeholder="✈️ 日本直送"></div>
-            <div class="form-group"><label>🇬🇧 Chip 1</label><input type="text" id="st-chip1-en" placeholder="✈️ Direct from Japan"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>🇭🇰 Chip 2</label><input type="text" id="st-chip2-zh" placeholder="🏠 South London 送貨"></div>
-            <div class="form-group"><label>🇬🇧 Chip 2</label><input type="text" id="st-chip2-en" placeholder="🏠 South London Delivery"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>🇭🇰 Chip 3</label><input type="text" id="st-chip3-zh" placeholder="💳 貨到付款"></div>
-            <div class="form-group"><label>🇬🇧 Chip 3</label><input type="text" id="st-chip3-en" placeholder="💳 Pay on Delivery"></div>
-          </div>
-        </div>
-
-        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
-          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">🚚 送貨資訊（底部）</div>
-          <div class="form-row">
-            <div class="form-group"><label>🇭🇰 送貨安排（中文）</label><textarea id="st-del-zh" rows="3" placeholder="逢週五送貨..."></textarea></div>
-            <div class="form-group"><label>🇬🇧 Delivery Info (EN)</label><textarea id="st-del-en" rows="3" placeholder="Delivery every Friday..."></textarea></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>🇭🇰 聯絡我們（中文）</label><textarea id="st-contact-zh" rows="3" placeholder="截單後 WhatsApp 確認..."></textarea></div>
-            <div class="form-group"><label>🇬🇧 Contact Us (EN)</label><textarea id="st-contact-en" rows="3" placeholder="We'll confirm via WhatsApp..."></textarea></div>
-          </div>
-        </div>
-
-        <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
-          <div style="font-size:0.85rem;font-weight:500;margin-bottom:14px;">⏰ 截單設定</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>截單日 Cutoff Day</label>
-              <select id="st-cutoff-day">
-                <option value="2">週二 Tuesday</option>
-                <option value="1">週一 Monday</option>
-                <option value="3">週三 Wednesday</option>
-                <option value="4">週四 Thursday</option>
-              </select>
-            </div>
-            <div class="form-group"><label>截單時間 Cutoff Time</label><input type="time" id="st-cutoff-time" value="13:00"></div>
-          
-
-          <!-- ── HOLIDAY MODE ── -->
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-              <div>
-                <div style="font-weight:600;font-size:0.88rem;">🏖️ 暫停接單 Store Pause</div>
-                <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;">開啟後，客戶網站暫停接受新訂單</div>
-              </div>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                <input type="checkbox" id="st-store-paused" style="width:18px;height:18px;accent-color:var(--red);cursor:pointer;">
-                <span style="font-size:0.82rem;font-weight:600;color:var(--red);">暫停接單</span>
-              </label>
-            </div>
-            <div style="margin-top:10px;">
-              <label style="font-size:0.75rem;color:var(--muted);">休息提示訊息</label>
-              <input type="text" id="st-pause-msg" placeholder="我哋暫時休息中，敬請期待！"
-                style="width:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);">
-            </div>
-          </div></div>
-        </div>
-      </div>
+      
     </div>
 
 <!-- PRODUCT MODAL -->
@@ -1210,6 +1211,12 @@ class="form-group">
         <div class="form-group">
           <label>特價期限 Sale Until</label>
           <input type="date" id="p-sale-until">
+        </div>
+        <div class="form-group">
+          <label>階梯定價 Tiered Pricing <span style="font-size:0.7rem;color:var(--muted);font-weight:400;">（最多 3 級，留空=唔用）</span></label>
+          <div id="p-tiers-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px;"></div>
+          <button id="p-add-tier-btn" type="button" onclick="addTierSlot()" style="margin-bottom:4px;padding:5px 12px;border:1.5px dashed var(--plum);border-radius:6px;background:var(--plum-l);color:var(--plum);cursor:pointer;font-size:0.78rem;">+ 加定價級別</button>
+          <div style="font-size:0.7rem;color:var(--muted);">例：買1件 £9.9，買3件（共）£29.9。購物車按數量自動揀最優惠。</div>
         </div>
         <div class="form-group">
           <label>庫存 Stock (-1=無限)</label>
@@ -1654,6 +1661,7 @@ async function loadData() {
           descEn:       saved_p.descEn   || sp.descEn   || '',
           featured:     saved_p.featured ?? sp.featured ?? false,
           priceByWeight: saved_p.priceByWeight ?? sp.priceByWeight ?? false,
+          tiers: (saved_p.tiers&&saved_p.tiers.length) ? saved_p.tiers : (sp.tiers||[]),
           costPerKg:     saved_p.costPerKg  ?? sp.costPerKg  ?? null,
           pricePerKg:    saved_p.pricePerKg ?? sp.pricePerKg ?? null,
         };
@@ -1718,6 +1726,7 @@ async function saveData() {
         banner:     state.banner,
         settings:   state.settings || {},
         promos:     (state.promos||[]).filter(p=>p.active!==false),
+        vips:       state.vips || {},
         updatedAt:  new Date().toISOString(),
       });
     } catch(e) {
@@ -1905,6 +1914,7 @@ function renderProducts() {
             : '<span style="background:rgba(0,200,150,0.15);color:var(--green);font-size:0.6rem;padding:1px 6px;border-radius:4px;flex-shrink:0;">✓ 已核實</span>'}
         </div>
         ${p.featured?'<span class="badge badge-gold" style="margin-top:2px;font-size:0.65rem;">推介</span>':''}
+        ${(p.tiers&&p.tiers.length)?p.tiers.map(t=>`<span style="font-size:0.65rem;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:4px;margin-top:2px;display:inline-block;">📦 買${t.qty}件 £${t.total}</span>`).join(' '):''}
         ${p.historicSold?`<span style="font-size:0.7rem;color:var(--muted)">歷史銷量: ${p.historicSold}</span>`:'<span style="font-size:0.7rem;color:var(--muted)">新產品</span>'}
       </td>
       <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
@@ -2835,6 +2845,50 @@ function toggleWeightFields() {
   if (el) el.style.display = on ? 'block' : 'none';
 }
 
+
+// ── TIERED PRICING ──────────────────────────────────────────
+// tiers = [{qty:1, total:9.9}, {qty:3, total:29.9}, ...]
+// total = total price for that many units (NOT per-unit)
+let editingTiers = [];  // [{qty, total}]
+const MAX_TIERS = 3;
+
+function renderTierSlots() {
+  const list = document.getElementById('p-tiers-list');
+  if (!list) return;
+  list.innerHTML = editingTiers.map((t, i) => `
+    <div style="display:flex;gap:6px;align-items:center;">
+      <span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;">買</span>
+      <input type="number" value="${t.qty||''}" min="1" step="1" placeholder="件數"
+        style="width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;"
+        oninput="editingTiers[${i}].qty=parseInt(this.value)||null">
+      <span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;">件共</span>
+      <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <span style="padding:0 6px;font-size:0.82rem;color:var(--muted);background:var(--surface2);">£</span>
+        <input type="number" value="${t.total||''}" min="0" step="0.01" placeholder="0.00"
+          style="width:72px;padding:5px 8px;border:none;font-size:0.82rem;background:transparent;"
+          oninput="editingTiers[${i}].total=parseFloat(this.value)||null">
+      </div>
+      <button onclick="removeTierSlot(${i})"
+        style="background:none;border:1px solid var(--border);color:var(--red);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">✕</button>
+    </div>
+  `).join('');
+
+  // Add tier button
+  const addBtn = document.getElementById('p-add-tier-btn');
+  if (addBtn) addBtn.style.display = editingTiers.length >= MAX_TIERS ? 'none' : '';
+}
+
+function addTierSlot() {
+  if (editingTiers.length >= MAX_TIERS) return;
+  editingTiers.push({qty: null, total: null});
+  renderTierSlots();
+}
+
+function removeTierSlot(i) {
+  editingTiers.splice(i, 1);
+  renderTierSlots();
+}
+
 function saveGHToken() {
   const val = document.getElementById('gh-token-display')?.value?.trim();
   if (val) {
@@ -2898,7 +2952,13 @@ function renderCategories() {
   const tbody = document.getElementById('categories-table');
   tbody.innerHTML = state.categories.map(c=>{
     const count = state.products.filter(p=>p.cat===c.id).length;
-    return `<tr>
+    return `<tr draggable="true"
+      ondragstart="catDragStart(event,'${c.id}')"
+      ondragover="catDragOver(event)"
+      ondrop="catDrop(event,'${c.id}')"
+      ondragend="catDragEnd(event)"
+      style="cursor:grab;">
+      <td style="color:var(--muted);font-size:1rem;padding-right:0;width:24px;">⠿</td>
       <td style="font-weight:500">${c.name}</td><td>${c.zh}</td>
       <td><span class="badge badge-blue">${count} 款</span></td>
       <td><div class="row-actions">
@@ -2916,6 +2976,41 @@ function openCategoryModal() {
   document.getElementById('cat-delete-btn').style.display = 'none';
   document.getElementById('category-modal').classList.add('open');
 }
+
+// ── CATEGORY DRAG-TO-REORDER ──────────────────────────────
+let _catDragId = null;
+
+function catDragStart(e, id) {
+  _catDragId = id;
+  e.currentTarget.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+function catDragEnd(e) {
+  e.currentTarget.style.opacity = '';
+  document.querySelectorAll('#categories-table tr').forEach(r => r.style.background = '');
+}
+function catDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.style.background = 'var(--plum-l)';
+}
+function catDrop(e, targetId) {
+  e.preventDefault();
+  e.currentTarget.style.background = '';
+  if (!_catDragId || _catDragId === targetId) return;
+  const cats = state.categories;
+  const fromIdx = cats.findIndex(c => c.id === _catDragId);
+  const toIdx   = cats.findIndex(c => c.id === targetId);
+  if (fromIdx < 0 || toIdx < 0) return;
+  // Move
+  const [moved] = cats.splice(fromIdx, 1);
+  cats.splice(toIdx, 0, moved);
+  saveData();
+  renderCategories();
+  showToast('✓ 分類順序已更新');
+  _catDragId = null;
+}
+
 function editCategory(id) {
   const cat = state.categories.find(x=>x.id===id); if(!cat) return;
   state.editingCategoryId = id;

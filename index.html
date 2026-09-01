@@ -1117,6 +1117,15 @@ body { background: var(--cream, #FFFDF9); }
 .pd-thumb.active{border-color:var(--plum);opacity:1;}
 .pd-thumb:hover{opacity:0.9;}
 
+
+/* ── Bulk discount badge ── */
+.pc-bulk-badge{
+  font-size:0.65rem;font-weight:600;
+  color:#2E7D32;background:#E8F5E9;
+  padding:2px 7px;border-radius:8px;
+  display:inline-block;margin-bottom:2px;
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -1899,6 +1908,10 @@ function pCard(p){
     : p.salePrice
     ? `<div class="pc-prices"><div class="pc-price">£${p.salePrice.toFixed(2)}</div><div class="pc-price-orig">£${p.price.toFixed(2)}</div></div>`
     : `<div class="pc-prices"><div class="pc-price">£${p.price.toFixed(2)}</div></div>`;
+  const tierBadges = (p.tiers&&p.tiers.length)
+    ? p.tiers.map(t=>`<span class="pc-bulk-badge">買${t.qty}件 £${t.total}</span>`).join('')
+    : '';
+  const bulkBadge = tierBadges ? `<div>${tierBadges}</div>` : '';
   const ctrl=oos
     ?`<button class="add-btn" disabled>✕</button>`
     :inCart>0
@@ -1931,6 +1944,7 @@ function pCard(p){
     ${imgSection}
     <div class="pc-body">
       <div class="pc-name">${pName}</div>
+      ${bulkBadge}
       ${pNameEn}
       <div class="pc-footer">
         ${price}
@@ -2052,7 +2066,41 @@ function chQty(id,d,btn){
 }
 function rmSetItem(id){delete cart[id];updateCart();}
 function refreshCard(id){const p=products.find(x=>x.id===id);if(!p)return;const el=document.getElementById('card-'+id);if(el)el.outerHTML=pCard(p);}
-function getTotal(){return Object.entries(cart).reduce((s,[id,val])=>{if(val&&val.isSet)return s+(val.price||0)*val.qty;const p=products.find(x=>x.id===id);if(!p||p.priceByWeight)return s;return s+(p?.salePrice||p?.price||0)*val;},0);}
+function getTieredTotal(p, qty) {
+  // Returns TOTAL price for qty units using best applicable tier
+  // tiers = [{qty:1, total:9.9}, {qty:3, total:29.9}, ...]
+  const tiers = (p.tiers||[]).filter(t=>t.qty&&t.total).sort((a,b)=>a.qty-b.qty);
+  if (!tiers.length) {
+    // No tiers: normal price
+    return (p.salePrice || p.price || 0) * qty;
+  }
+  // Find best tier: largest qty threshold that qty can fill completely
+  let bestTotal = null;
+  let remaining = qty;
+  // Walk through tiers from largest to smallest
+  const sorted = [...tiers].sort((a,b)=>b.qty-a.qty);
+  let lineTotal = 0;
+  while (remaining > 0) {
+    const tier = sorted.find(t => remaining >= t.qty);
+    if (tier) {
+      const sets = Math.floor(remaining / tier.qty);
+      lineTotal += sets * tier.total;
+      remaining -= sets * tier.qty;
+    } else {
+      // Remaining < smallest tier qty: charge per-unit from smallest tier
+      const unitPrice = tiers[0].total / tiers[0].qty;
+      lineTotal += remaining * unitPrice;
+      remaining = 0;
+    }
+  }
+  return lineTotal;
+}
+function getTotal(){return Object.entries(cart).reduce((s,[id,val])=>{
+  if(val&&val.isSet)return s+(val.price||0)*val.qty;
+  const p=products.find(x=>x.id===id);
+  if(!p||p.priceByWeight)return s;
+  return s + getTieredTotal(p, val);
+},0);}
 function getCount(){return Object.values(cart).reduce((a,b)=>a+(b&&b.isSet?b.qty:b),0);}
 function getMin(pc){
   const c=(pc||'').toUpperCase().replace(/\s/g,'');
@@ -2544,7 +2592,10 @@ Press OK if correct and we'll be in touch.`;
       _wItems.push(`• ${p.nameZh||p.zh||p.name} x${val} （以重量計價，送貨後報價）`);
     } else {
       const pr=p.salePrice||p.price;
-      _nItems.push(`• ${p.nameZh||p.zh||p.name} x${val} = £${(pr*val).toFixed(2)}`);
+      const lineTotal = getTieredTotal(p, val);
+      const hasTier = p.tiers && p.tiers.length;
+      const tierNote = hasTier ? ' (階梯優惠)' : '';
+      _nItems.push(`• ${p.nameZh||p.zh||p.name} x${val}${tierNote} = £${lineTotal.toFixed(2)}`);
     }
   });
   const items = [..._nItems,...(_wItems.length?['','⚖ 以下產品以重量計價，金額另行通知：',..._wItems]:[])].join('\n');
@@ -2702,11 +2753,12 @@ function closeMobileCart(e){
 // ── COUNTDOWN ────────────────────────────────────────────────
 function updateCountdown(){
   const el=document.getElementById('countdown');
-  if(!siteSettings || siteSettings.cutoffDay === undefined){
-    if(el) el.textContent='--'; return;
-  }
+  // Use Firebase settings if available, else fall back to defaults (Tue=2, 13:00)
+  const settings = (siteSettings && siteSettings.cutoffDay !== undefined)
+    ? siteSettings
+    : { cutoffDay: 2, cutoffTime: '13:00' };  // default: Tue 1pm cutoff
   const now=new Date(),day=now.getDay();
-  const cutDay=siteSettings.cutoffDay??2, cutTime=siteSettings.cutoffTime||'13:00';
+  const cutDay=settings.cutoffDay??2, cutTime=settings.cutoffTime||'13:00';
   const [ch,cm]=cutTime.split(':').map(Number);
   const d=(cutDay-day+7)%7||7, tgt=new Date(now);
   tgt.setDate(now.getDate()+d);tgt.setHours(ch,cm,0,0);
