@@ -1254,6 +1254,17 @@ class="form-group">
           <label class="toggle-switch"><input type="checkbox" id="p-active" checked><span class="slider"></span></label>
           <span style="color:var(--text);font-size:0.85rem;margin-left:12px;">推介</span>
           <label class="toggle-switch"><input type="checkbox" id="p-featured"><span class="slider"></span></label>
+          <span style="color:var(--text);font-size:0.85rem;margin-left:12px;">⚖ 重量</span>
+          <label class="toggle-switch"><input type="checkbox" id="p-weight-price" onchange="toggleWeightFields()"><span class="slider"></span></label>
+        </div>
+        <div id="p-weight-fields" style="display:none;margin-top:10px;padding:10px 12px;background:var(--plum-l);border-radius:8px;">
+          <label style="font-size:0.8rem;font-weight:600;color:var(--plum-d);margin-bottom:6px;display:block;">⚖ 重量計價記錄（僅供內部）</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label style="font-size:0.75rem;color:var(--muted);">入貨價 / kg (£)</label>
+              <input type="number" id="p-cost-per-kg" step="0.01" min="0" placeholder="0.00" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-top:3px;"></div>
+            <div><label style="font-size:0.75rem;color:var(--muted);">建議售價 / kg (£)</label>
+              <input type="number" id="p-price-per-kg" step="0.01" min="0" placeholder="0.00" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;margin-top:3px;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1639,6 +1650,9 @@ async function loadData() {
           images:       (saved_p.images  && saved_p.images.length) ? saved_p.images : (sp.images||[]),
           desc:         saved_p.desc     || sp.desc     || '',
           featured:     saved_p.featured ?? sp.featured ?? false,
+          priceByWeight: saved_p.priceByWeight ?? sp.priceByWeight ?? false,
+          costPerKg:     saved_p.costPerKg  ?? sp.costPerKg  ?? null,
+          pricePerKg:    saved_p.pricePerKg ?? sp.pricePerKg ?? null,
         };
       });
       // Non-product data: always restore from saved
@@ -2009,11 +2023,25 @@ function openProductModal(id=null) {
     renderProductImageSlots();
     document.getElementById('p-active').checked = p.active!==false;
     document.getElementById('p-featured').checked = p.featured||false;
+    const _cpk = document.getElementById('p-cost-per-kg');
+    const _ppk = document.getElementById('p-price-per-kg');
+    const _wt  = document.getElementById('p-weight-price');
+    if (_wt)  _wt.checked  = p.priceByWeight === true;
+    if (_cpk) _cpk.value   = p.costPerKg  || '';
+    if (_ppk) _ppk.value   = p.pricePerKg || '';
+    toggleWeightFields();
   } else {
     ['p-name-zh','p-name-en','p-unit','p-price','p-sale-price','p-sale-until','p-desc-zh','p-desc-en'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('p-stock').value=-1;
     document.getElementById('p-active').checked=true;
     document.getElementById('p-featured').checked=false;
+    const _wt2  = document.getElementById('p-weight-price');
+    const _cpk2 = document.getElementById('p-cost-per-kg');
+    const _ppk2 = document.getElementById('p-price-per-kg');
+    if (_wt2)  _wt2.checked  = false;
+    if (_cpk2) _cpk2.value   = '';
+    if (_ppk2) _ppk2.value   = '';
+    toggleWeightFields();
   }
   document.getElementById('product-modal').classList.add('open');
 }
@@ -2062,6 +2090,9 @@ function saveProduct() {
   image: (editingImages.filter(u=>u&&u.trim())[0])||'',
     active: document.getElementById('p-active').checked,
     featured: document.getElementById('p-featured').checked,
+    priceByWeight: document.getElementById('p-weight-price')?.checked ?? false,
+    costPerKg:    parseFloat(document.getElementById('p-cost-per-kg')?.value)||null,
+    pricePerKg:   parseFloat(document.getElementById('p-price-per-kg')?.value)||null,
     historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
     needsVerify: false,
   };
@@ -2778,6 +2809,13 @@ function debounceSlotPreview(i, url) {
 // Called when upload button is used — adds uploaded image as a new slot
 // handleProductImageUpload defined below (multi-image version)
 
+
+
+function toggleWeightFields() {
+  const on = document.getElementById('p-weight-price')?.checked;
+  const el = document.getElementById('p-weight-fields');
+  if (el) el.style.display = on ? 'block' : 'none';
+}
 
 function saveGHToken() {
   const val = document.getElementById('gh-token-display')?.value?.trim();

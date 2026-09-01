@@ -1042,6 +1042,18 @@ body { background: var(--cream, #FFFDF9); }
   }
 }
 
+
+/* ── Weight-priced products ── */
+.pc-price-weight{
+  font-size:0.75rem;
+  font-weight:600;
+  color:var(--plum);
+  background:var(--plum-l);
+  padding:3px 8px;
+  border-radius:10px;
+  white-space:nowrap;
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -1566,7 +1578,7 @@ async function loadProducts() {
   try {
     const data = await getDB();
     if (data) {
-      products = (data.products||[]).filter(p=>p.active!==false && p.price>0 && p.stock!==0);
+      products = (data.products||[]).filter(p=>p.active!==false && (p.priceByWeight || p.price>0) && p.stock!==0);
       sets = data.sets||[];
       categories = data.categories||[];
       promos = data.promos||[];
@@ -1819,9 +1831,11 @@ function pCard(p){
       :!(p.historicSold)
         ?`<div class="p-badge p-badge-new">${tx('newLabel')}</div>`
         :'';
-  const price=p.salePrice
-    ?`<div class="pc-prices"><div class="pc-price">£${p.salePrice.toFixed(2)}</div><div class="pc-price-orig">£${p.price.toFixed(2)}</div></div>`
-    :`<div class="pc-prices"><div class="pc-price">£${p.price.toFixed(2)}</div></div>`;
+  const price = p.priceByWeight
+    ? `<div class="pc-prices"><div class="pc-price-weight">⚖ 以重量計價</div></div>`
+    : p.salePrice
+    ? `<div class="pc-prices"><div class="pc-price">£${p.salePrice.toFixed(2)}</div><div class="pc-price-orig">£${p.price.toFixed(2)}</div></div>`
+    : `<div class="pc-prices"><div class="pc-price">£${p.price.toFixed(2)}</div></div>`;
   const ctrl=oos
     ?`<button class="add-btn" disabled>✕</button>`
     :inCart>0
@@ -1975,7 +1989,7 @@ function chQty(id,d,btn){
 }
 function rmSetItem(id){delete cart[id];updateCart();}
 function refreshCard(id){const p=products.find(x=>x.id===id);if(!p)return;const el=document.getElementById('card-'+id);if(el)el.outerHTML=pCard(p);}
-function getTotal(){return Object.entries(cart).reduce((s,[id,val])=>{if(val&&val.isSet)return s+(val.price||0)*val.qty;const p=products.find(x=>x.id===id);return s+(p?.salePrice||p?.price||0)*val;},0);}
+function getTotal(){return Object.entries(cart).reduce((s,[id,val])=>{if(val&&val.isSet)return s+(val.price||0)*val.qty;const p=products.find(x=>x.id===id);if(!p||p.priceByWeight)return s;return s+(p?.salePrice||p?.price||0)*val;},0);}
 function getCount(){return Object.values(cart).reduce((a,b)=>a+(b&&b.isSet?b.qty:b),0);}
 function getMin(pc){
   const c=(pc||'').toUpperCase().replace(/\s/g,'');
@@ -2303,13 +2317,19 @@ Press OK if correct and we'll be in touch.`;
   }
 
   // ── Step 3: Build order data ──
-  const items = Object.entries(cart).map(([id,val])=>{
-    if(val&&val.isSet) return `• ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}`;
+  const _wItems=[], _nItems=[];
+  Object.entries(cart).forEach(([id,val])=>{
+    if(val&&val.isSet){_nItems.push(`• ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}`);return;}
     const p=products.find(x=>x.id===id);
-    if(!p) return null;
-    const pr=p.salePrice||p.price;
-    return `• ${p.nameZh||p.zh||p.name} x${val} = £${(pr*val).toFixed(2)}`;
-  }).filter(Boolean).join('\n');
+    if(!p) return;
+    if(p.priceByWeight){
+      _wItems.push(`• ${p.nameZh||p.zh||p.name} x${val} （以重量計價，送貨後報價）`);
+    } else {
+      const pr=p.salePrice||p.price;
+      _nItems.push(`• ${p.nameZh||p.zh||p.name} x${val} = £${(pr*val).toFixed(2)}`);
+    }
+  });
+  const items = [..._nItems,...(_wItems.length?['','⚖ 以下產品以重量計價，金額另行通知：',..._wItems]:[])].join('\n');
 
   const total = getTotal();
   const waNum = '447762929455';
