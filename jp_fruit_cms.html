@@ -2049,7 +2049,7 @@ function openProductModal(id=null) {
   document.getElementById('product-modal').classList.add('open');
 }
 function editProduct(id) { openProductModal(id); }
-function saveProduct() {
+async function saveProduct() {
   const nameZh = document.getElementById('p-name-zh').value.trim();
   const nameEn = document.getElementById('p-name-en').value.trim();
   if (!nameZh && !nameEn) { alert('請至少填寫中文或英文名稱！'); return; }
@@ -2104,12 +2104,20 @@ function saveProduct() {
   };
   if (state.editingProductId) state.products = state.products.map(p=>p.id===state.editingProductId?product:p);
   else state.products.push(product);
-  saveData(); closeModal('product-modal'); renderAll(); renderProducts();
+  closeModal('product-modal');
+  renderAll();
+  renderProducts();
+  const ok = await saveData();
+  if (ok) showToast('✓ 產品已儲存並同步到雲端');
 }
-function deleteProduct() {
+async function deleteProduct() {
   if (!confirm('確定刪除此產品？')) return;
   state.products = state.products.filter(p=>p.id!==state.editingProductId);
-  saveData(); closeModal('product-modal'); renderAll(); renderProducts();
+  closeModal('product-modal');
+  renderAll();
+  renderProducts();
+  await saveData();
+  showToast('✓ 產品已刪除');
 }
 
 // ── ORDERS ───────────────────────────────────────────────────
