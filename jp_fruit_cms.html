@@ -1650,6 +1650,8 @@ async function loadData() {
           image:        saved_p.image    || sp.image    || '',
           images:       (saved_p.images  && saved_p.images.length) ? saved_p.images : (sp.images||[]),
           desc:         saved_p.desc     || sp.desc     || '',
+          descZh:       saved_p.descZh   || saved_p.desc || sp.descZh || '',
+          descEn:       saved_p.descEn   || sp.descEn   || '',
           featured:     saved_p.featured ?? sp.featured ?? false,
           priceByWeight: saved_p.priceByWeight ?? sp.priceByWeight ?? false,
           costPerKg:     saved_p.costPerKg  ?? sp.costPerKg  ?? null,
