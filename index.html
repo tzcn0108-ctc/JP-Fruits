@@ -1073,9 +1073,10 @@ body { background: var(--cream, #FFFDF9); }
 }
 @media(min-width:600px){.pd-sheet{border-radius:16px;margin:16px;}}
 @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
-.pd-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:20px 20px 0 0;background:var(--plum-l);}
-@media(min-width:600px){.pd-img{border-radius:16px 16px 0 0;}}
-.pd-emoji{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:5rem;background:var(--plum-l);border-radius:20px 20px 0 0;}
+.pd-img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:20px 20px 0 0;background:var(--plum-l);}
+.pd-emoji{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:5rem;background:var(--plum-l);border-radius:20px 20px 0 0;}
+@media(min-width:600px){.pd-img,.pd-emoji{border-radius:16px 16px 0 0;}}
+
 .pd-body{padding:18px 20px 20px;}
 .pd-name{font-size:1.15rem;font-weight:700;color:var(--plum-d);line-height:1.3;margin-bottom:4px;}
 .pd-en{font-size:0.82rem;color:var(--muted);margin-bottom:12px;}
@@ -1103,6 +1104,18 @@ body { background: var(--cream, #FFFDF9); }
   40%,80%{transform:translateX(5px)}
 }
 .btn-shake{animation:shake 0.35s ease;}
+
+
+/* ── Multi-image thumbnails ── */
+.pd-thumbs{display:flex;gap:6px;padding:8px 20px 0;overflow-x:auto;scrollbar-width:none;}
+.pd-thumbs::-webkit-scrollbar{display:none;}
+.pd-thumb{
+  width:52px;height:52px;border-radius:8px;object-fit:cover;
+  flex-shrink:0;cursor:pointer;border:2px solid transparent;
+  transition:border-color 0.15s,opacity 0.15s;opacity:0.6;
+}
+.pd-thumb.active{border-color:var(--plum);opacity:1;}
+.pd-thumb:hover{opacity:0.9;}
 
 </style>
 
@@ -2227,10 +2240,24 @@ function openPD(id) {
   const inCart = cart[id]||0;
   const oos    = p.stock === 0;
 
-  // Image area
+  // Image area — main image + thumbnail strip if multiple
   const imgWrap = document.getElementById('pd-img-wrap');
+  let _pdCurrentImg = 0;
   if (imgs.length) {
-    imgWrap.innerHTML = `<img class="pd-img" src="${imgs[0]}" alt="${name}" onerror="this.style.display='none'">`;
+    imgWrap.innerHTML =
+      `<img class="pd-img" id="pd-main-img" src="${imgs[0]}" alt="${name}" onerror="this.style.display='none'">` +
+      (imgs.length > 1
+        ? `<div class="pd-thumbs">` +
+          imgs.map((u,i) =>
+            `<img class="pd-thumb${i===0?' active':''}" src="${u}"
+              onerror="this.style.display='none'"
+              onclick="(function(){
+                document.getElementById('pd-main-img').src='${u}';
+                document.querySelectorAll('.pd-thumb').forEach((t,j)=>t.classList.toggle('active',j===${i}));
+              })()">`
+          ).join('') +
+          `</div>`
+        : '');
   } else {
     imgWrap.innerHTML = `<div class="pd-emoji">${EMOJI[p.cat]||'🛒'}</div>`;
   }

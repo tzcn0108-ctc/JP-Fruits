@@ -1854,7 +1854,11 @@ function getFilteredProducts() {
   else if (state.productStatusFilter==='inactive') prods = prods.filter(p=>!p.active);
   if (state.productSearchQuery) {
     const q = state.productSearchQuery.toLowerCase();
-    prods = prods.filter(p=>p.name.toLowerCase().includes(q));
+    prods = prods.filter(p=>
+      (p.nameZh||p.zh||'').includes(q) ||
+      (p.nameEn||p.name||'').toLowerCase().includes(q) ||
+      (p.id||'').toLowerCase().includes(q)
+    );
   }
   if (state.productCatFilter) prods = prods.filter(p=>p.cat===state.productCatFilter);
   return prods;
