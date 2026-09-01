@@ -1091,6 +1091,19 @@ body { background: var(--cream, #FFFDF9); }
 .pd-qty button{width:42px;height:42px;border-radius:50%;border:2px solid var(--peach-m);background:var(--peach-l);font-size:1.2rem;cursor:pointer;}
 .pd-qty-num{font-size:1.1rem;font-weight:700;color:var(--plum);min-width:28px;text-align:center;}
 
+
+/* ── Form field error state ── */
+.cf-input.field-error{
+  border-color:#CC2222 !important;
+  box-shadow:0 0 0 3px rgba(204,34,34,0.15) !important;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%,60%{transform:translateX(-5px)}
+  40%,80%{transform:translateX(5px)}
+}
+.btn-shake{animation:shake 0.35s ease;}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -2430,8 +2443,56 @@ function sendWA(sfx){
   const pc    = (document.getElementById('cf-post' +sfx)?.value?.trim()||'').toUpperCase();
   const notes = document.getElementById('cf-notes'+sfx)?.value?.trim();
 
-  if(!name||!phone||!addr||!pc){
-    showToast(tx('alertFill'));
+  // Clear all previous field errors
+  ['cf-name','cf-phone','cf-addr','cf-post'].forEach(field => {
+    const el = document.getElementById(field+sfx);
+    if (el) { el.style.borderColor=''; el.style.boxShadow=''; }
+    const errEl = document.getElementById(field+sfx+'-err');
+    if (errEl) errEl.remove();
+  });
+
+  // Validate each field and show inline error
+  const fieldErrors = [];
+  const _markErr = (fieldId, msg) => {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    el.style.borderColor = '#CC2222';
+    el.style.boxShadow = '0 0 0 3px rgba(204,34,34,0.15)';
+    // Remove existing error
+    const old = document.getElementById(fieldId+'-err');
+    if (old) old.remove();
+    // Insert error message below the field
+    const err = document.createElement('div');
+    err.id = fieldId+'-err';
+    err.textContent = msg;
+    err.style.cssText = 'color:#CC2222;font-size:0.72rem;margin-top:3px;font-weight:500;';
+    el.parentNode.insertBefore(err, el.nextSibling);
+    fieldErrors.push(fieldId);
+  };
+
+  if (!name)  _markErr('cf-name'+sfx,  lang==='zh'?'請填寫姓名':'Please enter your name');
+  if (!phone) _markErr('cf-phone'+sfx, lang==='zh'?'請填寫 WhatsApp 號碼':'Please enter your WhatsApp number');
+  if (!addr)  _markErr('cf-addr'+sfx,  lang==='zh'?'請填寫送貨地址':'Please enter delivery address');
+  if (!pc)    _markErr('cf-post'+sfx,  lang==='zh'?'請填寫郵政編碼':'Please enter your postcode');
+
+  if (fieldErrors.length > 0) {
+    // Scroll to first error field
+    const firstErr = document.getElementById(fieldErrors[0]);
+    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Clear errors when user starts typing
+    fieldErrors.forEach(fid => {
+      const el = document.getElementById(fid);
+      if (el) el.addEventListener('input', function _clr() {
+        el.style.borderColor=''; el.style.boxShadow='';
+        const e=document.getElementById(fid+'-err'); if(e)e.remove();
+        el.removeEventListener('input',_clr);
+      }, {once:true});
+    });
+    // Shake the submit button to signal something's wrong
+    document.querySelectorAll('.whatsapp-btn').forEach(b=>{
+      b.classList.add('btn-shake');
+      setTimeout(()=>b.classList.remove('btn-shake'),400);
+    });
     return;
   }
   // Postcode coverage check
