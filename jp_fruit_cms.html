@@ -2055,8 +2055,11 @@ function saveProduct() {
   // ── Price validation ──
   const _priceRaw = document.getElementById('p-price').value.trim();
   const _price = parseFloat(_priceRaw);
-  if (_priceRaw === '' || isNaN(_price) || _price < 0) {
-    alert('請填寫正確價錢（不可為空、負數或文字）！');
+  const _isWeightPrice = document.getElementById('p-weight-price')?.checked;
+  if (_priceRaw === '' || isNaN(_price) || _price < 0 || (_price === 0 && !_isWeightPrice)) {
+    alert(_price === 0 && !_isWeightPrice
+      ? '售價不可為 0，除非已開啟「以重量計價」！'
+      : '請填寫正確價錢（不可為空、負數或文字）！');
     document.getElementById('p-price').focus();
     return;
   }
