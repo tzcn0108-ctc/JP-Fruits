@@ -526,7 +526,7 @@ function cmsUnlock() {
           <button class="btn btn-ghost" onclick="showPage('orders')">睇訂單</button>
           <button class="btn btn-primary" onclick="openProductModal()">+ 新增產品</button>
         </div>
-      </div>
+      
       <div class="content">
         <div class="stats-grid">
           <div class="stat-card"><div class="stat-label">產品總數</div><div class="stat-value blue" id="stat-products">-</div><div class="stat-sub">款產品</div></div>
@@ -558,7 +558,6 @@ function cmsUnlock() {
           </label>
           <button class="btn btn-primary" onclick="openProductModal()">+ 新增產品</button>
         </div>
-      </div>
       <div class="tabs" id="product-tabs">
         <div class="tab active" onclick="filterProductStatus('all',this)">全部</div>
         <div class="tab" onclick="filterProductStatus('noprice',this)">⚠️ 未填價錢</div>
@@ -587,7 +586,7 @@ function cmsUnlock() {
           <input class="search-box" placeholder="搜尋..." oninput="filterInventory(this.value)" style="width:160px;">
           <button class="btn btn-ghost" onclick="toggleLowOnly()" id="low-btn">⚠️ 只顯示售罄</button>
         </div>
-      </div>
+      
       <div class="content">
         <div class="notice">💡 庫存 <strong>-1</strong> = 無限（不追蹤）｜<strong>0</strong> = 售罄，自動顯示缺貨</div>
         <div class="table-wrap">
@@ -610,7 +609,7 @@ function cmsUnlock() {
           <button class="btn btn-gold" onclick="exportWeeklyCSV()">⬇ 匯出 CSV</button>
           <button class="btn btn-ghost" onclick="exportXeroCSV()" title="匯出 Xero/QuickBooks 格式">⬇ Xero CSV</button>
         </div>
-      </div>
+      
       <div class="content">
 
         <!-- DATE FILTER -->
@@ -670,7 +669,8 @@ function cmsUnlock() {
           <button class="btn btn-primary" onclick="openSetModal()">+ 新增套餐</button>
         </div>
       
-      <div class="content">
+            
+<div class="content">
         <div class="notice">💡 套餐會顯示喺你指定嘅分類入面。客人可以互動揀選，揀齊先可以落單。</div>
         <div id="sets-list"></div>
       </div>
@@ -726,7 +726,8 @@ function cmsUnlock() {
           <span id="featured-count-label" style="font-size:0.82rem;color:var(--muted);padding:0 8px;"></span>
         </div>
       
-      <div class="content">
+            
+<div class="content">
         <div class="notice" id="featured-notice">💡 剔選最多 <strong>10 款</strong>產品作為「本店熱賣」。建議每月更新一次，反映當季貨品。冇剔選時，系統自動用歷史銷量 Top 10。</div>
 
         <!-- QUICK STATS -->
@@ -773,7 +774,7 @@ function cmsUnlock() {
           <button class="btn btn-ghost" onclick="previewBanner()">👁 預覽</button>
           <button class="btn btn-primary" onclick="saveBanner()">儲存並發佈</button>
         </div>
-      </div>
+      
       <div class="content">
         <div class="notice">🌟 每週週一更新，約 5 分鐘。儲存後客戶網站即時顯示。</div>
 
@@ -840,7 +841,8 @@ function cmsUnlock() {
         <div class="page-title">分類設定 Categories</div>
         <div class="header-actions"><button class="btn btn-primary" onclick="openCategoryModal()">+ 新增分類</button></div>
       
-      <div class="content">
+            
+<div class="content">
         <div class="table-wrap">
           <table><thead><tr><th>分類</th><th>中文</th><th>產品數</th><th>操作</th></tr></thead>
           <tbody id="categories-table"></tbody></table>
@@ -854,7 +856,8 @@ function cmsUnlock() {
           <button class="btn btn-primary" onclick="openVIPModal()">+ 新增 VIP</button>
         </div>
       
-      <div class="content">
+            
+<div class="content">
         <div class="notice" style="margin-bottom:16px;">VIP 客人可以獲得專屬優惠碼同 Magic Link，一鍵預填個人資料落單。</div>
         <div id="vip-list"></div>
       </div>
@@ -933,7 +936,8 @@ function cmsUnlock() {
           <button class="btn btn-primary" onclick="openPromoModal()">+ 新增優惠碼</button>
         </div>
       
-      <div class="content">
+            
+<div class="content">
         <div class="notice" style="margin-bottom:16px;">優惠碼喺 Order Form 結帳時輸入，自動計算折扣。</div>
         <div id="promos-list"></div>
       </div>
@@ -1008,7 +1012,8 @@ function cmsUnlock() {
           <button class="btn btn-primary" onclick="saveSettings()">💾 儲存並發佈</button>
         </div>
       
-      <div class="content">
+            
+<div class="content">
         <div class="notice">⚙️ 呢度嘅設定會同步到客戶訂單表格，包括所有文字、字體、聯絡方式。</div>
 
         <div class="table-wrap" style="padding:20px;margin-bottom:16px;">
