@@ -279,6 +279,34 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 .img-slot-badge{font-size:0.6rem;background:var(--plum-l);color:var(--plum);padding:1px 5px;border-radius:3px;flex-shrink:0;}
 .img-slot-del{background:none;border:1px solid var(--border);color:var(--red);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.8rem;flex-shrink:0;}
 .img-slot-del:hover{background:var(--red);color:#fff;}
+
+/* ── Password screen ── */
+#cms-lock{
+  position:fixed;inset:0;background:#0F1117;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+.lock-box{
+  background:#1A1D27;border:1px solid #2E3350;border-radius:16px;
+  padding:40px 36px;width:340px;text-align:center;
+}
+.lock-logo{font-size:2.5rem;margin-bottom:8px;}
+.lock-title{font-size:1.1rem;font-weight:600;color:#E8EAF0;margin-bottom:4px;}
+.lock-sub{font-size:0.78rem;color:#7A7F99;margin-bottom:24px;}
+.lock-input{
+  width:100%;padding:11px 14px;border:1.5px solid #2E3350;
+  border-radius:8px;background:#22263A;color:#E8EAF0;
+  font-size:0.95rem;margin-bottom:12px;outline:none;
+  transition:border-color 0.2s;
+}
+.lock-input:focus{border-color:#6B4C8A;}
+.lock-btn{
+  width:100%;padding:12px;background:#6B4C8A;color:#fff;
+  border:none;border-radius:8px;font-size:0.95rem;font-weight:600;
+  cursor:pointer;transition:background 0.2s;
+}
+.lock-btn:hover{background:#4A2060;}
+.lock-err{color:#FF4D6D;font-size:0.78rem;margin-top:8px;display:none;}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -394,6 +422,37 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 </script>
 <script>
 /* CMS_VERSION: 2026-09-01-WEIGHTPRICE */
+
+// ── CMS PASSWORD PROTECTION ──────────────────────────────
+// Change this password to whatever you want:
+const CMS_PASSWORD = 'jpfruit2026';
+
+(function() {
+  const stored = sessionStorage.getItem('cms-auth');
+  if (stored === CMS_PASSWORD) {
+    document.getElementById('cms-lock').style.display = 'none';
+  }
+})();
+
+function cmsUnlock() {
+  const val = document.getElementById('cms-pw-input').value;
+  if (val === CMS_PASSWORD) {
+    sessionStorage.setItem('cms-auth', CMS_PASSWORD);
+    document.getElementById('cms-lock').style.display = 'none';
+    document.getElementById('cms-pw-err').style.display = 'none';
+  } else {
+    const err = document.getElementById('cms-pw-err');
+    err.style.display = 'block';
+    document.getElementById('cms-pw-input').value = '';
+    document.getElementById('cms-pw-input').focus();
+    // Brief shake
+    const box = document.querySelector('.lock-box');
+    box.style.animation = 'none';
+    box.offsetHeight;
+    box.style.animation = 'shake 0.35s ease';
+  }
+}
+
 // ── ANTI-FOUC: Apply theme BEFORE DOM renders ──
 (function(){
   try {
@@ -404,6 +463,21 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 </script>
 </head>
 <body>
+
+<!-- CMS Password Lock Screen -->
+<div id="cms-lock">
+  <div class="lock-box">
+    <div class="lock-logo">🛒</div>
+    <div class="lock-title">JP Fruit CMS</div>
+    <div class="lock-sub">請輸入管理員密碼</div>
+    <input type="password" class="lock-input" id="cms-pw-input"
+      placeholder="Password"
+      onkeydown="if(event.key==='Enter')cmsUnlock()">
+    <button class="lock-btn" onclick="cmsUnlock()">進入</button>
+    <div class="lock-err" id="cms-pw-err">密碼錯誤，請重試</div>
+  </div>
+</div>
+
 <div class="toast-host" id="toast-host"></div>
 <div class="app">
   <div class="sidebar">
@@ -600,7 +674,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
     <div id="page-orders" style="display:none;">
       <div class="header">
         <div class="page-title">訂單管理 Orders</div>
-        <div class="header-actions"><button class="btn btn-primary" onclick="openOrderModal()">+ 新增訂單</button></div>
+        <div class="header-actions"><button class="btn btn-ghost btn-sm" onclick="exportOrders()">⬇ 匯出訂單</button><button class="btn btn-ghost btn-sm" onclick="exportCustomers()" style="margin-left:6px;">⬇ 匯出客人</button><button class="btn btn-primary" onclick="openOrderModal()" style="margin-left:6px;">+ 新增訂單</button></div>
       </div>
       <div class="content">
         <!-- Advanced Search & Filter Bar -->
@@ -1011,6 +1085,12 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
               </select>
             </div>
             <div class="form-group"><label>截單時間 Cutoff Time</label><input type="time" id="st-cutoff-time" value="13:00"></div>
+            </div>
+            <div class="form-group">
+              <label>免運費最低消費 Min. for Free Delivery (£)</label>
+              <input type="number" id="st-min-free" step="0.01" min="0" placeholder="例: 30">
+              <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">未填 = 永不免運費</div>
+            </div>
           
 
           <!-- ── HOLIDAY MODE ── -->
@@ -1653,17 +1733,34 @@ async function loadData() {
         if (!saved_p) return {...sp};
         // Preserve CMS-only fields; everything else from SEED (Excel)
         return {
+          // SEED_PRODUCTS provides the base shape (...sp)
+          // but ALL CMS-editable fields must be explicitly overridden from Firebase (saved_p)
+          // so that user changes (price, active, priceByWeight etc.) survive a new HTML upload.
+          // Rule: use ?? (not ||) so that false and 0 are preserved from saved_p.
           ...sp,
-          image:        saved_p.image    || sp.image    || '',
-          images:       (saved_p.images  && saved_p.images.length) ? saved_p.images : (sp.images||[]),
-          desc:         saved_p.desc     || sp.desc     || '',
-          descZh:       saved_p.descZh   || saved_p.desc || sp.descZh || '',
-          descEn:       saved_p.descEn   || sp.descEn   || '',
-          featured:     saved_p.featured ?? sp.featured ?? false,
-          priceByWeight: saved_p.priceByWeight ?? sp.priceByWeight ?? false,
-          tiers: (saved_p.tiers&&saved_p.tiers.length) ? saved_p.tiers : (sp.tiers||[]),
-          costPerKg:     saved_p.costPerKg  ?? sp.costPerKg  ?? null,
-          pricePerKg:    saved_p.pricePerKg ?? sp.pricePerKg ?? null,
+          // ── Names & descriptions ──────────────────────────────
+          nameZh:       saved_p.nameZh       ?? sp.nameZh       ?? '',
+          nameEn:       saved_p.nameEn       ?? sp.nameEn       ?? '',
+          desc:         saved_p.desc         || sp.desc         || '',
+          descZh:       saved_p.descZh       || saved_p.desc    || sp.descZh  || '',
+          descEn:       saved_p.descEn       || sp.descEn       || '',
+          // ── Pricing (use ?? so price=0 is preserved) ──────────
+          price:        saved_p.price        ?? sp.price        ?? 0,
+          salePrice:    saved_p.salePrice    ?? sp.salePrice    ?? null,
+          saleUntil:    saved_p.saleUntil    ?? sp.saleUntil    ?? null,
+          priceByWeight:saved_p.priceByWeight ?? sp.priceByWeight ?? false,
+          costPerKg:    saved_p.costPerKg    ?? sp.costPerKg    ?? null,
+          pricePerKg:   saved_p.pricePerKg   ?? sp.pricePerKg   ?? null,
+          tiers:        (saved_p.tiers&&saved_p.tiers.length) ? saved_p.tiers : (sp.tiers||[]),
+          // ── Inventory ─────────────────────────────────────────
+          stock:        saved_p.stock        ?? sp.stock        ?? -1,
+          unit:         saved_p.unit         ?? sp.unit         ?? '',
+          // ── Visibility & merchandising ────────────────────────
+          active:       saved_p.active       ?? sp.active       ?? true,
+          featured:     saved_p.featured     ?? sp.featured     ?? false,
+          // ── Images ────────────────────────────────────────────
+          image:        saved_p.image        || sp.image        || '',
+          images:       (saved_p.images&&saved_p.images.length) ? saved_p.images : (sp.images||[]),
         };
       });
       // Non-product data: always restore from saved
@@ -2208,7 +2305,7 @@ function viewOrder(id) {
   const itemsHtml = Array.isArray(o.items)
     ? o.items.map((item, idx) => `
       <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4dc;">
-        <span style="flex:1;font-size:0.85rem;color:#1C0F08;">${escapeHTML(item.name||'—')}</span>
+        <span style="flex:1;font-size:0.85rem;color:var(--text);">${escapeHTML(item.name||'—')}</span>
         <div style="display:flex;align-items:center;gap:4px;">
           <button onclick="editOrderItemQty('${o.id}',${idx},-1)"
             style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">−</button>
@@ -2216,7 +2313,7 @@ function viewOrder(id) {
           <button onclick="editOrderItemQty('${o.id}',${idx},1)"
             style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">+</button>
         </div>
-        <span style="font-size:0.85rem;font-weight:600;color:#1C0F08;min-width:52px;text-align:right;">£${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--text);min-width:52px;text-align:right;">£${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
         <button onclick="removeOrderItem('${o.id}',${idx})"
           style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:0.85rem;padding:2px 4px;">✕</button>
       </div>`).join('')
@@ -2245,7 +2342,7 @@ function viewOrder(id) {
       <div style="padding:20px;">
         <div style="background:var(--plum-l,#EDE6F5);border:1.5px solid var(--plum-m,#9B7AB8);border-radius:10px;padding:14px;margin-bottom:16px;">
           <div style="font-size:0.7rem;color:var(--plum,#6B4C8A);margin-bottom:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;">客人資料</div>
-          <div style="font-size:0.92rem;font-weight:700;color:#1C0F08;">${escapeHTML(o.name)||'—'}</div>
+          <div style="font-size:0.92rem;font-weight:700;color:var(--text);">${escapeHTML(o.name)||'—'}</div>
           <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${escapeHTML(o.phone)||''}</div>
           <div style="font-size:0.82rem;color:#3D2B1F;margin-top:3px;">${escapeHTML(o.address)||''}, ${escapeHTML(o.postcode)||''}</div>
           ${o.notes?`<div style="font-size:0.8rem;color:#3D2B1F;margin-top:8px;padding-top:8px;border-top:1px solid var(--plum-m,#9B7AB8);"><strong>備註：</strong>${escapeHTML(o.notes)}</div>`:''}
@@ -2887,6 +2984,211 @@ function addTierSlot() {
 function removeTierSlot(i) {
   editingTiers.splice(i, 1);
   renderTierSlots();
+}
+
+
+// ══ EXPORT / IMPORT ═══════════════════════════════════════════════════
+
+function csvEscape(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function downloadCSVFile(rows, filename) {
+  const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+  const bom = '\uFEFF';  // BOM for Excel to recognise UTF-8
+  const blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ 已匯出 ' + filename);
+}
+
+// ── Export: Products ──────────────────────────────────────────────────
+function exportProducts() {
+  const headers = [
+    'ProductID','中文名','英文名','分類ID','分類中文','售價','特價','以重量計價',
+    '入貨價/kg','建議售價/kg','庫存(-1=無限)','上架','推介','描述(中)','描述(英)',
+    '買X件定價1(件數)','買X件定價1(總價)','買X件定價2(件數)','買X件定價2(總價)',
+    '買X件定價3(件數)','買X件定價3(總價)'
+  ];
+  const rows = [headers];
+  state.products.forEach(p => {
+    const cat = state.categories.find(c=>c.id===p.cat);
+    const tiers = p.tiers || [];
+    rows.push([
+      p.id, p.nameZh||p.zh||'', p.nameEn||p.name||'',
+      p.cat||'', cat?cat.zh:'',
+      p.price??'', p.salePrice??'',
+      p.priceByWeight?'是':'否',
+      p.costPerKg??'', p.pricePerKg??'',
+      p.stock??-1,
+      p.active===false?'否':'是',
+      p.featured?'是':'否',
+      p.descZh||p.desc||'', p.descEn||'',
+      tiers[0]?.qty??'', tiers[0]?.total??'',
+      tiers[1]?.qty??'', tiers[1]?.total??'',
+      tiers[2]?.qty??'', tiers[2]?.total??'',
+    ]);
+  });
+  downloadCSVFile(rows, `JP_Fruit_Products_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+// ── Export: Orders ────────────────────────────────────────────────────
+function exportOrders() {
+  const orders = (window._firebaseOrders && window._firebaseOrders.length)
+    ? window._firebaseOrders : state.orders;
+  const headers = [
+    '訂單號','日期','客人姓名','電話','地址','郵編','訂購產品',
+    '小計','總額','付款狀態','訂單狀態','備註'
+  ];
+  const rows = [headers];
+  orders.forEach(o => {
+    const itemsStr = (o.items||[]).map(i =>
+      i.type==='set'
+        ? `${i.name||''} x1 £${(i.price||0).toFixed(2)}`
+        : `${i.name||''} x${i.qty||1} £${((i.price||0)*(i.qty||1)).toFixed(2)}`
+    ).join(' | ');
+    const date = o.createdAt ? new Date(o.createdAt).toLocaleString('zh-HK') : '';
+    rows.push([
+      o.id||'', date,
+      o.name||'', o.phone||'',
+      o.address||'', o.postcode||'',
+      itemsStr,
+      o.subtotal??o.total??'', o.total??'',
+      o.paymentStatus||'unpaid', o.status||'new',
+      o.notes||''
+    ]);
+  });
+  downloadCSVFile(rows, `JP_Fruit_Orders_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+// ── Export: Customers ─────────────────────────────────────────────────
+function exportCustomers() {
+  const orders = (window._firebaseOrders && window._firebaseOrders.length)
+    ? window._firebaseOrders : state.orders;
+  // Group by phone number
+  const map = {};
+  orders.forEach(o => {
+    const key = (o.phone||'').trim().replace(/\s/g,'');
+    if (!key) return;
+    if (!map[key]) {
+      map[key] = { name:o.name||'', phone:key, address:o.address||'', postcode:o.postcode||'',
+                   orders:0, total:0, lastDate:'' };
+    }
+    map[key].orders++;
+    map[key].total += parseFloat(o.total||0);
+    const d = o.createdAt ? new Date(o.createdAt).toISOString().slice(0,10) : '';
+    if (d > map[key].lastDate) {
+      map[key].lastDate = d;
+      map[key].name = o.name||map[key].name;
+      map[key].address = o.address||map[key].address;
+      map[key].postcode = o.postcode||map[key].postcode;
+    }
+  });
+  const headers = ['客人姓名','電話','地址','郵編','訂單數','總消費(£)','最後落單日期'];
+  const rows = [headers];
+  Object.values(map)
+    .sort((a,b) => b.total - a.total)
+    .forEach(cu => {
+      rows.push([cu.name, cu.phone, cu.address, cu.postcode,
+                 cu.orders, cu.total.toFixed(2), cu.lastDate]);
+    });
+  downloadCSVFile(rows, `JP_Fruit_Customers_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+// ── Import: Products from CSV ─────────────────────────────────────────
+function triggerImportProducts() {
+  const input = document.getElementById('import-products-file');
+  if (input) input.click();
+}
+
+async function handleImportProducts(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const text = await file.text();
+  // Parse CSV
+  const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.trim());
+  if (lines.length < 2) { showToast('❌ 檔案格式錯誤'); return; }
+
+  // Parse header
+  const headers = parseCSVLine(lines[0]);
+  const colIdx = {};
+  headers.forEach((h,i) => colIdx[h.trim()] = i);
+
+  const required = ['ProductID'];
+  for (const r of required) {
+    if (colIdx[r] === undefined) {
+      showToast('❌ 缺少欄位: ' + r); return;
+    }
+  }
+
+  let updated = 0, notFound = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    const id = vals[colIdx['ProductID']]?.trim();
+    if (!id) continue;
+    const p = state.products.find(x => x.id === id);
+    if (!p) { notFound++; continue; }
+
+    // Apply each column if present
+    const gv = col => colIdx[col] !== undefined ? vals[colIdx[col]]?.trim() : undefined;
+
+    if (gv('售價')         !== undefined && gv('售價') !== '') p.price = parseFloat(gv('售價'))||0;
+    if (gv('特價')         !== undefined) p.salePrice = gv('特價') ? parseFloat(gv('特價')) : null;
+    if (gv('庫存(-1=無限)') !== undefined && gv('庫存(-1=無限)') !== '') p.stock = parseInt(gv('庫存(-1=無限)'))||0;
+    if (gv('上架')         !== undefined && gv('上架') !== '') p.active = gv('上架') !== '否';
+    if (gv('推介')         !== undefined && gv('推介') !== '') p.featured = gv('推介') === '是';
+    if (gv('以重量計價')    !== undefined && gv('以重量計價') !== '') p.priceByWeight = gv('以重量計價') === '是';
+    if (gv('入貨價/kg')     !== undefined) p.costPerKg = gv('入貨價/kg') ? parseFloat(gv('入貨價/kg')) : null;
+    if (gv('建議售價/kg')   !== undefined) p.pricePerKg = gv('建議售價/kg') ? parseFloat(gv('建議售價/kg')) : null;
+    if (gv('描述(中)')      !== undefined) p.descZh = gv('描述(中)')||'';
+    if (gv('描述(英)')      !== undefined) p.descEn = gv('描述(英)')||'';
+    if (gv('中文名')        !== undefined && gv('中文名') !== '') p.nameZh = gv('中文名');
+    if (gv('英文名')        !== undefined && gv('英文名') !== '') p.nameEn = gv('英文名');
+
+    // Tiers
+    const t1q = gv('買X件定價1(件數)'), t1p = gv('買X件定價1(總價)');
+    const t2q = gv('買X件定價2(件數)'), t2p = gv('買X件定價2(總價)');
+    const t3q = gv('買X件定價3(件數)'), t3p = gv('買X件定價3(總價)');
+    const newTiers = [];
+    if (t1q && t1p) newTiers.push({qty:parseInt(t1q), total:parseFloat(t1p)});
+    if (t2q && t2p) newTiers.push({qty:parseInt(t2q), total:parseFloat(t2p)});
+    if (t3q && t3p) newTiers.push({qty:parseInt(t3q), total:parseFloat(t3p)});
+    if (newTiers.length || (colIdx['買X件定價1(件數)'] !== undefined)) {
+      p.tiers = newTiers;
+    }
+
+    updated++;
+  }
+
+  await saveData();
+  renderAll();
+  showToast(`✓ 已更新 ${updated} 款產品${notFound ? ('，' + notFound + ' 個 ID 找不到') : ''}`);
+  input.value = '';
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      result.push(cur); cur = '';
+    } else { cur += ch; }
+  }
+  result.push(cur);
+  return result;
 }
 
 function saveGHToken() {

@@ -2608,7 +2608,12 @@ Press OK if correct and we'll be in touch.`;
 
   // ── Step 4: Save to Firebase FIRST ──
   const orderData = {
-    id: 'ORD-' + Date.now(),
+    id: (()=>{
+      const pc = (document.getElementById('cf-post')?.value||'').trim().toUpperCase();
+      const prefix = pc.match(/^([A-Z]{1,2})/)?.[1] || 'JP';
+      const rand = String(Math.floor(1000+Math.random()*9000));
+      return '#'+prefix+'-'+rand;
+    })(),
     status: 'new',
     name, phone,
     address: addr,
