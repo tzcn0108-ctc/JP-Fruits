@@ -544,7 +544,8 @@ function cmsUnlock() {
     </div>
 
     <!-- PRODUCTS -->
-    <div id="page-products" style="display:none;">
+    </div>
+<div id="page-products" style="display:none;">
       <div class="header">
         <div class="page-title">產品管理 Products <span style="font-size:0.85rem;color:var(--muted);font-weight:400;" id="products-count"></span></div>
         <div class="header-actions">
@@ -579,7 +580,8 @@ function cmsUnlock() {
     </div>
 
     <!-- INVENTORY -->
-    <div id="page-inventory" style="display:none;">
+    </div>
+<div id="page-inventory" style="display:none;">
       <div class="header">
         <div class="page-title">庫存管理 Inventory</div>
         <div class="header-actions">
@@ -602,7 +604,8 @@ function cmsUnlock() {
 
     <!-- REPORTS -->
     <!-- REPORTS -->
-    <div id="page-reports" style="display:none;">
+    </div>
+<div id="page-reports" style="display:none;">
       <div class="header">
         <div class="page-title">報告 Reports</div>
         <div class="header-actions">
@@ -660,7 +663,8 @@ function cmsUnlock() {
     </div>
 
 
-    <div id="page-sets" style="display:none;">
+    </div>
+<div id="page-sets" style="display:none;">
       <div class="header">
         <div class="page-title">套餐管理 Set Meals</div>
         <div class="header-actions" style="gap:8px;flex-wrap:wrap;">
@@ -677,7 +681,8 @@ function cmsUnlock() {
     </div>
 
     <!-- ORDERS -->
-    <div id="page-orders" style="display:none;">
+    </div>
+<div id="page-orders" style="display:none;">
       <div class="header">
         <div class="page-title">訂單管理 Orders</div>
         <div class="header-actions"><button class="btn btn-ghost btn-sm" onclick="exportOrders()">⬇ 匯出訂單</button><button class="btn btn-ghost btn-sm" onclick="exportCustomers()" style="margin-left:6px;">⬇ 匯出客人</button><button class="btn btn-primary" onclick="openOrderModal()" style="margin-left:6px;">+ 新增訂單</button></div>
@@ -718,7 +723,8 @@ function cmsUnlock() {
     </div>
 
     <!-- FEATURED / BESTSELLERS -->
-    <div id="page-featured" style="display:none;">
+    </div>
+<div id="page-featured" style="display:none;">
       <div class="header">
         <div class="page-title">熱賣專區管理 Top Sellers</div>
         <div class="header-actions">
@@ -767,7 +773,8 @@ function cmsUnlock() {
     </div>
 
     <!-- BANNER -->
-    <div id="page-banner" style="display:none;">
+    </div>
+<div id="page-banner" style="display:none;">
       <div class="header">
         <div class="page-title">本週主打 Banner</div>
         <div class="header-actions">
@@ -836,7 +843,8 @@ function cmsUnlock() {
     </div>
 
         <!-- CATEGORIES -->
-    <div id="page-categories" style="display:none;">
+    </div>
+<div id="page-categories" style="display:none;">
       <div class="header">
         <div class="page-title">分類設定 Categories</div>
         <div class="header-actions"><button class="btn btn-primary" onclick="openCategoryModal()">+ 新增分類</button></div>
@@ -849,7 +857,9 @@ function cmsUnlock() {
         </div>
       </div>
     <!-- VIP CUSTOMERS -->
-    <div id="page-vip" style="display:none;">
+    </div>
+</div>
+<div id="page-vip" style="display:none;">
       <div class="header">
         <div class="page-title">VIP 客人 ⭐</div>
         <div class="header-actions">
@@ -929,7 +939,8 @@ function cmsUnlock() {
     </div>
 
     <!-- PROMOS -->
-    <div id="page-promos" style="display:none;">
+    </div>
+<div id="page-promos" style="display:none;">
       <div class="header">
         <div class="page-title">推廣 & 優惠碼 Promotions</div>
         <div class="header-actions">
@@ -1005,7 +1016,8 @@ function cmsUnlock() {
     </div>
 
     <!-- SETTINGS -->
-    <div id="page-settings" style="display:none;">
+    </div>
+<div id="page-settings" style="display:none;">
       <div class="header">
         <div class="page-title">網站設定 Site Settings</div>
         <div class="header-actions">
@@ -1126,11 +1138,7 @@ function cmsUnlock() {
       </div>
 
     </div>
-  </div>
-</div>
-
-
-<!-- SET MODAL -->
+  <!-- SET MODAL -->
 <div class="modal-overlay" id="set-modal">
   <div class="modal" style="width:720px;max-height:94vh;display:flex;flex-direction:column;">
     <div class="modal-header">
@@ -2634,6 +2642,23 @@ ${statusMsg}
 
   const phone = o.phone.replace(/\s/g,'').replace(/^\+/,'').replace(/^0/,'44');
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+
+// ── STOCK MANAGEMENT ────────────────────────────────────
+// Restores/deducts stock when an order is cancelled/deleted.
+// Products with stock===-1 are unlimited and are never touched.
+function applyStockDelta(order, delta) {
+  if (!order || !Array.isArray(order.items)) return;
+  let changed = false;
+  order.items.forEach(item => {
+    if (item.type === 'set' || !item.productId) return;
+    const p = state.products.find(x => x.id === item.productId);
+    if (!p || p.stock === -1) return;
+    p.stock = Math.max(0, p.stock + delta * (item.qty || 1));
+    changed = true;
+  });
+  if (changed) saveData();
 }
 
 function advanceOrder(id, newStatus) {
