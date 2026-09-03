@@ -1347,6 +1347,8 @@ class="form-group">
           <label class="toggle-switch"><input type="checkbox" id="p-featured"><span class="slider"></span></label>
           <span style="color:var(--text);font-size:0.85rem;margin-left:12px;">⚖ 重量</span>
           <label class="toggle-switch"><input type="checkbox" id="p-weight-price" onchange="toggleWeightFields()"><span class="slider"></span></label>
+          <span style="color:var(--text);font-size:0.85rem;margin-left:12px;">🆕 新品</span>
+          <label class="toggle-switch"><input type="checkbox" id="p-is-new"><span class="slider"></span></label>
         </div>
         <div id="p-weight-fields" style="display:none;margin-top:10px;padding:10px 12px;background:var(--plum-l);border-radius:8px;">
           <label style="font-size:0.8rem;font-weight:600;color:var(--plum-d);margin-bottom:6px;display:block;">⚖ 重量計價記錄（僅供內部）</label>
@@ -1752,6 +1754,7 @@ async function loadData() {
           salePrice:    saved_p.salePrice    ?? sp.salePrice    ?? null,
           saleUntil:    saved_p.saleUntil    ?? sp.saleUntil    ?? null,
           priceByWeight:saved_p.priceByWeight ?? sp.priceByWeight ?? false,
+          isNew:        saved_p.isNew        ?? sp.isNew        ?? false,
           costPerKg:    saved_p.costPerKg    ?? sp.costPerKg    ?? null,
           pricePerKg:   saved_p.pricePerKg   ?? sp.pricePerKg   ?? null,
           tiers:        (saved_p.tiers&&saved_p.tiers.length) ? saved_p.tiers : (sp.tiers||[]),
@@ -1761,6 +1764,7 @@ async function loadData() {
           // ── Visibility & merchandising ────────────────────────
           active:       saved_p.active       ?? sp.active       ?? true,
           featured:     saved_p.featured     ?? sp.featured     ?? false,
+          isNew:        saved_p.isNew        ?? sp.isNew        ?? false,
           // ── Images ────────────────────────────────────────────
           image:        saved_p.image        || sp.image        || '',
           images:       (saved_p.images&&saved_p.images.length) ? saved_p.images : (sp.images||[]),
@@ -2015,7 +2019,8 @@ function renderProducts() {
         </div>
         ${p.featured?'<span class="badge badge-gold" style="margin-top:2px;font-size:0.65rem;">推介</span>':''}
         ${(p.tiers&&p.tiers.length)?p.tiers.map(t=>`<span style="font-size:0.65rem;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:4px;margin-top:2px;display:inline-block;">📦 買${t.qty}件 £${t.total}</span>`).join(' '):''}
-        ${p.historicSold?`<span style="font-size:0.7rem;color:var(--muted)">歷史銷量: ${p.historicSold}</span>`:'<span style="font-size:0.7rem;color:var(--muted)">新產品</span>'}
+        ${p.isNew?'<span style="font-size:0.65rem;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:4px;">🆕 新品</span>':''}
+        ${p.historicSold?`<span style="font-size:0.7rem;color:var(--muted)">歷史銷量: ${p.historicSold}</span>`:''}
       </td>
       <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
       <td>${priceDisplay}</td>
@@ -2212,6 +2217,7 @@ async function saveProduct() {
     active: document.getElementById('p-active').checked,
     featured: document.getElementById('p-featured').checked,
     priceByWeight: document.getElementById('p-weight-price')?.checked ?? false,
+    isNew:        document.getElementById('p-is-new')?.checked ?? false,
     costPerKg:    parseFloat(document.getElementById('p-cost-per-kg')?.value)||null,
     pricePerKg:   parseFloat(document.getElementById('p-price-per-kg')?.value)||null,
     historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
