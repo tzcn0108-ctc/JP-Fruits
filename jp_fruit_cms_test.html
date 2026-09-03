@@ -1761,6 +1761,7 @@ async function loadData() {
           // ── Visibility & merchandising ────────────────────────
           active:       saved_p.active       ?? sp.active       ?? true,
           featured:     saved_p.featured     ?? sp.featured     ?? false,
+          isNew:        saved_p.isNew        ?? sp.isNew        ?? false,
           // ── Images ────────────────────────────────────────────
           image:        saved_p.image        || sp.image        || '',
           images:       (saved_p.images&&saved_p.images.length) ? saved_p.images : (sp.images||[]),
@@ -2015,7 +2016,8 @@ function renderProducts() {
         </div>
         ${p.featured?'<span class="badge badge-gold" style="margin-top:2px;font-size:0.65rem;">推介</span>':''}
         ${(p.tiers&&p.tiers.length)?p.tiers.map(t=>`<span style="font-size:0.65rem;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:4px;margin-top:2px;display:inline-block;">📦 買${t.qty}件 £${t.total}</span>`).join(' '):''}
-        ${p.historicSold?`<span style="font-size:0.7rem;color:var(--muted)">歷史銷量: ${p.historicSold}</span>`:'<span style="font-size:0.7rem;color:var(--muted)">新產品</span>'}
+        ${p.isNew?'<span style="font-size:0.65rem;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:4px;">🆕 新品</span>':''}
+        ${p.historicSold?`<span style="font-size:0.7rem;color:var(--muted)">歷史銷量: ${p.historicSold}</span>`:''}
       </td>
       <td><span class="cat-chip">${cat?cat.zh:'—'}</span></td>
       <td>${priceDisplay}</td>

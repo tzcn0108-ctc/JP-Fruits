@@ -1900,7 +1900,7 @@ function pCard(p){
     ?`<div class="p-badge p-badge-oos">${tx('oos')}</div>`
     :p.salePrice
       ?`<div class="p-badge p-badge-sale">${tx('sale')}</div>`
-      :!(p.historicSold)
+      :p.isNew===true
         ?`<div class="p-badge p-badge-new">${tx('newLabel')}</div>`
         :'';
   const price = p.priceByWeight
