@@ -274,7 +274,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 
 /* ── Multi-image slots ───────────────────── */
 .img-slot{display:flex;gap:8px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
-.img-slot img{width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;}
+.img-slot img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--plum-m);flex-shrink:0;cursor:pointer;transition:transform 0.15s;}.img-slot img:hover{transform:scale(1.05);}
 .img-slot input{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.75rem;}
 .img-slot-badge{font-size:0.6rem;background:var(--plum-l);color:var(--plum);padding:1px 5px;border-radius:3px;flex-shrink:0;}
 .img-slot-del{background:none;border:1px solid var(--border);color:var(--red);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.8rem;flex-shrink:0;}
@@ -2913,15 +2913,26 @@ function renderProductImageSlots() {
   const list = document.getElementById('p-images-list');
   const addBtn = document.getElementById('p-add-img-btn');
   if (!list) return;
-  list.innerHTML = editingImages.map((url, i) => `
-    <div class="img-slot" id="img-slot-${i}">
-      <span class="img-slot-badge">${i === 0 ? '主圖' : `副圖${i}`}</span>
-      ${url ? `<img src="${url}" onerror="this.style.display='none'">` : '<div style="width:52px;height:52px;border-radius:6px;border:1px dashed var(--border);"></div>'}
-      <input type="text" value="${url}" placeholder="圖片 URL..."
-        oninput="editingImages[${i}]=this.value; debounceSlotPreview(${i}, this.value)">
+  list.innerHTML = editingImages.map((url, i) => {
+    const badge  = i === 0 ? '主圖' : '副圖' + i;
+    const imgHtml = url
+      ? '<img src="' + url + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--plum-m);flex-shrink:0;cursor:pointer;" onclick="window.open(\'' + url + '\')" onerror="this.style.border=\'2px solid var(--red)\'" title="撳放大睇">'
+      : '<div style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1.8rem;flex-shrink:0;">🖼</div>';
+    const statusHtml = url
+      ? '<div style="font-size:0.65rem;color:var(--green);">✓ 已設定圖片　撳縮圖可放大</div>'
+      : '<div style="font-size:0.65rem;color:var(--muted);">尚未設定圖片</div>';
+    return `<div class="img-slot" id="img-slot-${i}">
+      <span class="img-slot-badge">${badge}</span>
+      ${imgHtml}
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+        <input type="text" value="${url}" placeholder="貼圖片 URL 或用上方⬆上傳..."
+          style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.75rem;width:100%;"
+          oninput="editingImages[${i}]=this.value; debounceSlotPreview(${i}, this.value)">
+        ${statusHtml}
+      </div>
       <button class="img-slot-del" onclick="removeProductImageSlot(${i})" title="刪除">✕</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
   if (addBtn) addBtn.style.display = editingImages.length >= MAX_IMAGES ? 'none' : '';
 }
 
@@ -4616,35 +4627,37 @@ async function handleProductImageUpload(input) {
   if (!file.type.startsWith('image/')) { showToast('請選擇圖片檔案（JPG、PNG、WebP）'); return; }
   if (file.size > 10 * 1024 * 1024) { showToast('圖片太大！請選擇 10MB 以下'); return; }
 
-  const productId = document.getElementById('p-id')?.value || 'product';
+  // Product ID: use the one being edited, or a temp placeholder for new products
+  const productId = state.editingProductId || 'new-' + Date.now();
   const statusEl  = document.getElementById('p-image-upload-status');
-  const previewDiv= document.getElementById('p-image-preview');
-  const previewImg= document.getElementById('p-image-preview-img');
-
-  previewDiv.style.display = 'flex';
-  previewImg.src = URL.createObjectURL(file);
-  statusEl.textContent = '上傳到 GitHub 中...';
-  statusEl.style.color = 'var(--muted)';
+  if (statusEl) {
+    statusEl.textContent = '上傳到 GitHub 中...';
+    statusEl.style.color = 'var(--muted)';
+  }
 
   try {
     const url = await uploadToGitHub(file, productId);
-    // Add the uploaded image to the multi-image slot list
+    // Add the uploaded image into the multi-image slot list
     if (editingImages.length < MAX_IMAGES) {
       editingImages.push(url);
     } else {
-      // Replace the last empty slot, or add if under limit
-      editingImages[editingImages.length-1] = url;
+      editingImages[editingImages.length - 1] = url;
     }
     renderProductImageSlots();
-    statusEl.textContent = '✓ 已上傳！';
-    statusEl.style.color = 'var(--green)';
+    if (statusEl) {
+      statusEl.textContent = '✓ 已上傳！';
+      statusEl.style.color = 'var(--green)';
+    }
     showToast('✓ 圖片已上傳到 GitHub');
-  } catch(e) {
-    statusEl.textContent = '✗ 上傳失敗：' + e.message;
-    statusEl.style.color = 'var(--red)';
+  } catch (e) {
+    if (statusEl) {
+      statusEl.textContent = '✗ 上傳失敗：' + e.message;
+      statusEl.style.color = 'var(--red)';
+    }
     showToast('❌ ' + e.message, 5000);
     console.error('GitHub upload failed:', e);
   }
+  input.value = ''; // allow re-selecting the same file again
 }
 
 // Show image preview when URL is typed manually
