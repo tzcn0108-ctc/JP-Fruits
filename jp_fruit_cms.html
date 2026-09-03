@@ -669,7 +669,7 @@ function cmsUnlock() {
           <button class="btn btn-ghost btn-sm" onclick="createTemplateSet('bread')">🍞 麵包套餐模板</button>
           <button class="btn btn-primary" onclick="openSetModal()">+ 新增套餐</button>
         </div>
-      </div>
+      
       <div class="content">
         <div class="notice">💡 套餐會顯示喺你指定嘅分類入面。客人可以互動揀選，揀齊先可以落單。</div>
         <div id="sets-list"></div>
@@ -681,7 +681,7 @@ function cmsUnlock() {
       <div class="header">
         <div class="page-title">訂單管理 Orders</div>
         <div class="header-actions"><button class="btn btn-ghost btn-sm" onclick="exportOrders()">⬇ 匯出訂單</button><button class="btn btn-ghost btn-sm" onclick="exportCustomers()" style="margin-left:6px;">⬇ 匯出客人</button><button class="btn btn-primary" onclick="openOrderModal()" style="margin-left:6px;">+ 新增訂單</button></div>
-      </div>
+      
       <div class="content">
         <!-- Advanced Search & Filter Bar -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
@@ -725,7 +725,7 @@ function cmsUnlock() {
           <button class="btn btn-ghost btn-sm" onclick="clearAllFeatured()">清除全部推介</button>
           <span id="featured-count-label" style="font-size:0.82rem;color:var(--muted);padding:0 8px;"></span>
         </div>
-      </div>
+      
       <div class="content">
         <div class="notice" id="featured-notice">💡 剔選最多 <strong>10 款</strong>產品作為「本店熱賣」。建議每月更新一次，反映當季貨品。冇剔選時，系統自動用歷史銷量 Top 10。</div>
 
@@ -839,7 +839,7 @@ function cmsUnlock() {
       <div class="header">
         <div class="page-title">分類設定 Categories</div>
         <div class="header-actions"><button class="btn btn-primary" onclick="openCategoryModal()">+ 新增分類</button></div>
-      </div>
+      
       <div class="content">
         <div class="table-wrap">
           <table><thead><tr><th>分類</th><th>中文</th><th>產品數</th><th>操作</th></tr></thead>
@@ -853,7 +853,7 @@ function cmsUnlock() {
         <div class="header-actions">
           <button class="btn btn-primary" onclick="openVIPModal()">+ 新增 VIP</button>
         </div>
-      </div>
+      
       <div class="content">
         <div class="notice" style="margin-bottom:16px;">VIP 客人可以獲得專屬優惠碼同 Magic Link，一鍵預填個人資料落單。</div>
         <div id="vip-list"></div>
@@ -932,7 +932,7 @@ function cmsUnlock() {
         <div class="header-actions">
           <button class="btn btn-primary" onclick="openPromoModal()">+ 新增優惠碼</button>
         </div>
-      </div>
+      
       <div class="content">
         <div class="notice" style="margin-bottom:16px;">優惠碼喺 Order Form 結帳時輸入，自動計算折扣。</div>
         <div id="promos-list"></div>
