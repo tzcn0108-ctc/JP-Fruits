@@ -4616,35 +4616,37 @@ async function handleProductImageUpload(input) {
   if (!file.type.startsWith('image/')) { showToast('請選擇圖片檔案（JPG、PNG、WebP）'); return; }
   if (file.size > 10 * 1024 * 1024) { showToast('圖片太大！請選擇 10MB 以下'); return; }
 
-  const productId = document.getElementById('p-id')?.value || 'product';
+  // Product ID: use the one being edited, or a temp placeholder for new products
+  const productId = state.editingProductId || 'new-' + Date.now();
   const statusEl  = document.getElementById('p-image-upload-status');
-  const previewDiv= document.getElementById('p-image-preview');
-  const previewImg= document.getElementById('p-image-preview-img');
-
-  previewDiv.style.display = 'flex';
-  previewImg.src = URL.createObjectURL(file);
-  statusEl.textContent = '上傳到 GitHub 中...';
-  statusEl.style.color = 'var(--muted)';
+  if (statusEl) {
+    statusEl.textContent = '上傳到 GitHub 中...';
+    statusEl.style.color = 'var(--muted)';
+  }
 
   try {
     const url = await uploadToGitHub(file, productId);
-    // Add the uploaded image to the multi-image slot list
+    // Add the uploaded image into the multi-image slot list
     if (editingImages.length < MAX_IMAGES) {
       editingImages.push(url);
     } else {
-      // Replace the last empty slot, or add if under limit
-      editingImages[editingImages.length-1] = url;
+      editingImages[editingImages.length - 1] = url;
     }
     renderProductImageSlots();
-    statusEl.textContent = '✓ 已上傳！';
-    statusEl.style.color = 'var(--green)';
+    if (statusEl) {
+      statusEl.textContent = '✓ 已上傳！';
+      statusEl.style.color = 'var(--green)';
+    }
     showToast('✓ 圖片已上傳到 GitHub');
-  } catch(e) {
-    statusEl.textContent = '✗ 上傳失敗：' + e.message;
-    statusEl.style.color = 'var(--red)';
+  } catch (e) {
+    if (statusEl) {
+      statusEl.textContent = '✗ 上傳失敗：' + e.message;
+      statusEl.style.color = 'var(--red)';
+    }
     showToast('❌ ' + e.message, 5000);
     console.error('GitHub upload failed:', e);
   }
+  input.value = ''; // allow re-selecting the same file again
 }
 
 // Show image preview when URL is typed manually
