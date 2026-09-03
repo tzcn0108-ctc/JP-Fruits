@@ -550,6 +550,12 @@ function cmsUnlock() {
         <div class="header-actions">
           <input class="search-box" placeholder="搜尋產品..." oninput="filterProducts(this.value)" id="product-search" style="width:180px;">
           <select class="search-box" style="width:150px;" onchange="filterProductsCat(this.value)" id="cat-filter"><option value="">所有分類</option></select>
+          <button class="btn btn-ghost btn-sm" onclick="exportProducts()">⬇ 匯出產品</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">
+            ⬆ 匯入產品
+            <input type="file" id="import-products-file" accept=".csv" style="display:none"
+              onchange="handleImportProducts(this)">
+          </label>
           <button class="btn btn-primary" onclick="openProductModal()">+ 新增產品</button>
         </div>
       </div>
@@ -2149,6 +2155,7 @@ function openProductModal(id=null) {
     document.getElementById('p-stock').value=-1;
     document.getElementById('p-active').checked=true;
     document.getElementById('p-featured').checked=false;
+    editingTiers = []; renderTierSlots();
     const _wt2  = document.getElementById('p-weight-price');
     const _cpk2 = document.getElementById('p-cost-per-kg');
     const _ppk2 = document.getElementById('p-price-per-kg');
