@@ -142,8 +142,9 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .product-card:hover .product-thumb img{transform:scale(1.06);}
 
 /* Badges */
-.p-badge{position:absolute;top:8px;left:8px;font-size:0.6rem;padding:3px 8px;border-radius:8px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;}
-.p-badge-sale{background:var(--berry);color:white;box-shadow:0 2px 6px rgba(192,57,43,0.4);}
+.p-badge{position:absolute;top:8px;left:8px;font-size:0.68rem;padding:4px 10px;border-radius:8px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;z-index:2;}
+.p-badge-sale{background:linear-gradient(135deg,#E74C3C,#C0392B);color:white;box-shadow:0 3px 10px rgba(192,57,43,0.55);animation:saleBadgePulse 1.8s ease-in-out infinite;}
+@keyframes saleBadgePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
 .p-badge-new{background:var(--leaf);color:white;box-shadow:0 2px 6px rgba(61,107,53,0.4);}
 .p-badge-oos{background:rgba(0,0,0,0.45);color:white;backdrop-filter:blur(4px);}
 .p-badge-hot{background:linear-gradient(135deg,#FF6B35,#F7C59F);color:white;box-shadow:0 2px 6px rgba(255,107,53,0.4);}
@@ -504,13 +505,15 @@ body { background: var(--cream, #FFFDF9); }
 
 /* Sale badge - berry red for urgency */
 .p-badge-sale {
-  background: var(--berry, #C0392B) !important;
+  background: linear-gradient(135deg,#E74C3C,#C0392B) !important;
   color: white !important;
-  font-size: 0.6rem !important;
-  font-weight: 700 !important;
-  padding: 2px 6px !important;
-  border-radius: 4px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
   letter-spacing: 0.3px;
+  box-shadow: 0 3px 10px rgba(192,57,43,0.55) !important;
+  animation: saleBadgePulse 1.8s ease-in-out infinite;
 }
 /* New badge - plum for prestige */
 .p-badge-new {
@@ -1123,11 +1126,13 @@ body { background: var(--cream, #FFFDF9); }
 
 /* ── Bulk discount badge ── */
 .pc-bulk-badge{
-  font-size:0.65rem;font-weight:600;
-  color:#2E7D32;background:#E8F5E9;
-  padding:2px 7px;border-radius:8px;
-  display:inline-block;margin-bottom:2px;
+  font-size:0.72rem;font-weight:700;
+  color:#fff;background:linear-gradient(135deg,#2E9E44,#1B7A2E);
+  padding:4px 10px;border-radius:20px;
+  display:inline-flex;align-items:center;gap:3px;margin-bottom:4px;
+  box-shadow:0 2px 6px rgba(46,158,68,0.35);
 }
+.pc-bulk-badge::before{content:'🔥';font-size:0.7rem;}
 
 </style>
 
@@ -1854,7 +1859,13 @@ function renderProducts(){
   if(!prods.length){area.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">${lang==='zh'?'沒有符合條件嘅產品':'No products found'}</div>`;return;}
   const grouped={};
   prods.forEach(p=>{if(!grouped[p.cat])grouped[p.cat]=[];grouped[p.cat].push(p);});
-  const sorted=Object.keys(grouped).sort((a,b)=>Math.max(...grouped[b].map(p=>p.historicSold||0))-Math.max(...grouped[a].map(p=>p.historicSold||0)));
+  // Category section order follows the CMS-configured category order (same as the tab bar),
+  // not auto-sorted by sales — so dragging categories in CMS reorders both consistently.
+  const catOrderIndex={};
+  categories.forEach((c,i)=>{catOrderIndex[c.id]=i;});
+  const sorted=Object.keys(grouped).sort((a,b)=>
+    (catOrderIndex[a]??999) - (catOrderIndex[b]??999)
+  );
   let bestStrip='';
   if(activeCat==='all'&&!searchQuery){
     const best=getBestSellers();
@@ -2432,9 +2443,11 @@ function renderCart(cid,sfx){
 
   const itemsHtml = items.map(({id,val})=>{
     if(val&&val.isSet)return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="rmSetItem('${id}')">✕</button></div><div class="ci-price">£${parseFloat(val.price||0).toFixed(2)}</div></div>`;
-    const p=products.find(x=>x.id===id);if(!p)return'';const pr=p.salePrice||p.price;
+    const p=products.find(x=>x.id===id);if(!p)return'';
     const ciName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
-    return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum" data-qty-id="${id}${sfx}">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price" data-price-id="${id}${sfx}">£${(pr*val).toFixed(2)}</div></div>`;
+    const lineTotal = p.priceByWeight ? 0 : getTieredTotal(p, val);
+    const priceDisplay = p.priceByWeight ? (lang==='zh'?'⚖ 以重量計價':'⚖ By weight') : `£${lineTotal.toFixed(2)}`;
+    return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum" data-qty-id="${id}${sfx}">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price" data-price-id="${id}${sfx}">${priceDisplay}</div></div>`;
   }).join('');
 
   const discount = getDiscount();
