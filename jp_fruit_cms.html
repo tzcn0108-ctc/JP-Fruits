@@ -2317,6 +2317,7 @@ async function saveProduct() {
     })(),
     costPerKg:    parseFloat(document.getElementById('p-cost-per-kg')?.value)||null,
     pricePerKg:   parseFloat(document.getElementById('p-price-per-kg')?.value)||null,
+    tiers:        editingTiers.filter(t=>t.qty&&t.total).sort((a,b)=>a.qty-b.qty),
     historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
     needsVerify: false,
   };
