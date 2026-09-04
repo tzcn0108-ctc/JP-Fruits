@@ -1755,6 +1755,7 @@ async function loadData() {
           saleUntil:    saved_p.saleUntil    ?? sp.saleUntil    ?? null,
           priceByWeight:saved_p.priceByWeight ?? sp.priceByWeight ?? false,
           isNew:        saved_p.isNew        ?? sp.isNew        ?? false,
+          sortOrder:    saved_p.sortOrder    ?? sp.sortOrder    ?? null,
           costPerKg:    saved_p.costPerKg    ?? sp.costPerKg    ?? null,
           pricePerKg:   saved_p.pricePerKg   ?? sp.pricePerKg   ?? null,
           tiers:        (saved_p.tiers&&saved_p.tiers.length) ? saved_p.tiers : (sp.tiers||[]),
@@ -1981,33 +1982,54 @@ function getFilteredProducts() {
     );
   }
   if (state.productCatFilter) prods = prods.filter(p=>p.cat===state.productCatFilter);
+  // Within a single filtered category, respect the manually dragged order
+  // (sortOrder). Products without a sortOrder fall back to their natural
+  // position at the end, sorted stable by array order.
+  if (state.productCatFilter) {
+    prods = [...prods].sort((a,b) => (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999));
+  }
   return prods;
 }
 
 function renderProducts() {
-  const prods = getFilteredProducts();
-  const total = prods.length;
-  const totalPages = Math.ceil(total/state.pageSize);
-  const page = Math.min(state.currentPage, Math.max(1,totalPages));
-  state.currentPage = page;
-  const slice = prods.slice((page-1)*state.pageSize, page*state.pageSize);
+  const allFiltered = getFilteredProducts();
+  const total = allFiltered.length;
+
+  // Drag-to-reorder is only available when viewing ONE specific category
+  // (no search query) — showing everything unpaginated so the whole
+  // category can be reordered in one view, same as category reordering.
+  const reorderMode = !!state.productCatFilter && !state.productSearchQuery;
 
   document.getElementById('products-count').textContent = `(${total} 款)`;
-
-  // Group by category for display
   const tbody = document.getElementById('products-table');
-  if (slice.length===0) {
+  const pg = document.getElementById('products-pagination');
+
+  if (total===0) {
     tbody.innerHTML = `<tr><td colspan="8"><div class="empty">沒有符合條件嘅產品</div></td></tr>`;
-    document.getElementById('products-pagination').innerHTML='';
+    pg.innerHTML='';
     return;
   }
 
-  // Group rows by category
+  let slice, totalPages, page;
+  if (reorderMode) {
+    slice = allFiltered;   // show all, unpaginated, so drag targets are all visible
+    totalPages = 1; page = 1;
+  } else {
+    totalPages = Math.ceil(total/state.pageSize);
+    page = Math.min(state.currentPage, Math.max(1,totalPages));
+    state.currentPage = page;
+    slice = allFiltered.slice((page-1)*state.pageSize, page*state.pageSize);
+  }
+
+  const reorderHint = reorderMode
+    ? `<tr><td colspan="8" style="padding:8px 12px;background:var(--plum-l);color:var(--plum);font-size:0.78rem;">⠿ 拖曳左邊圖示調整呢個分類入面嘅產品順序，Order Form 會跟住呢個順序顯示</td></tr>`
+    : '';
+
   let lastCat = null;
-  let html = '';
+  let html = reorderHint;
   slice.forEach(p => {
     const cat = state.categories.find(c=>c.id===p.cat);
-    if (cat?.id !== lastCat) {
+    if (!reorderMode && cat?.id !== lastCat) {
       lastCat = cat?.id;
       html += `<tr><td colspan="8" class="section-divider">${cat?.zh||'其他'} — ${cat?.name||''}</td></tr>`;
     }
@@ -2015,7 +2037,14 @@ function renderProducts() {
     const priceDisplay = p.price?`<span style="font-family:var(--mono)">£${p.price.toFixed(2)}</span>`:`<span class="badge badge-gold">未填</span>`;
     const salePriceDisplay = p.salePrice?`<span style="color:var(--green);font-family:var(--mono)">£${p.salePrice}</span>`:`<span style="color:var(--muted)">—</span>`;
     const statusBadge = !p.active?'<span class="badge badge-gray">下架</span>':p.stock===0?'<span class="badge badge-red">售罄</span>':'<span class="badge badge-green">上架</span>';
-    html += `<tr>
+    const dragAttrs = reorderMode
+      ? `draggable="true" ondragstart="prodDragStart(event,'${p.id}')" ondragover="prodDragOver(event)" ondrop="prodDrop(event,'${p.id}')" ondragend="prodDragEnd(event)" style="cursor:grab;"`
+      : '';
+    const dragHandle = reorderMode
+      ? `<td style="color:var(--muted);font-size:1rem;width:24px;padding-right:0;">⠿</td>`
+      : '';
+    html += `<tr ${dragAttrs}>
+      ${dragHandle}
       <td>
         <div style="font-size:0.84rem;font-weight:500;max-width:300px;">${p.nameZh||p.zh||p.name}</div>
         <div style="font-size:0.73rem;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px;">
@@ -2040,12 +2069,50 @@ function renderProducts() {
   });
   tbody.innerHTML = html;
 
-  // Pagination
-  const pg = document.getElementById('products-pagination');
-  if (totalPages<=1) { pg.innerHTML=''; return; }
+  // Pagination (hidden in reorder mode — whole category shown on one page)
+  if (reorderMode || totalPages<=1) { pg.innerHTML=''; return; }
   pg.innerHTML = `<span class="page-info">第 ${page}/${totalPages} 頁，共 ${total} 款</span>
     <button class="btn btn-ghost btn-sm" onclick="changePage(-1)" ${page===1?'disabled':''}>‹ 上頁</button>
     <button class="btn btn-ghost btn-sm" onclick="changePage(1)" ${page===totalPages?'disabled':''}>下頁 ›</button>`;
+}
+
+// ── PRODUCT DRAG-TO-REORDER (within a single filtered category) ──────
+let _prodDragId = null;
+
+function prodDragStart(e, id) {
+  _prodDragId = id;
+  e.currentTarget.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+function prodDragEnd(e) {
+  e.currentTarget.style.opacity = '';
+  document.querySelectorAll('#products-table tr').forEach(r => r.style.background = '');
+}
+function prodDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.style.background = 'var(--plum-l)';
+}
+function prodDrop(e, targetId) {
+  e.preventDefault();
+  e.currentTarget.style.background = '';
+  if (!_prodDragId || _prodDragId === targetId) return;
+
+  // Reorder within the current filtered/sorted category list
+  const list = getFilteredProducts();
+  const fromIdx = list.findIndex(p => p.id === _prodDragId);
+  const toIdx   = list.findIndex(p => p.id === targetId);
+  if (fromIdx < 0 || toIdx < 0) return;
+  const [moved] = list.splice(fromIdx, 1);
+  list.splice(toIdx, 0, moved);
+
+  // Reassign sortOrder in steps of 10 (leaves room for future manual inserts)
+  list.forEach((p, i) => { p.sortOrder = (i + 1) * 10; });
+
+  saveData();
+  renderProducts();
+  showToast('✓ 產品順序已更新');
+  _prodDragId = null;
 }
 
 function changePage(delta) {
@@ -2225,6 +2292,15 @@ async function saveProduct() {
     featured: document.getElementById('p-featured').checked,
     priceByWeight: document.getElementById('p-weight-price')?.checked ?? false,
     isNew:        document.getElementById('p-is-new')?.checked ?? false,
+    sortOrder:    (() => {
+      if (state.editingProductId) {
+        const existing = state.products.find(x=>x.id===state.editingProductId);
+        return existing?.sortOrder ?? null;
+      }
+      const cat = document.getElementById('p-category')?.value;
+      const inCat = state.products.filter(x=>x.cat===cat && x.sortOrder!=null);
+      return inCat.length ? Math.max(...inCat.map(x=>x.sortOrder)) + 10 : 10;
+    })(),
     costPerKg:    parseFloat(document.getElementById('p-cost-per-kg')?.value)||null,
     pricePerKg:   parseFloat(document.getElementById('p-price-per-kg')?.value)||null,
     historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
@@ -3175,17 +3251,39 @@ async function handleImportProducts(input) {
     }
   }
 
-  let updated = 0, notFound = 0;
+  let updated = 0, created = 0, skipped = 0;
   for (let i = 1; i < lines.length; i++) {
     const vals = parseCSVLine(lines[i]);
     const id = vals[colIdx['ProductID']]?.trim();
     if (!id) continue;
-    const p = state.products.find(x => x.id === id);
-    if (!p) { notFound++; continue; }
 
-    // Apply each column if present
     const gv = col => colIdx[col] !== undefined ? vals[colIdx[col]]?.trim() : undefined;
 
+    let p = state.products.find(x => x.id === id);
+    const isNewProduct = !p;
+
+    if (isNewProduct) {
+      // Row's ID doesn't exist yet — treat as a new product to create.
+      // Requires at minimum a Chinese or English name and a category to be usable.
+      const nameZh = gv('中文名') || '';
+      const nameEn = gv('英文名') || '';
+      const cat    = gv('分類ID') || '';
+      if (!nameZh && !nameEn) { skipped++; continue; }
+      if (!cat || !state.categories.find(c => c.id === cat)) { skipped++; continue; }
+      const inCat = state.products.filter(x=>x.cat===cat && x.sortOrder!=null);
+      const nextSortOrder = inCat.length ? Math.max(...inCat.map(x=>x.sortOrder)) + 10 : 10;
+      p = {
+        id, nameZh, nameEn, name: nameEn || nameZh, zh: nameZh,
+        cat, price: 0, salePrice: null, saleUntil: null,
+        stock: -1, unit: '', descZh: '', descEn: '', desc: '',
+        images: [], image: '', active: true, featured: false,
+        priceByWeight: false, isNew: false, costPerKg: null, pricePerKg: null,
+        tiers: [], historicSold: 0, needsVerify: false, sortOrder: nextSortOrder,
+      };
+      state.products.push(p);
+    }
+
+    // Apply each column if present (covers both update and newly-created rows)
     if (gv('售價')         !== undefined && gv('售價') !== '') p.price = parseFloat(gv('售價'))||0;
     if (gv('特價')         !== undefined) p.salePrice = gv('特價') ? parseFloat(gv('特價')) : null;
     if (gv('庫存(-1=無限)') !== undefined && gv('庫存(-1=無限)') !== '') p.stock = parseInt(gv('庫存(-1=無限)'))||0;
@@ -3196,8 +3294,12 @@ async function handleImportProducts(input) {
     if (gv('建議售價/kg')   !== undefined) p.pricePerKg = gv('建議售價/kg') ? parseFloat(gv('建議售價/kg')) : null;
     if (gv('描述(中)')      !== undefined) p.descZh = gv('描述(中)')||'';
     if (gv('描述(英)')      !== undefined) p.descEn = gv('描述(英)')||'';
-    if (gv('中文名')        !== undefined && gv('中文名') !== '') p.nameZh = gv('中文名');
-    if (gv('英文名')        !== undefined && gv('英文名') !== '') p.nameEn = gv('英文名');
+    if (!isNewProduct) {
+      // For existing products, allow name/category edits from the sheet too
+      if (gv('中文名') !== undefined && gv('中文名') !== '') p.nameZh = gv('中文名');
+      if (gv('英文名') !== undefined && gv('英文名') !== '') p.nameEn = gv('英文名');
+      if (gv('分類ID') !== undefined && gv('分類ID') !== '' && state.categories.find(c=>c.id===gv('分類ID'))) p.cat = gv('分類ID');
+    }
 
     // Tiers
     const t1q = gv('買X件定價1(件數)'), t1p = gv('買X件定價1(總價)');
@@ -3211,12 +3313,30 @@ async function handleImportProducts(input) {
       p.tiers = newTiers;
     }
 
-    updated++;
+    if (isNewProduct) created++; else updated++;
   }
 
   await saveData();
+
+  // If new products were created, jump to the page that contains them
+  // (they're appended to the end of the list) so they're visible immediately
+  // instead of silently landing on a later page under pagination.
+  if (created > 0) {
+    state.productStatusFilter = 'all';
+    state.productCatFilter = '';
+    state.productSearchQuery = '';
+    const searchBox = document.getElementById('product-search');
+    if (searchBox) searchBox.value = '';
+    const totalAfter = getFilteredProducts().length;
+    state.currentPage = Math.max(1, Math.ceil(totalAfter / state.pageSize));
+  }
+
   renderAll();
-  showToast(`✓ 已更新 ${updated} 款產品${notFound ? ('，' + notFound + ' 個 ID 找不到') : ''}`);
+  renderProducts();
+  let msg = `✓ 已更新 ${updated} 款`;
+  if (created) msg += `，新增 ${created} 款（已自動跳到相應頁面）`;
+  if (skipped) msg += `，${skipped} 行缺少必要欄位（中文名/英文名 + 分類ID）被略過`;
+  showToast(msg, 4000);
   input.value = '';
 }
 

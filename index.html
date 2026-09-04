@@ -1859,6 +1859,12 @@ function renderProducts(){
   if(!prods.length){area.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">${lang==='zh'?'沒有符合條件嘅產品':'No products found'}</div>`;return;}
   const grouped={};
   prods.forEach(p=>{if(!grouped[p.cat])grouped[p.cat]=[];grouped[p.cat].push(p);});
+  // Within each category, respect the manual order set by dragging in the CMS
+  // (sortOrder). Products without a sortOrder fall to the end, in their
+  // existing order (stable sort).
+  Object.keys(grouped).forEach(catId=>{
+    grouped[catId].sort((a,b)=>(a.sortOrder??999999)-(b.sortOrder??999999));
+  });
   // Category section order follows the CMS-configured category order (same as the tab bar),
   // not auto-sorted by sales — so dragging categories in CMS reorders both consistently.
   const catOrderIndex={};
