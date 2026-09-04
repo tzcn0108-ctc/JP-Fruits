@@ -1770,11 +1770,16 @@ function applyTX(){
   document.getElementById('topbar-el').innerHTML=t.topbar;
   document.getElementById('logo-sub').textContent=t.logoSub;
   document.getElementById('nav-cart-label').textContent=t.navCart;
-  // Hero tag/title/sub/chips are NOT set here — they're owned by applyBanner()
+  // Hero tag/title/sub are NOT set here — they're owned by applyBanner()
   // (driven by the CMS Banner data), which is re-applied below whenever the
   // language changes. This used to hard-overwrite whatever the CMS had set,
   // which is why CMS Banner edits never showed up on the live site.
   if (typeof currentBannerData !== 'undefined' && currentBannerData) applyBanner(currentBannerData);
+  // Chips ARE owned by applyTX (they come from Settings → chip1Zh/chip1En etc,
+  // a separate CMS field from Banner) — must stay here so language switching works.
+  document.getElementById('chip1').textContent=t.chip1;
+  document.getElementById('chip2').textContent=t.chip2;
+  document.getElementById('chip3').textContent=t.chip3;
   document.getElementById('search-input').placeholder=t.searchPh;
   const ctEl=document.getElementById('cart-title-text');if(ctEl)ctEl.textContent=t.cartTitle;else{const el=document.getElementById('cart-title');if(el)el.textContent=t.cartTitle;}
   const mctEl=document.getElementById('mobile-cart-title-text');if(mctEl)mctEl.textContent=t.cartTitle;else{const el=document.getElementById('mobile-cart-title');if(el)el.textContent=t.cartTitle;}
