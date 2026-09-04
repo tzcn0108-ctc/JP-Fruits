@@ -76,15 +76,6 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 /* Toast */
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 18px;border-radius:8px;font-size:0.8rem;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:300;}
 #toast.show{opacity:1;}
-
-/* GitHub scan results */
-.gh-img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
-.gh-img-item{border:2px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;}
-.gh-img-item:hover{border-color:var(--plum);}
-.gh-img-item.used{border-color:var(--green);}
-.gh-img-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
-.gh-img-name{font-size:0.6rem;color:var(--muted);padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#fafafa;}
-.scan-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -141,48 +132,19 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
     <div style="margin-top:16px;padding:12px;background:var(--gold-l);border-radius:8px;font-size:0.75rem;color:#6B4A00;">
       <strong>上傳後：</strong>圖片會儲存到 GitHub repo 嘅 <code>images/</code> 資料夾，URL 會自動填入產品。
     </div>
-
-    <div class="scan-section">
-      <h3>📂 掃描 GitHub 現有圖片</h3>
-      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">
-        列出 repo 入面 <code>images/</code> 資料夾嘅所有圖片，撳圖片然後選擇配對邊個產品。
-      </div>
-      <button class="btn-primary" onclick="scanGitHubImages()" style="width:100%;padding:9px;">
-        🔍 掃描 GitHub images/ 資料夾
-      </button>
-      <div id="scan-status" style="font-size:0.75rem;color:var(--muted);margin-top:6px;"></div>
-      <div id="gh-img-grid" class="gh-img-grid"></div>
-    </div>
-
-    <!-- Assign modal: pick which product gets this GitHub image -->
-    <div id="assign-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;">
-      <div style="background:#fff;border-radius:12px;width:360px;max-width:95vw;max-height:85vh;overflow:auto;padding:18px;">
-        <h3 style="font-size:0.95rem;margin-bottom:4px;" id="assign-img-name">選擇圖片</h3>
-        <img id="assign-preview" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;margin-bottom:12px;" src="">
-        <input type="text" id="assign-search" placeholder="搜尋產品名..." oninput="renderAssignList()"
-          style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.8rem;margin-bottom:8px;">
-        <div id="assign-list" style="max-height:260px;overflow-y:auto;border:1px solid #eee;border-radius:6px;"></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-          <button onclick="closeAssign()" style="padding:7px 16px;border:1px solid #ddd;border-radius:6px;cursor:pointer;background:#fff;">取消</button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
-<!-- Multi-image Modal -->
+<!-- URL Modal -->
 <div class="modal-bg" id="url-modal">
-  <div class="modal" style="width:520px;">
-    <h2 id="modal-title">管理圖片</h2>
+  <div class="modal">
+    <h2 id="modal-title">設定圖片 URL</h2>
     <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;" id="modal-product"></p>
-    <div id="modal-img-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-    <button onclick="addModalImgSlot()" id="modal-add-btn"
-      style="width:100%;padding:8px;border:1.5px dashed var(--plum);border-radius:8px;background:var(--plum-l);color:var(--plum);cursor:pointer;font-size:0.82rem;">
-      + 加圖片（最多 5 張）
-    </button>
-    <div class="modal-actions" style="margin-top:14px;">
+    <input type="text" id="modal-url" placeholder="https://..." oninput="previewModalImg()">
+    <img id="modal-preview" src="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:none;margin-bottom:10px;">
+    <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal()">取消</button>
-      <button class="btn-primary" onclick="saveModalImages()">儲存</button>
+      <button class="btn-primary" onclick="saveModalUrl()">確認</button>
     </div>
   </div>
 </div>
@@ -199,9 +161,8 @@ const IMG_FOLDER = 'images';
 
 let products = [];
 let categories = [];
-let edits = {};         // id → { images: ['url1','url2',...] }
+let edits = {};      // id → new image url
 let activeProduct = null;
-const MAX_IMGS = 5;
 
 // ── Firebase imports (same module pattern as CMS) ──
 const FIREBASE_CFG = {
@@ -214,21 +175,11 @@ const FIREBASE_CFG = {
 // ════════════════════════════════════════════════════════
 // LOAD from Firebase catalogue
 // ════════════════════════════════════════════════════════
-// Shared Firebase instances — initialised once, reused everywhere
-let _fbApp = null, _fbDb2 = null, _fbRef2 = null, _fbUpdate2 = null, _fbGet2 = null;
-
-async function getFirebase(){
-  if (_fbDb2) return { db:_fbDb2, ref:_fbRef2, update:_fbUpdate2, get:_fbGet2 };
-  const {initializeApp, getApps, getApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-  const {getDatabase,ref,get,update} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
-  _fbApp   = getApps().find(a=>a.name==='matcher') || initializeApp(FIREBASE_CFG,'matcher');
-  _fbDb2   = getDatabase(_fbApp);
-  _fbRef2  = ref; _fbUpdate2 = update; _fbGet2 = get;
-  return { db:_fbDb2, ref, get, update };
-}
-
 async function loadFromFirebase(){
-  const { db, ref, get } = await getFirebase();
+  const {initializeApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const {getDatabase,ref,get} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+  const app = initializeApp(FIREBASE_CFG, 'matcher');
+  const db  = getDatabase(app);
   const snap = await get(ref(db,'catalogue'));
   if (!snap.exists()) return null;
   return snap.val();
@@ -281,12 +232,7 @@ function buildCatFilter(){
   });
 }
 
-function currentImages(p) {
-  if (edits[p.id]) return edits[p.id].images || [];
-  const imgs = Array.isArray(p.images) ? p.images.filter(u=>u) : [];
-  return imgs.length ? imgs : (p.image ? [p.image] : []);
-}
-function currentUrl(p){ const imgs=currentImages(p); return imgs[0]||''; }
+function currentUrl(p){ return edits[p.id] !== undefined ? edits[p.id] : (p.image||''); }
 
 function renderAll(){
   const q    = document.getElementById('search').value.toLowerCase();
@@ -341,24 +287,27 @@ function renderAll(){
 }
 
 function productCard(p){
-  const imgs = currentImages(p);
-  const hasImg = imgs.length > 0;
-  const firstImg = imgs[0]||'';
+  const url = currentUrl(p);
+  const hasImg = !!url;
   return `<div class="card ${hasImg?'matched':'pending'}">
     <div class="img-area" onclick="openModal('${p.id}')">
       ${hasImg
-        ? `<img src="${firstImg}" alt="${p.nameZh||''}" loading="lazy" onerror="this.style.display='none'">`
+        ? `<img src="${url}" alt="${p.nameZh||''}" loading="lazy">`
         : `<span class="img-placeholder">🖼</span>`}
-      ${imgs.length>1?`<div style="position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:10px;">×${imgs.length}</div>`:''}
       ${hasImg ? `<div class="badge-matched">✓</div>` : ''}
       <div class="img-overlay">
-        <button class="overlay-btn" onclick="event.stopPropagation();openModal('${p.id}')">🖼 管理圖片</button>
+        <button class="overlay-btn" onclick="event.stopPropagation();openModal('${p.id}')">🔗 設 URL</button>
+        ${hasImg ? `<button class="overlay-btn" onclick="event.stopPropagation();clearImg('${p.id}')">✕ 清除</button>` : ''}
       </div>
     </div>
     <div class="card-body">
       <div class="card-name">${p.nameZh||'—'}</div>
       <div class="card-en">${p.nameEn||''}</div>
-      <div class="card-id">${p.id} · ${imgs.length} 張</div>
+      <div class="card-id">${p.id}</div>
+      <input type="text" class="url-input" placeholder="貼圖片 URL..."
+        value="${url}"
+        oninput="setEdit('${p.id}',this.value)"
+        onclick="event.stopPropagation()">
     </div>
   </div>`;
 }
@@ -366,10 +315,20 @@ function productCard(p){
 // ════════════════════════════════════════════════════════
 // EDITING
 // ════════════════════════════════════════════════════════
-// setEdit kept for GitHub upload auto-link compatibility
 function setEdit(id, url){
-  if (!edits[id]) edits[id] = { images: [...currentImages(products.find(p=>p.id===id)||{})] };
-  if (url && !edits[id].images.includes(url)) edits[id].images.push(url);
+  const p = products.find(x=>x.id===id);
+  if (!p) return;
+  edits[id] = url.trim();
+  // Update card border live
+  const cards = document.querySelectorAll('.card');
+  // Just re-render the stats
+  const withImg = products.filter(p=>currentUrl(p)).length;
+  const changed = Object.keys(edits).length;
+  document.getElementById('stats-bar').innerHTML =
+    `<span>總共 <strong>${products.length}</strong> 款</span>
+     <span>已有圖片 <strong>${withImg}</strong></span>
+     <span>未有圖片 <strong>${products.length-withImg}</strong></span>
+     ${changed ? `<span style="color:var(--gold)">⚡ <strong>${changed}</strong> 項未儲存</span>` : ''}`;
 }
 
 function clearImg(id){
@@ -384,18 +343,19 @@ async function applyAll(){
   if (!Object.keys(edits).length){ showToast('冇更改'); return; }
 
   // Apply edits to products array
-  Object.entries(edits).forEach(([id,edit])=>{
+  Object.entries(edits).forEach(([id,url])=>{
     const p = products.find(x=>x.id===id);
-    if (!p) return;
-    const imgs = typeof edit === 'string' ? [edit] : (edit.images||[]);
-    const clean = imgs.filter(u=>u&&u.trim());
-    p.images = clean;
-    p.image  = clean[0]||'';
+    if (p) p.image = url;
   });
 
   showToast('儲存中...');
   try {
-    const { db, ref, update } = await getFirebase();
+    const {initializeApp,getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const {getDatabase,ref,update} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    const apps = getApps();
+    const app = apps.find(a=>a.name==='matcher') ||
+                initializeApp(FIREBASE_CFG,'matcher');
+    const db  = getDatabase(app);
     await update(ref(db,'catalogue'),{products, updatedAt:new Date().toISOString()});
     edits = {};
     showToast(`✓ 已儲存到 Firebase！Order Form 圖片已更新。`);
@@ -414,76 +374,31 @@ function exportJSON(){
 }
 
 // ════════════════════════════════════════════════════════
-// MULTI-IMAGE MODAL
+// URL MODAL
 // ════════════════════════════════════════════════════════
-let modalImgs = [];
-
 function openModal(id){
   activeProduct = products.find(p=>p.id===id);
   if (!activeProduct) return;
-  modalImgs = [...currentImages(activeProduct)];
-  if (!modalImgs.length) modalImgs = [''];
-  document.getElementById('modal-title').textContent = `圖片管理 — ${activeProduct.nameZh||activeProduct.nameEn}`;
-  document.getElementById('modal-product').textContent = `ID: ${activeProduct.id}  ·  ${activeProduct.nameEn||''}  ·  最多 ${MAX_IMGS} 張`;
-  renderModalImgs();
+  const url = currentUrl(activeProduct);
+  document.getElementById('modal-title').textContent = `設定圖片 — ${activeProduct.nameZh||activeProduct.nameEn}`;
+  document.getElementById('modal-product').textContent = `ID: ${activeProduct.id}  ·  ${activeProduct.nameEn||''}`;
+  document.getElementById('modal-url').value = url;
+  const prev = document.getElementById('modal-preview');
+  if (url){ prev.src=url; prev.style.display='block'; }
+  else { prev.style.display='none'; }
   document.getElementById('url-modal').classList.add('open');
 }
-
-function renderModalImgs(){
-  const list = document.getElementById('modal-img-list');
-  const addBtn = document.getElementById('modal-add-btn');
-  list.innerHTML = modalImgs.map((url,i)=>`
-    <div style="display:flex;gap:8px;align-items:center;background:#F8F7F5;border:1px solid #DDD;border-radius:8px;padding:8px 10px;">
-      <span style="font-size:0.65rem;background:var(--plum-l);color:var(--plum);padding:1px 6px;border-radius:3px;flex-shrink:0;">${i===0?'主圖':'副圖'+i}</span>
-      ${url?`<img src="${url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #DDD;flex-shrink:0;" onerror="this.style.display='none'">`
-           :`<div style="width:48px;height:48px;border-radius:6px;border:1.5px dashed #DDD;flex-shrink:0;"></div>`}
-      <input type="text" value="${url}" placeholder="圖片 URL..."
-        oninput="modalImgs[${i}]=this.value;debounceModalPreview(${i},this.value)"
-        style="flex:1;padding:6px 8px;border:1px solid #DDD;border-radius:6px;font-size:0.75rem;">
-      <button onclick="removeModalImg(${i})"
-        style="background:none;border:1px solid #DDD;color:#CC2222;border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.8rem;flex-shrink:0;">✕</button>
-    </div>
-  `).join('');
-  addBtn.style.display = modalImgs.length >= MAX_IMGS ? 'none' : '';
-}
-
-function addModalImgSlot(){
-  if (modalImgs.length >= MAX_IMGS) return;
-  modalImgs.push('');
-  renderModalImgs();
-  setTimeout(()=>{
-    const inputs = document.querySelectorAll('#modal-img-list input');
-    if (inputs.length) inputs[inputs.length-1].focus();
-  },50);
-}
-
-function removeModalImg(i){
-  modalImgs.splice(i,1);
-  if (!modalImgs.length) modalImgs=[''];
-  renderModalImgs();
-}
-
-let _modalPreviewTimer;
-function debounceModalPreview(i, url){
-  clearTimeout(_modalPreviewTimer);
-  _modalPreviewTimer = setTimeout(()=>{
-    const rows = document.querySelectorAll('#modal-img-list > div');
-    const row = rows[i]; if (!row) return;
-    const img = row.querySelector('img');
-    const ph  = row.querySelector('div[style*="dashed"]');
-    if (url&&url.startsWith('http')){
-      if (img){ img.src=url; img.style.display=''; }
-      else if (ph){ ph.outerHTML=`<img src="${url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #DDD;flex-shrink:0;" onerror="this.style.display='none'">`; }
-    } else if (img){ img.style.display='none'; }
-  },400);
-}
-
 function closeModal(){ document.getElementById('url-modal').classList.remove('open'); activeProduct=null; }
-
-function saveModalImages(){
+function previewModalImg(){
+  const url = document.getElementById('modal-url').value.trim();
+  const prev = document.getElementById('modal-preview');
+  if (url){ prev.src=url; prev.style.display='block'; }
+  else { prev.style.display='none'; }
+}
+function saveModalUrl(){
   if (!activeProduct) return;
-  const clean = modalImgs.filter(u=>u&&u.trim());
-  edits[activeProduct.id] = { images: clean };
+  const url = document.getElementById('modal-url').value.trim();
+  edits[activeProduct.id] = url;
   closeModal();
   renderAll();
 }
@@ -539,10 +454,7 @@ async function handleFiles(files){
         (p.nameZh||'').includes(stem) ||
         (p.nameEn||'').toLowerCase().includes(stem.toLowerCase())
       );
-      if (matched_p){
-        if (!edits[matched_p.id]) edits[matched_p.id]={ images:[...currentImages(matched_p)] };
-        if (!edits[matched_p.id].images.includes(rawUrl)) edits[matched_p.id].images.push(rawUrl);
-      }
+      if (matched_p){ edits[matched_p.id]=rawUrl; }
 
       row.querySelector('span:last-child').innerHTML =
         `<span class="ok">✓ ${rawUrl.slice(0,40)}...</span>`;
@@ -562,137 +474,6 @@ function fileToBase64(file){
     r.onerror=rej;
     r.readAsDataURL(file);
   });
-}
-
-
-// ════════════════════════════════════════════════════════
-// GITHUB IMAGE SCANNER
-// ════════════════════════════════════════════════════════
-let _scannedImgs = [];   // [{name, url, used}]
-let _assignUrl   = '';   // URL being assigned
-
-async function scanGitHubImages() {
-  const token = document.getElementById('gh-token').value.trim() ||
-                localStorage.getItem('jp-gh-token') || '';
-  if (!token) { showToast('請先填入 GitHub Token'); return; }
-
-  const statusEl = document.getElementById('scan-status');
-  const gridEl   = document.getElementById('gh-img-grid');
-  statusEl.textContent = '掃描中...';
-  gridEl.innerHTML = '';
-
-  try {
-    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${IMG_FOLDER}`;
-    const res = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
-    if (!res.ok) {
-      if (res.status === 404) {
-        statusEl.textContent = 'images/ 資料夾未存在，先上傳圖片建立佢。';
-      } else if (res.status === 401) {
-        statusEl.textContent = '❌ Token 無效或過期';
-      } else {
-        statusEl.textContent = `❌ 錯誤 ${res.status}`;
-      }
-      return;
-    }
-    const files = await res.json();
-    const imgs = files.filter(f => /\.(jpe?g|png|webp|gif)$/i.test(f.name));
-
-    if (!imgs.length) {
-      statusEl.textContent = 'images/ 資料夾入面未有圖片。';
-      return;
-    }
-
-    // Build set of already-used URLs
-    const usedUrls = new Set(products.flatMap(p => {
-      const imgs2 = currentImages(p);
-      return imgs2;
-    }));
-
-    _scannedImgs = imgs.map(f => ({
-      name: f.name,
-      url:  `https://jpfruitsutton.uk/${IMG_FOLDER}/${f.name}`,
-      used: usedUrls.has(`https://jpfruitsutton.uk/${IMG_FOLDER}/${f.name}`)
-    }));
-
-    statusEl.textContent = `找到 ${imgs.length} 張圖片，已配對 ${_scannedImgs.filter(i=>i.used).length} 張，未配對 ${_scannedImgs.filter(i=>!i.used).length} 張`;
-
-    renderGHGrid();
-  } catch(e) {
-    statusEl.textContent = '❌ 掃描失敗：' + e.message;
-  }
-}
-
-function renderGHGrid() {
-  const grid = document.getElementById('gh-img-grid');
-  grid.innerHTML = _scannedImgs.map((img, i) => `
-    <div class="gh-img-item ${img.used?'used':''}" onclick="openAssign('${img.url}','${img.name.replace(/'/g,"\'")}',${i})" title="${img.name}">
-      <img src="${img.url}" loading="lazy" onerror="this.parentElement.style.display='none'">
-      <div class="gh-img-name">${img.name}</div>
-    </div>
-  `).join('');
-}
-
-// ── Assign modal ──
-function openAssign(url, name, idx) {
-  _assignUrl = url;
-  document.getElementById('assign-img-name').textContent = name;
-  document.getElementById('assign-preview').src = url;
-  document.getElementById('assign-search').value = '';
-  document.getElementById('assign-overlay').style.display = 'flex';
-  renderAssignList();
-}
-
-function closeAssign() {
-  document.getElementById('assign-overlay').style.display = 'none';
-  _assignUrl = '';
-}
-
-function renderAssignList() {
-  const q = document.getElementById('assign-search').value.toLowerCase();
-  const list = document.getElementById('assign-list');
-  const filtered = products.filter(p =>
-    !q ||
-    (p.nameZh||'').includes(q) ||
-    (p.nameEn||'').toLowerCase().includes(q) ||
-    (p.id||'').toLowerCase().includes(q)
-  ).slice(0, 40);
-
-  list.innerHTML = filtered.map(p => {
-    const imgs = currentImages(p);
-    const hasThisImg = imgs.includes(_assignUrl);
-    return `<div onclick="assignImgTo('${p.id}')"
-      style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #f0f0f0;
-             background:${hasThisImg?'#e8f5e9':''};"
-      onmouseover="this.style.background='${hasThisImg?'#c8e6c9':'#f5f0ff'}'"
-      onmouseout="this.style.background='${hasThisImg?'#e8f5e9':''}'">
-      ${imgs[0]?`<img src="${imgs[0]}" style="width:36px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
-               :`<div style="width:36px;height:36px;border-radius:5px;background:#eee;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">${SEED_IMAGES[p.id]?'📷':'🖼'}</div>`}
-      <div>
-        <div style="font-size:0.8rem;font-weight:600;">${p.nameZh||'—'}</div>
-        <div style="font-size:0.68rem;color:#888;">${p.id} · ${imgs.length} 張圖 ${hasThisImg?'· ✓ 已配對':''}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function assignImgTo(productId) {
-  if (!_assignUrl) return;
-  const p = products.find(x => x.id === productId);
-  if (!p) return;
-
-  // Add to this product's images
-  if (!edits[productId]) edits[productId] = { images: [...currentImages(p)] };
-  if (!edits[productId].images.includes(_assignUrl)) {
-    edits[productId].images.push(_assignUrl);
-  }
-
-  // Mark as used in scan grid
-  const item = _scannedImgs.find(i => i.url === _assignUrl);
-  if (item) { item.used = true; renderGHGrid(); }
-
-  showToast(`✓ 已配對到 ${p.nameZh||productId}`);
-  closeAssign();
-  renderAll();
 }
 
 // ════════════════════════════════════════════════════════
