@@ -1992,7 +1992,15 @@ function renderSetGroup(sid,g,gi){
     const p = products.find(x => x.id === item.id);
     return p && p.active !== false && p.stock !== 0;
   });
-  return `<div class="set-group-title">${isZh?g.nameZh:g.nameEn}<span class="set-group-badge">${total}/${g.max}</span></div>${availableItems.map(item=>{const qty=sel[item.id]||0,atMax=total>=g.max&&!qty;return`<div class="set-item-row${qty?' s-selected':''}${atMax?' s-disabled':''}" onclick="toggleSetItem('${sid}',${gi},'${item.id}')"><span class="set-item-name${qty?' s-sel':''}">${item.zh||item.name}${qty>1?`<span class="set-qty-tag">x${qty}</span>`:''}</span><div class="set-check">${qty?'✓':''}</div></div>`;}).join('')}`;
+  return `<div class="set-group-title">${isZh?g.nameZh:g.nameEn}<span class="set-group-badge">${total}/${g.max}</span></div>${availableItems.map(item=>{
+    const qty=sel[item.id]||0,atMax=total>=g.max&&!qty;
+    // Always show the product's CURRENT name — the set only stores the product ID,
+    // item.zh/item.name is just a snapshot from when it was added and goes stale
+    // after a rename in Products.
+    const p=products.find(x=>x.id===item.id);
+    const liveName=p?(isZh?(p.nameZh||p.zh||p.name):(p.nameEn||p.name)):(item.zh||item.name);
+    return`<div class="set-item-row${qty?' s-selected':''}${atMax?' s-disabled':''}" onclick="toggleSetItem('${sid}',${gi},'${item.id}')"><span class="set-item-name${qty?' s-sel':''}">${liveName}${qty>1?`<span class="set-qty-tag">x${qty}</span>`:''}</span><div class="set-check">${qty?'✓':''}</div></div>`;
+  }).join('')}`;
 }
 function renderSetProgress(sid,s){
   const groups=s.groups||[],needed=groups.reduce((t,g)=>t+g.min,0),got=groups.reduce((t,g,gi)=>{const sel=setSelections[sid][gi]||{};return t+Object.values(sel).reduce((a,b)=>a+b,0);},0);
@@ -2000,7 +2008,18 @@ function renderSetProgress(sid,s){
   return `<div class="set-progress"><div class="set-prog-bar"><div class="set-prog-fill${done?' sp-done':''}" style="width:${pct}%"></div></div><div class="set-prog-label"><span>${isZh?'已選':'Selected'} ${got}/${needed}</span><span style="color:${done?'var(--leaf)':'var(--plum)'}">${done?(isZh?'✓ 選齊！':'✓ Complete!'):''}</span></div></div>`;
 }
 function isSetReady(sid,s){return(s.groups||[]).every((g,gi)=>{const sel=setSelections[sid][gi]||{},t=Object.values(sel).reduce((a,b)=>a+b,0);return t>=g.min&&t<=g.max;});}
-function buildSetPreview(sid,s){return(s.groups||[]).map((g,gi)=>{const sel=setSelections[sid][gi]||{};const items=g.items.filter(i=>sel[i.id]).map(i=>(i.zh||i.name)+(sel[i.id]>1?` x${sel[i.id]}`:'')).join('、');return`<strong>${lang==='zh'?g.nameZh:g.nameEn}：</strong>${items}`;}).join('<br>');}
+function buildSetPreview(sid,s){
+  const isZh = lang==='zh';
+  return (s.groups||[]).map((g,gi)=>{
+    const sel=setSelections[sid][gi]||{};
+    const items=g.items.filter(i=>sel[i.id]).map(i=>{
+      const p=products.find(x=>x.id===i.id);
+      const liveName=p?(isZh?(p.nameZh||p.zh||p.name):(p.nameEn||p.name)):(i.zh||i.name);
+      return liveName+(sel[i.id]>1?` x${sel[i.id]}`:'');
+    }).join('、');
+    return`<strong>${isZh?g.nameZh:g.nameEn}：</strong>${items}`;
+  }).join('<br>');
+}
 function toggleSetItem(sid,gi,itemId){
   const s=sets.find(x=>x.id===sid);if(!s)return;
   const g=s.groups[gi];if(!setSelections[sid][gi])setSelections[sid][gi]={};
@@ -2012,7 +2031,15 @@ function toggleSetItem(sid,gi,itemId){
 }
 function addSetToCart(sid){
   const s=sets.find(x=>x.id===sid);if(!s||!isSetReady(sid,s))return;
-  const summary=(s.groups||[]).map((g,gi)=>{const sel=setSelections[sid][gi]||{};return g.items.filter(i=>sel[i.id]).map(i=>(i.zh||i.name)+(sel[i.id]>1?` x${sel[i.id]}`:'')).join('、');}).join(' + ');
+  const isZh = lang==='zh';
+  const summary=(s.groups||[]).map((g,gi)=>{
+    const sel=setSelections[sid][gi]||{};
+    return g.items.filter(i=>sel[i.id]).map(i=>{
+      const p=products.find(x=>x.id===i.id);
+      const liveName=p?(isZh?(p.nameZh||p.zh||p.name):(p.nameEn||p.name)):(i.zh||i.name);
+      return liveName+(sel[i.id]>1?` x${sel[i.id]}`:'');
+    }).join('、');
+  }).join(' + ');
   const cartKey='set_'+sid+'_'+Date.now();
   cart[cartKey]={isSet:true,setId:sid,name:s.name,nameZh:s.nameZh||s.name,nameEn:s.nameEn||s.name,price:s.price,summary,qty:1};
   setSelections[sid]={};
