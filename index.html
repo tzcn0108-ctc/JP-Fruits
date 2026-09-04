@@ -614,7 +614,7 @@ body { background: var(--cream, #FFFDF9); }
   font-size: 0.78rem;
   letter-spacing: 0.3px;
 }
-.countdown-bar strong, .countdown-bar #countdown {
+.countdown-bar strong, .countdown-bar #countdown, .countdown-bar #countdown2, .countdown-bar .cd-num {
   color: #FFD700;
   font-weight: 800;
 }
@@ -1134,6 +1134,26 @@ body { background: var(--cream, #FFFDF9); }
 }
 .pc-bulk-badge::before{content:'🔥';font-size:0.7rem;}
 
+
+/* ── Store paused pop-up ── */
+.pause-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:600;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.pause-overlay.open{display:flex;}
+.pause-sheet{
+  background:#fff;border-radius:20px;max-width:420px;width:100%;
+  padding:36px 28px 28px;text-align:center;
+  animation:pauseFadeIn 0.25s ease;
+}
+@keyframes pauseFadeIn{from{transform:scale(0.92);opacity:0}to{transform:none;opacity:1}}
+.pause-emoji{font-size:3rem;margin-bottom:14px;}
+.pause-msg{font-size:1rem;color:var(--ink-2);line-height:1.6;margin-bottom:24px;white-space:pre-wrap;}
+.pause-close-btn{
+  background:var(--plum);color:#fff;border:none;border-radius:10px;
+  padding:12px 32px;font-size:0.92rem;font-weight:600;cursor:pointer;
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -1245,7 +1265,7 @@ window.addEventListener('scroll', () => {
 <!-- COUNTDOWN -->
 <div class="countdown-bar">
   <span id="countdown-label-text">截單倒數：</span>
-  <span class="cd-num" id="countdown">--</span>
+  <span class="cd-num" id="countdown2">--</span>
   &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 貨到付款
 </div>
 
@@ -1606,20 +1626,34 @@ function applySettings(s) {
   if(!s) return;
   // ── Holiday mode: disable ordering if store paused ──
   if(s.storePaused) {
-    const msg = s.pauseMessage || (lang==='zh'?'我哋暫時休息中，敬請期待！':'We are currently closed. Please check back soon!');
+    const isZh = lang==='zh';
+    const msg = isZh
+      ? (s.pauseMessageZh || s.pauseMessage || '我哋暫時休息中，敬請期待！')
+      : (s.pauseMessageEn || 'We are currently closed. Please check back soon!');
     const banner = document.getElementById('topbar');
     if(banner) { banner.style.background='#C0392B'; banner.innerHTML=`⚠️ ${msg}`; }
     // Disable all add-to-cart buttons
     document.querySelectorAll('.add-btn,.whatsapp-btn,.cart-btn').forEach(btn=>{
       btn.disabled=true; btn.style.opacity='0.5'; btn.title=msg;
     });
-    // Show overlay message
+    // Show sticky banner (stays visible while browsing)
     const area=document.getElementById('products-area');
-    if(area) {
+    if(area && !area.querySelector('.pause-sticky-notice')) {
       const notice=document.createElement('div');
+      notice.className='pause-sticky-notice';
       notice.style.cssText='position:sticky;top:0;z-index:100;background:#C0392B;color:white;text-align:center;padding:12px 16px;font-weight:600;border-radius:8px;margin-bottom:12px;';
       notice.textContent='🏖️ '+msg;
       area.prepend(notice);
+    }
+    // Also show an attention-grabbing pop-up on first load, so it can't be missed
+    const msgEl = document.getElementById('pause-msg-text');
+    const btnEl = document.getElementById('pause-close-btn-text');
+    if (msgEl) msgEl.textContent = msg;
+    if (btnEl) btnEl.textContent = isZh ? '知道喇' : 'Got it';
+    const alreadySeen = sessionStorage.getItem('jp-pause-seen') === 'true';
+    if (!alreadySeen) {
+      const overlay = document.getElementById('pause-overlay');
+      if (overlay) overlay.classList.add('open');
     }
   }
   if(s.font) document.body.style.fontFamily=s.font;
@@ -1677,6 +1711,12 @@ async function loadProducts() {
   renderProducts();
 }
 
+
+function closePauseModal() {
+  const overlay = document.getElementById('pause-overlay');
+  if (overlay) overlay.classList.remove('open');
+  sessionStorage.setItem('jp-pause-seen', 'true');
+}
 
 function applyBanner(b) {
   const isZh = lang==='zh';
@@ -2829,7 +2869,13 @@ function updateCountdown(){
   const d=(cutDay-day+7)%7||7, tgt=new Date(now);
   tgt.setDate(now.getDate()+d);tgt.setHours(ch,cm,0,0);
   const diff=tgt-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
-  if(el) el.textContent=`${h}hr ${m}min`;
+  const text=`${h}hr ${m}min`;
+  if(el) el.textContent=text;
+  // #countdown appears twice in the page (topbar + the red countdown-bar below
+  // hero) — both need updating, since only the first id="countdown" match
+  // would otherwise get updated by getElementById.
+  const el2=document.getElementById('countdown2');
+  if(el2) el2.textContent=text;
 }
 
 
@@ -3024,6 +3070,16 @@ setTimeout(_doLoadProducts, 3000);
       <div class="pd-desc" id="pd-desc"></div>
       <div class="pd-footer" id="pd-footer"></div>
     </div>
+  </div>
+</div>
+
+
+<!-- Store paused pop-up -->
+<div class="pause-overlay" id="pause-overlay" onclick="if(event.target===this)closePauseModal()">
+  <div class="pause-sheet">
+    <div class="pause-emoji">🏖️</div>
+    <div class="pause-msg" id="pause-msg-text"></div>
+    <button class="pause-close-btn" onclick="closePauseModal()" id="pause-close-btn-text">知道喇</button>
   </div>
 </div>
 

@@ -1119,10 +1119,27 @@ function cmsUnlock() {
                 <span style="font-size:0.82rem;font-weight:600;color:var(--red);">暫停接單</span>
               </label>
             </div>
-            <div style="margin-top:10px;">
-              <label style="font-size:0.75rem;color:var(--muted);">休息提示訊息</label>
-              <input type="text" id="st-pause-msg" placeholder="我哋暫時休息中，敬請期待！"
-                style="width:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);">
+            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-weight:600;font-size:0.88rem;">⏰ 截單後自動暫停接單</div>
+                <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;">你或拍檔下次打開 CMS 時，如果已經過咗截單時間，會自動幫你剔起「暫停接單」。想重新接單，返嚟呢度手動 untick 「暫停接單」就得。</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;">
+                <input type="checkbox" id="st-auto-lock" style="width:18px;height:18px;accent-color:var(--plum);cursor:pointer;">
+                <span style="font-size:0.82rem;font-weight:600;">啟用</span>
+              </label>
+            </div>
+            <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);">🇭🇰 休息提示訊息</label>
+                <input type="text" id="st-pause-msg-zh" placeholder="我哋暫時休息中，敬請期待！"
+                  style="width:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);">
+              </div>
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);">🇬🇧 Closed Message</label>
+                <input type="text" id="st-pause-msg-en" placeholder="We are currently closed. Please check back soon!"
+                  style="width:100%;margin-top:4px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);">
+              </div>
             </div>
           </div></div>
         </div>
@@ -1822,6 +1839,44 @@ async function loadData() {
   renderAll();
   // Hint shown on first run when there is no saved data anywhere
   if (!saved) showToast('首次使用 — 請喺各頁面設定好內容後撳「儲存」', 4000);
+  checkAutoLockAfterCutoff();
+}
+
+// ── AUTO-LOCK AFTER CUTOFF ───────────────────────────────────────────
+// Finds the most recent cutoff moment (this week's cutoffDay+cutoffTime,
+// or last week's if this week's hasn't happened yet) that is <= now.
+function getLastCutoffMoment(cutoffDay, cutoffTime) {
+  const [ch, cm] = (cutoffTime || '13:00').split(':').map(Number);
+  const now = new Date();
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    d.setHours(ch, cm, 0, 0);
+    if (d.getDay() === cutoffDay && d <= now) return d;
+  }
+  return null;
+}
+
+// Runs once whenever the CMS is opened. If "截單後自動暫停接單" is enabled,
+// the store isn't already paused, and we're past a cutoff moment that
+// hasn't been auto-locked yet, automatically tick "暫停接單" and save —
+// there's no server running 24/7, so this only fires when someone opens
+// the CMS after cutoff (see the person's own note on this trade-off).
+function checkAutoLockAfterCutoff() {
+  const s = state.settings || {};
+  if (!s.autoLockEnabled || s.storePaused) return;
+  const cutoffDay = s.cutoffDay ?? 2;
+  const cutoffTime = s.cutoffTime || '13:00';
+  const lastCutoff = getLastCutoffMoment(cutoffDay, cutoffTime);
+  if (!lastCutoff) return;
+  const lastLocked = s.lastCutoffLockedAt ? new Date(s.lastCutoffLockedAt) : null;
+  if (lastLocked && lastLocked >= lastCutoff) return; // already locked for this cycle
+  state.settings.storePaused = true;
+  state.settings.lastCutoffLockedAt = lastCutoff.toISOString();
+  saveData();
+  const pauseEl = document.getElementById('st-store-paused');
+  if (pauseEl) pauseEl.checked = true;
+  showToast('⏰ 已過截單時間，已自動暫停接單。想重新開放，去「網站設定」untick「暫停接單」。', 7000);
 }
 
 async function saveData() {
@@ -4970,8 +5025,12 @@ function initSettings() {
   if (time) time.value = s.cutoffTime || '13:00';
   const pauseEl = document.getElementById('st-store-paused');
   if (pauseEl) pauseEl.checked = !!s.storePaused;
-  const pauseMsgEl = document.getElementById('st-pause-msg');
-  if (pauseMsgEl && s.pauseMessage) pauseMsgEl.value = s.pauseMessage;
+  const autoLockEl = document.getElementById('st-auto-lock');
+  if (autoLockEl) autoLockEl.checked = !!s.autoLockEnabled;
+  const pauseMsgZhEl = document.getElementById('st-pause-msg-zh');
+  if (pauseMsgZhEl) pauseMsgZhEl.value = s.pauseMessageZh || s.pauseMessage || '';
+  const pauseMsgEnEl = document.getElementById('st-pause-msg-en');
+  if (pauseMsgEnEl) pauseMsgEnEl.value = s.pauseMessageEn || '';
 }
 
 function saveSettings() {
@@ -4991,7 +5050,11 @@ function saveSettings() {
     // Fix: explicit check prevents £0 being treated as "not set"
     minFreeDelivery: gv('st-min-free') !== '' ? Number(gv('st-min-free')) : 999999,
     storePaused: document.getElementById('st-store-paused')?.checked || false,
-    pauseMessage: gv('st-pause-msg') || '我哋暫時休息中，敬請期待！',
+    autoLockEnabled: document.getElementById('st-auto-lock')?.checked || false,
+    lastCutoffLockedAt: state.settings?.lastCutoffLockedAt || null,
+    pauseMessage:   gv('st-pause-msg-zh') || '我哋暫時休息中，敬請期待！', // kept for backward compatibility
+    pauseMessageZh: gv('st-pause-msg-zh') || '我哋暫時休息中，敬請期待！',
+    pauseMessageEn: gv('st-pause-msg-en') || 'We are currently closed. Please check back soon!',
   };
   saveData();
   if(state.settings.storePaused){
