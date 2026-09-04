@@ -274,7 +274,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 
 /* ── Multi-image slots ───────────────────── */
 .img-slot{display:flex;gap:8px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
-.img-slot img{width:52px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;}
+.img-slot img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--plum-m);flex-shrink:0;cursor:pointer;transition:transform 0.15s;}.img-slot img:hover{transform:scale(1.05);}
 .img-slot input{flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.75rem;}
 .img-slot-badge{font-size:0.6rem;background:var(--plum-l);color:var(--plum);padding:1px 5px;border-radius:3px;flex-shrink:0;}
 .img-slot-del{background:none;border:1px solid var(--border);color:var(--red);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.8rem;flex-shrink:0;}
@@ -1770,6 +1770,13 @@ async function loadData() {
           images:       (saved_p.images&&saved_p.images.length) ? saved_p.images : (sp.images||[]),
         };
       });
+      // Products added directly in the CMS (not present in SEED_PRODUCTS / the Excel
+      // file) must also be restored, or they vanish on every reload — merge them in.
+      (saved.products || []).forEach(saved_p => {
+        if (!SEED_PRODUCTS.find(sp => sp.id === saved_p.id)) {
+          state.products.push({...saved_p});
+        }
+      });
       // Non-product data: always restore from saved
       state.orders     = saved.orders   || [];
       // Category NAMES always come from SEED_CATEGORIES (the Excel file) — same
@@ -2913,15 +2920,26 @@ function renderProductImageSlots() {
   const list = document.getElementById('p-images-list');
   const addBtn = document.getElementById('p-add-img-btn');
   if (!list) return;
-  list.innerHTML = editingImages.map((url, i) => `
-    <div class="img-slot" id="img-slot-${i}">
-      <span class="img-slot-badge">${i === 0 ? '主圖' : `副圖${i}`}</span>
-      ${url ? `<img src="${url}" onerror="this.style.display='none'">` : '<div style="width:52px;height:52px;border-radius:6px;border:1px dashed var(--border);"></div>'}
-      <input type="text" value="${url}" placeholder="圖片 URL..."
-        oninput="editingImages[${i}]=this.value; debounceSlotPreview(${i}, this.value)">
+  list.innerHTML = editingImages.map((url, i) => {
+    const badge  = i === 0 ? '主圖' : '副圖' + i;
+    const imgHtml = url
+      ? '<img src="' + url + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--plum-m);flex-shrink:0;cursor:pointer;" onclick="window.open(\'' + url + '\')" onerror="this.style.border=\'2px solid var(--red)\'" title="撳放大睇">'
+      : '<div style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1.8rem;flex-shrink:0;">🖼</div>';
+    const statusHtml = url
+      ? '<div style="font-size:0.65rem;color:var(--green);">✓ 已設定圖片　撳縮圖可放大</div>'
+      : '<div style="font-size:0.65rem;color:var(--muted);">尚未設定圖片</div>';
+    return `<div class="img-slot" id="img-slot-${i}">
+      <span class="img-slot-badge">${badge}</span>
+      ${imgHtml}
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+        <input type="text" value="${url}" placeholder="貼圖片 URL 或用上方⬆上傳..."
+          style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.75rem;width:100%;"
+          oninput="editingImages[${i}]=this.value; debounceSlotPreview(${i}, this.value)">
+        ${statusHtml}
+      </div>
       <button class="img-slot-del" onclick="removeProductImageSlot(${i})" title="刪除">✕</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
   if (addBtn) addBtn.style.display = editingImages.length >= MAX_IMAGES ? 'none' : '';
 }
 
