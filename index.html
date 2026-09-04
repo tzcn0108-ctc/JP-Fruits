@@ -1895,7 +1895,7 @@ function renderProducts(){
   }
   area.innerHTML=bestStrip+sorted.map(cid=>{
     const cat=categories.find(c=>c.id===cid);
-    const cprods=grouped[cid].sort((a,b)=>(b.historicSold||0)-(a.historicSold||0));
+    const cprods=grouped[cid]; // already sorted by sortOrder above — do NOT re-sort by historicSold here
     const catSets=sets.filter(s=>s.cat===cid&&s.isSet);
     const main=lang==='zh'?(cat?.zh||cid):(cat?.name||cid);
     const sub=lang==='zh'?(cat?.name||''):(cat?.zh||'');

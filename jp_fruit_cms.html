@@ -430,7 +430,14 @@ const CMS_PASSWORD = 'jpfruit2026';
 (function() {
   const stored = sessionStorage.getItem('cms-auth');
   if (stored === CMS_PASSWORD) {
-    document.getElementById('cms-lock').style.display = 'none';
+    // #cms-lock is defined further down in the HTML, so it may not exist
+    // in the DOM yet when this inline script runs — wait for it if needed.
+    const hide = () => { const el = document.getElementById('cms-lock'); if (el) el.style.display = 'none'; };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', hide);
+    } else {
+      hide();
+    }
   }
 })();
 
@@ -1784,10 +1791,17 @@ async function loadData() {
       // reasoning as products above. But categories created manually in the CMS's
       // own "Categories" page (not present in the Excel) are preserved, so this
       // doesn't wipe out category management done inside the CMS itself.
-      state.categories = SEED_CATEGORIES.map(sc => ({...sc}));
-      (saved.categories || []).forEach(sv => {
-        if (!SEED_CATEGORIES.find(sc => sc.id === sv.id)) state.categories.push(sv);
-      });
+      // Use Firebase's saved category list (which preserves any manual drag-to-reorder)
+      // as the base, then append any brand-new SEED categories that were never saved
+      // yet (e.g. added to the code after the person last used the CMS).
+      if (saved.categories && saved.categories.length) {
+        state.categories = saved.categories.map(sv => ({...sv}));
+        SEED_CATEGORIES.forEach(sc => {
+          if (!state.categories.find(c => c.id === sc.id)) state.categories.push({...sc});
+        });
+      } else {
+        state.categories = SEED_CATEGORIES.map(sc => ({...sc}));
+      }
       state.banner     = saved.banner   || {...DEFAULT_BANNER};
       state.sets       = saved.sets     || [];
       state.promos     = saved.promos   || [];
