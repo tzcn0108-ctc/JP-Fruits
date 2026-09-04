@@ -1985,7 +1985,14 @@ function renderSetCard(s){
 }
 function renderSetGroup(sid,g,gi){
   const sel=setSelections[sid][gi]||{}, total=Object.values(sel).reduce((a,b)=>a+b,0), isZh=lang==='zh';
-  return `<div class="set-group-title">${isZh?g.nameZh:g.nameEn}<span class="set-group-badge">${total}/${g.max}</span></div>${(g.items||[]).map(item=>{const qty=sel[item.id]||0,atMax=total>=g.max&&!qty;return`<div class="set-item-row${qty?' s-selected':''}${atMax?' s-disabled':''}" onclick="toggleSetItem('${sid}',${gi},'${item.id}')"><span class="set-item-name${qty?' s-sel':''}">${item.zh||item.name}${qty>1?`<span class="set-qty-tag">x${qty}</span>`:''}</span><div class="set-check">${qty?'✓':''}</div></div>`;}).join('')}`;
+  // Only show items whose underlying product is still on-shelf (active) and in stock.
+  // A set can reference a product that was later taken off-shelf in Products — that
+  // product must disappear from the customer-facing option list too.
+  const availableItems = (g.items||[]).filter(item => {
+    const p = products.find(x => x.id === item.id);
+    return p && p.active !== false && p.stock !== 0;
+  });
+  return `<div class="set-group-title">${isZh?g.nameZh:g.nameEn}<span class="set-group-badge">${total}/${g.max}</span></div>${availableItems.map(item=>{const qty=sel[item.id]||0,atMax=total>=g.max&&!qty;return`<div class="set-item-row${qty?' s-selected':''}${atMax?' s-disabled':''}" onclick="toggleSetItem('${sid}',${gi},'${item.id}')"><span class="set-item-name${qty?' s-sel':''}">${item.zh||item.name}${qty>1?`<span class="set-qty-tag">x${qty}</span>`:''}</span><div class="set-check">${qty?'✓':''}</div></div>`;}).join('')}`;
 }
 function renderSetProgress(sid,s){
   const groups=s.groups||[],needed=groups.reduce((t,g)=>t+g.min,0),got=groups.reduce((t,g,gi)=>{const sel=setSelections[sid][gi]||{};return t+Object.values(sel).reduce((a,b)=>a+b,0);},0);
