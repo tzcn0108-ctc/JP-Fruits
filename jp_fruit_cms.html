@@ -1773,6 +1773,8 @@ async function loadData() {
           desc:         saved_p.desc         || sp.desc         || '',
           descZh:       saved_p.descZh       || saved_p.desc    || sp.descZh  || '',
           descEn:       saved_p.descEn       || sp.descEn       || '',
+          // ── Merchandising placement ─────────────────────────────
+          cat:          saved_p.cat          ?? sp.cat          ?? '',
           // ── Pricing (use ?? so price=0 is preserved) ──────────
           price:        saved_p.price        ?? sp.price        ?? 0,
           salePrice:    saved_p.salePrice    ?? sp.salePrice    ?? null,
@@ -2295,6 +2297,11 @@ function openProductModal(id=null) {
     if (_cpk) _cpk.value   = p.costPerKg  || '';
     if (_ppk) _ppk.value   = p.pricePerKg || '';
     toggleWeightFields();
+    // Load THIS product's own tiers — without this, editingTiers keeps
+    // whatever was left from the previously-edited product and appears to
+    // "copy" across to the next one.
+    editingTiers = Array.isArray(p.tiers) ? p.tiers.map(t=>({...t})) : [];
+    renderTierSlots();
   } else {
     ['p-name-zh','p-name-en','p-unit','p-price','p-sale-price','p-sale-until','p-desc-zh','p-desc-en'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('p-stock').value=-1;
