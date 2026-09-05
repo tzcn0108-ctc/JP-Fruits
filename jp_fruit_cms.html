@@ -1752,58 +1752,22 @@ async function loadData() {
     saved = await dbGet();
     if (saved) {
       // Products always come from SEED_PRODUCTS (the Excel file is the source of truth).
-      // We preserve per-product edits (image, desc, featured) made inside the CMS
-      // by merging them back onto the base SEED data — but price, stock, active
-      // always reflect the latest SEED_PRODUCTS.
-      const savedProdMap = {};
-      (saved.products || []).forEach(p => { savedProdMap[p.id] = p; });
-      state.products = SEED_PRODUCTS.map(sp => {
-        const saved_p = savedProdMap[sp.id];
-        if (!saved_p) return {...sp};
-        // Preserve CMS-only fields; everything else from SEED (Excel)
-        return {
-          // SEED_PRODUCTS provides the base shape (...sp)
-          // but ALL CMS-editable fields must be explicitly overridden from Firebase (saved_p)
-          // so that user changes (price, active, priceByWeight etc.) survive a new HTML upload.
-          // Rule: use ?? (not ||) so that false and 0 are preserved from saved_p.
-          ...sp,
-          // ── Names & descriptions ──────────────────────────────
-          nameZh:       saved_p.nameZh       ?? sp.nameZh       ?? '',
-          nameEn:       saved_p.nameEn       ?? sp.nameEn       ?? '',
-          desc:         saved_p.desc         || sp.desc         || '',
-          descZh:       saved_p.descZh       || saved_p.desc    || sp.descZh  || '',
-          descEn:       saved_p.descEn       || sp.descEn       || '',
-          // ── Merchandising placement ─────────────────────────────
-          cat:          saved_p.cat          ?? sp.cat          ?? '',
-          // ── Pricing (use ?? so price=0 is preserved) ──────────
-          price:        saved_p.price        ?? sp.price        ?? 0,
-          salePrice:    saved_p.salePrice    ?? sp.salePrice    ?? null,
-          saleUntil:    saved_p.saleUntil    ?? sp.saleUntil    ?? null,
-          priceByWeight:saved_p.priceByWeight ?? sp.priceByWeight ?? false,
-          isNew:        saved_p.isNew        ?? sp.isNew        ?? false,
-          sortOrder:    saved_p.sortOrder    ?? sp.sortOrder    ?? null,
-          costPerKg:    saved_p.costPerKg    ?? sp.costPerKg    ?? null,
-          pricePerKg:   saved_p.pricePerKg   ?? sp.pricePerKg   ?? null,
-          tiers:        (saved_p.tiers&&saved_p.tiers.length) ? saved_p.tiers : (sp.tiers||[]),
-          // ── Inventory ─────────────────────────────────────────
-          stock:        saved_p.stock        ?? sp.stock        ?? -1,
-          unit:         saved_p.unit         ?? sp.unit         ?? '',
-          // ── Visibility & merchandising ────────────────────────
-          active:       saved_p.active       ?? sp.active       ?? true,
-          featured:     saved_p.featured     ?? sp.featured     ?? false,
-          isNew:        saved_p.isNew        ?? sp.isNew        ?? false,
-          // ── Images ────────────────────────────────────────────
-          image:        saved_p.image        || sp.image        || '',
-          images:       (saved_p.images&&saved_p.images.length) ? saved_p.images : (sp.images||[]),
-        };
-      });
-      // Products added directly in the CMS (not present in SEED_PRODUCTS / the Excel
-      // file) must also be restored, or they vanish on every reload — merge them in.
-      (saved.products || []).forEach(saved_p => {
-        if (!SEED_PRODUCTS.find(sp => sp.id === saved_p.id)) {
-          state.products.push({...saved_p});
-        }
-      });
+      // Saved-first (same robust pattern already used for categories below):
+      // everything already saved in Firebase carries forward exactly as-is,
+      // so a newly added CMS field never again needs to be separately
+      // whitelisted here — this exact bug (a field quietly missing from a
+      // hand-maintained list, silently reverting to SEED on every reload)
+      // recurred repeatedly (active, price, sortOrder, cat, name/zh) under
+      // the old SEED-first design. SEED_PRODUCTS now only fills in products
+      // that were never saved to Firebase yet (brand-new catalogue items).
+      if (saved.products && saved.products.length) {
+        state.products = saved.products.map(sp => ({...sp}));
+        SEED_PRODUCTS.forEach(sp => {
+          if (!state.products.find(p => p.id === sp.id)) state.products.push({...sp});
+        });
+      } else {
+        state.products = SEED_PRODUCTS.map(sp => ({...sp}));
+      }
       // Non-product data: always restore from saved
       state.orders     = saved.orders   || [];
       // Category NAMES always come from SEED_CATEGORIES (the Excel file) — same
