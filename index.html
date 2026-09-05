@@ -2069,8 +2069,10 @@ function toggleSetItem(sid,gi,itemId){
   const s=sets.find(x=>x.id===sid);if(!s)return;
   const g=s.groups[gi];if(!setSelections[sid][gi])setSelections[sid][gi]={};
   const sel=setSelections[sid][gi],total=Object.values(sel).reduce((a,b)=>a+b,0),cur=sel[itemId]||0;
+  // Per-item repeat count is only bounded by the group's overall max (g.max) —
+  // no separate hardcoded per-item cap.
   if(!cur){if(total>=g.max)return;sel[itemId]=1;}
-  else if(g.allowRepeat&&cur<3&&total<g.max){sel[itemId]++;}
+  else if(g.allowRepeat&&total<g.max){sel[itemId]++;}
   else{delete sel[itemId];}
   const el=document.getElementById(`setcard-${sid}`);if(el)el.outerHTML=renderSetCard(s);
 }
@@ -2589,14 +2591,16 @@ function cartForm(sfx){
   </div>
   <button class="whatsapp-btn" onclick="sendWA('${sfx}')">${tx('waBtn')}</button></div>`;
 }
-function sendWA(sfx){
+async function sendWA(sfx){
   // ── Anti-duplicate: disable button immediately ──
   const waBtn = document.querySelector(`#cart-${sfx?'mobile':'section'} .whatsapp-btn`);
+  // Hoisted to function scope (not just the if-block below) so the stock
+  // re-check further down can also restore the button's original label.
+  const origText = waBtn ? waBtn.textContent : (lang==='zh' ? 'WhatsApp 落單' : 'Order via WhatsApp');
   if(waBtn){
     if(waBtn.dataset.submitting === 'true') return; // already submitting
     waBtn.dataset.submitting = 'true';
     waBtn.disabled = true;
-    const origText = waBtn.textContent;
     waBtn.textContent = lang==='zh' ? '處理中...' : 'Processing...';
     setTimeout(() => {
       waBtn.disabled = false;
@@ -2681,6 +2685,66 @@ function sendWA(sfx){
       : `⚠️ ${pc} may be outside our delivery zone (SM/KT/CR/SW South London).
 Press OK if correct and we'll be in touch.`;
     if(!confirm(_warn)) return;
+  }
+
+  // ── Step 2.5: Final live stock check — re-fetch fresh stock from Firebase
+  // right before committing, since the customer's own view may be stale
+  // (someone else may have bought the last units moments ago). If anything
+  // is short, tell them exactly which items and by how much, auto-adjust
+  // their cart down to what's actually available, and let them re-submit —
+  // rather than silently blocking or silently overselling.
+  if (window._firebaseReady && window._fbDb) {
+    try {
+      const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue/products'));
+      if (snap.exists()) {
+        const liveProds = snap.val();
+        const liveList = Array.isArray(liveProds) ? liveProds : Object.values(liveProds||{});
+        const shortfalls = [];
+        Object.entries(cart).forEach(([id, val]) => {
+          if (val && val.isSet) return; // set meals aren't stock-tracked here
+          const liveP = liveList.find(p => p && p.id === id);
+          if (!liveP || liveP.stock === -1) return; // unlimited stock or unknown product — skip
+          if (liveP.stock < val) {
+            const localP = products.find(p => p.id === id);
+            const dispName = localP
+              ? (lang==='zh' ? (localP.nameZh||localP.zh||localP.name) : (localP.nameEn||localP.name))
+              : id;
+            shortfalls.push({ id, name: dispName, requested: val, available: liveP.stock });
+            if (localP) localP.stock = liveP.stock; // sync local view to reality
+            if (liveP.stock > 0) cart[id] = liveP.stock; // clamp cart down to what's left
+            else delete cart[id]; // fully sold out — remove from cart entirely
+          }
+        });
+        if (shortfalls.length > 0) {
+          if (waBtn) {
+            waBtn.disabled = false;
+            waBtn.dataset.submitting = 'false';
+            waBtn.textContent = origText;
+          }
+          const isZh = lang==='zh';
+          const lines = shortfalls.map(it =>
+            isZh
+              ? (it.available > 0
+                  ? `• ${it.name}：淨返 ${it.available} 件（你揀咗 ${it.requested} 件，已幫你調整）`
+                  : `• ${it.name}：啱啱賣晒，已從購物車移除`)
+              : (it.available > 0
+                  ? `• ${it.name}: only ${it.available} left (you had ${it.requested} — adjusted for you)`
+                  : `• ${it.name}: just sold out — removed from your cart`)
+          ).join('\n');
+          const summary = isZh
+            ? `⚠️ 有產品啱啱俾人買咗，庫存唔夠晒：\n\n${lines}\n\n購物車已經幫你調整好，麻煩檢查一下再撳一次落單。`
+            : `⚠️ Some items just sold out or ran low:\n\n${lines}\n\nYour cart has been adjusted — please review and tap order again.`;
+          alert(summary);
+          renderProducts();
+          updateCart();
+          return;
+        }
+      }
+    } catch(e) {
+      console.warn('Stock re-check failed, proceeding without it:', e);
+      // Fail open: a network hiccup on this check alone shouldn't block a
+      // genuine order — same offline-friendly spirit as the rest of checkout.
+    }
   }
 
   // ── Step 3: Build order data ──
