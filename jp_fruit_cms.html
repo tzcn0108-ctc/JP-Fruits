@@ -2883,7 +2883,12 @@ function cancelOrder(id) {
   if (!confirm('確定取消此訂單？')) return;
   const o = state.orders.find(x => x.id === id);
   if (!o) return;
+  const oldStatus = o.status;
   o.status = 'cancelled';
+
+  // Restore stock — this order's items are no longer being fulfilled.
+  // Only restore once: skip if it was already cancelled before.
+  if (oldStatus !== 'cancelled') applyStockDelta(o, +1);
 
   // Update Firebase
   if (window._firebaseReady && window._fbDb && o.firebaseId) {
@@ -2895,6 +2900,7 @@ function cancelOrder(id) {
 
   renderOrders();
   renderDashboard();
+  renderProducts();
 }
 
 
