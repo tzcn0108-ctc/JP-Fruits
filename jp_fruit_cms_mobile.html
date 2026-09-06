@@ -38,6 +38,14 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#F5C842;}
 .sync-dot.ok{background:#4CD964;}
 
+/* ── Bottom nav ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:60;padding-bottom:env(safe-area-inset-bottom,0);}
+.nav-btn{flex:1;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:var(--font);}
+.nav-btn.active{color:var(--plum);}
+.nav-btn .nav-icon{font-size:1.25rem;}
+.nav-btn .nav-label{font-size:0.68rem;font-weight:600;}
+body{padding-bottom:74px;}
+
 /* ── Status filter tabs (horizontal scroll) ── */
 .tabs{display:flex;gap:8px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:40;}
 .tabs::-webkit-scrollbar{display:none;}
@@ -112,8 +120,30 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
 .status-btn.current{background:var(--plum);color:#fff;border-color:var(--plum);}
 .status-btn.cancel{color:var(--red);border-color:var(--red-l);grid-column:span 2;}
 
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2D2438;color:#fff;padding:10px 20px;border-radius:24px;font-size:0.85rem;z-index:300;opacity:0;transition:opacity 0.25s;pointer-events:none;}
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:#2D2438;color:#fff;padding:10px 20px;border-radius:24px;font-size:0.85rem;z-index:300;opacity:0;transition:opacity 0.25s;pointer-events:none;}
 .toast.show{opacity:1;}
+
+/* ── Reports page ── */
+.report-page{padding:14px;}
+.week-nav{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.week-nav button{background:var(--bg);border:none;border-radius:10px;width:38px;height:38px;font-size:1.1rem;color:var(--plum);cursor:pointer;}
+.week-nav .week-label{font-size:0.85rem;font-weight:700;text-align:center;flex:1;}
+.week-nav .week-sub{font-size:0.7rem;color:var(--muted);font-weight:400;margin-top:2px;}
+
+.report-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.summary-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.summary-card .sc-label{font-size:0.72rem;color:var(--muted);margin-bottom:4px;}
+.summary-card .sc-value{font-size:1.3rem;font-weight:700;color:var(--plum-d);}
+
+.cat-report-list{display:flex;flex-direction:column;gap:8px;}
+.cat-row{background:#fff;border-radius:12px;padding:13px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.cat-row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.cat-name{font-size:0.9rem;font-weight:700;}
+.cat-name.is-set{color:var(--plum);}
+.cat-revenue{font-size:0.95rem;font-weight:700;color:var(--plum-d);}
+.cat-bar-track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.cat-bar-fill{height:100%;background:var(--plum);border-radius:3px;}
+.cat-row-meta{display:flex;justify-content:space-between;font-size:0.74rem;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -136,8 +166,39 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
   <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">連接中...</span></div>
 </header>
 
-<div class="tabs" id="tabs"></div>
-<div class="list" id="order-list"></div>
+<!-- ORDERS PAGE -->
+<div id="page-orders-mobile">
+  <div class="tabs" id="tabs"></div>
+  <div class="list" id="order-list"></div>
+</div>
+
+<!-- REPORTS PAGE -->
+<div id="page-reports-mobile" style="display:none;">
+  <div class="report-page">
+    <div class="week-nav">
+      <button onclick="shiftWeek(-1)">‹</button>
+      <div>
+        <div class="week-label" id="week-label">—</div>
+        <div class="week-sub" id="week-sub">六 – 五</div>
+      </div>
+      <button onclick="shiftWeek(1)">›</button>
+    </div>
+    <div class="report-summary">
+      <div class="summary-card"><div class="sc-label">總銷售額</div><div class="sc-value" id="rpt-total">£0.00</div></div>
+      <div class="summary-card"><div class="sc-label">訂單數量</div><div class="sc-value" id="rpt-orders">0</div></div>
+    </div>
+    <div class="cat-report-list" id="cat-report-list"></div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-btn-orders" onclick="switchPage('orders')">
+    <span class="nav-icon">📦</span><span class="nav-label">訂單</span>
+  </button>
+  <button class="nav-btn" id="nav-btn-reports" onclick="switchPage('reports')">
+    <span class="nav-icon">📊</span><span class="nav-label">報告</span>
+  </button>
+</div>
 
 <!-- Order detail modal -->
 <div class="modal-overlay" id="order-modal" onclick="if(event.target===this)closeOrderModal()">
@@ -189,10 +250,15 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
     setSyncStatus(false);
   });
 
-  // ── Also fetch products catalogue (read-only) — needed for applyStockDelta on cancel ──
+  // ── Also fetch products + categories (read-only) — products needed for
+  // applyStockDelta on cancel, both needed for the by-category report ──
   get(ref(db, 'catalogue/products')).then(snap => {
     window._allProducts = snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
   }).catch(() => { window._allProducts = []; });
+
+  get(ref(db, 'catalogue/categories')).then(snap => {
+    window._allCategories = snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
+  }).catch(() => { window._allCategories = []; });
 
   function setSyncStatus(ok) {
     const dot = document.getElementById('sync-dot');
@@ -421,6 +487,111 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══ BOTTOM NAV / PAGE SWITCHING ═══════════════════════════════════
+function switchPage(page) {
+  document.getElementById('page-orders-mobile').style.display = page==='orders' ? '' : 'none';
+  document.getElementById('page-reports-mobile').style.display = page==='reports' ? '' : 'none';
+  document.getElementById('nav-btn-orders').classList.toggle('active', page==='orders');
+  document.getElementById('nav-btn-reports').classList.toggle('active', page==='reports');
+  document.querySelector('header .title').textContent = page==='orders' ? '📦 訂單管理' : '📊 銷售報告';
+  if (page==='reports') renderReports();
+}
+
+// ══ REPORTS BY CATEGORY (週六 – 下週五) ═══════════════════════════
+let weekOffset = 0; // 0 = the Sat–Fri week containing today
+
+// Returns {start, end} Date objects for the Sat–Fri week at `offset` weeks
+// from the week containing today. Sat 00:00:00 to the following Fri 23:59:59.
+function getWeekRange(offset) {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun..6=Sat
+  const daysSinceSat = (day - 6 + 7) % 7; // how many days ago was the most recent Saturday
+  const thisSat = new Date(now);
+  thisSat.setDate(now.getDate() - daysSinceSat);
+  thisSat.setHours(0,0,0,0);
+  const start = new Date(thisSat);
+  start.setDate(thisSat.getDate() + offset*7);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23,59,59,999);
+  return { start, end };
+}
+
+function fmtShortDate(d) { return `${d.getMonth()+1}/${d.getDate()}`; }
+
+function shiftWeek(delta) {
+  weekOffset += delta;
+  renderReports();
+}
+
+function catNameOf(catId) {
+  const cats = window._allCategories || [];
+  const c = cats.find(x => x.id === catId);
+  return (c && (c.zh || c.name)) || catId || '未分類';
+}
+
+function renderReports() {
+  const { start, end } = getWeekRange(weekOffset);
+  document.getElementById('week-label').textContent = `${fmtShortDate(start)} – ${fmtShortDate(end)}`;
+  document.getElementById('week-sub').textContent = weekOffset===0 ? '本週（六至五）' : `${fmtShortDate(start)}週六 – ${fmtShortDate(end)}週五`;
+
+  const orders = getOrders().filter(o => {
+    if (o.status === 'cancelled') return false;
+    if (!o.createdAt) return false;
+    const d = new Date(o.createdAt);
+    return d >= start && d <= end;
+  });
+
+  const totalRev = orders.reduce((s,o) => s + parseFloat(o.total||0), 0);
+  document.getElementById('rpt-total').textContent = `£${totalRev.toFixed(2)}`;
+  document.getElementById('rpt-orders').textContent = orders.length;
+
+  // ── Group revenue by category. Regular products are attributed to their
+  // own catalogue category; set meals are bucketed into a single separate
+  // "套餐 Set Meals" row rather than trying to split their price across the
+  // categories of whatever products happen to be inside them. ──
+  const products = window._allProducts || [];
+  const catMap = {}; // key -> {label, revenue, qty, orderIds:Set}
+
+  orders.forEach(o => {
+    (o.items||[]).forEach(item => {
+      let key, label;
+      if (item.type === 'set') {
+        key = '__set__'; label = '📦 套餐 Set Meals';
+      } else {
+        const p = products.find(x => x.id === item.productId);
+        key = p ? (p.cat || '__uncat__') : '__uncat__';
+        label = p ? catNameOf(p.cat) : '未分類 Uncategorised';
+      }
+      if (!catMap[key]) catMap[key] = { label, revenue: 0, qty: 0, orderIds: new Set() };
+      catMap[key].revenue += (item.price||0) * (item.qty||1);
+      catMap[key].qty += (item.qty||1);
+      catMap[key].orderIds.add(o.id);
+    });
+  });
+
+  const rows = Object.values(catMap).sort((a,b) => b.revenue - a.revenue);
+  const maxRev = rows.length ? rows[0].revenue : 1;
+
+  const listEl = document.getElementById('cat-report-list');
+  if (!rows.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-emoji">📊</div>呢個星期暫時冇銷售資料</div>`;
+    return;
+  }
+  listEl.innerHTML = rows.map(r => {
+    const isSet = r.label.includes('套餐');
+    const pct = maxRev ? (r.revenue / maxRev * 100).toFixed(0) : 0;
+    return `<div class="cat-row">
+      <div class="cat-row-top">
+        <span class="cat-name${isSet?' is-set':''}">${escapeHTML(r.label)}</span>
+        <span class="cat-revenue">£${r.revenue.toFixed(2)}</span>
+      </div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;${isSet?'background:var(--gold);':''}"></div></div>
+      <div class="cat-row-meta"><span>${r.qty} 件</span><span>${r.orderIds.size} 張訂單</span></div>
+    </div>`;
+  }).join('');
 }
 
 // Initial render (in case onValue fires before these functions are defined,
