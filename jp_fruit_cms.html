@@ -4282,12 +4282,16 @@ function exportWeeklyCSV() {
   });
 
   // ── Build order → product map ──
+  // For set items, keep the qty AND the summary (what the customer actually
+  // chose inside the set) together, so the matrix cell can show both —
+  // otherwise a "麵包套餐" row tells you someone bought it, but not which
+  // breads they picked.
   const orderMap = {};
   sorted.forEach(o => {
     orderMap[o.id] = {};
     if (Array.isArray(o.items)) {
       o.items.forEach(i => {
-        if (i.name) orderMap[o.id][i.name] = i.qty || 1;
+        if (i.name) orderMap[o.id][i.name] = { qty: i.qty || 1, summary: (i.type==='set' && i.summary) || '' };
       });
     }
   });
@@ -4305,11 +4309,16 @@ function exportWeeklyCSV() {
 
   // ── PRODUCT ROWS (one per product, qty in each order column) ──
   allProds.forEach(prod => {
-    const total = sorted.reduce((s, o) => s + (parseInt(orderMap[o.id][prod]) || 0), 0);
+    const total = sorted.reduce((s, o) => s + (parseInt(orderMap[o.id][prod]?.qty) || 0), 0);
     rows.push([
       prod,
       total || '',  // total qty column
-      ...sorted.map(o => orderMap[o.id][prod] || '')
+      ...sorted.map(o => {
+        const cell = orderMap[o.id][prod];
+        if (!cell) return '';
+        // Sets: show quantity + what was chosen, e.g. "1（即食黃咖喱、即食帕能咖喱）"
+        return cell.summary ? `${cell.qty}（${cell.summary}）` : cell.qty;
+      })
     ]);
   });
 
