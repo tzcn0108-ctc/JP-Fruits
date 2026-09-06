@@ -3942,12 +3942,21 @@ function renderCategoriesReport(el, orders) {
   orders.forEach(o => {
     if (!Array.isArray(o.items)) return;
     o.items.forEach(item => {
-      // Find product to get category (try productId first, then name match)
-      let p = item.productId ? state.products.find(x => x.id === item.productId) : null;
-      if (!p && item.name) p = state.products.find(x => (x.nameZh||x.name) === item.name);
-      const catId = p ? p.cat : null;
-      const cat = catId ? state.categories.find(x => x.id === catId) : null;
-      const catName = cat ? (cat.zh || cat.name) : (p ? '其他' : '未分類');
+      let catName;
+      if (item.type === 'set') {
+        // Set meals bundle several products together and aren't tied to a
+        // single category — shown as their own row rather than lumped into
+        // "未分類 Uncategorised", which would otherwise wrongly suggest a
+        // data problem rather than "this is a set".
+        catName = '📦 套餐 Set Meals';
+      } else {
+        // Find product to get category (try productId first, then name match)
+        let p = item.productId ? state.products.find(x => x.id === item.productId) : null;
+        if (!p && item.name) p = state.products.find(x => (x.nameZh||x.name) === item.name);
+        const catId = p ? p.cat : null;
+        const cat = catId ? state.categories.find(x => x.id === catId) : null;
+        catName = cat ? (cat.zh || cat.name) : (p ? '其他' : '未分類');
+      }
       if (!catMap[catName]) catMap[catName] = { qty: 0, revenue: 0, orders: new Set(), products: new Set() };
       catMap[catName].qty += parseInt(item.qty) || 1;
       catMap[catName].revenue += parseFloat(item.price || 0) * (parseInt(item.qty) || 1);
