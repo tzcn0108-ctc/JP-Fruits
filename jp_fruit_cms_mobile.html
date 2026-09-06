@@ -6,6 +6,7 @@
 <title>JP Fruit 訂單 (手機版)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+html{font-size:16px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
   --plum:#6B4C8A;--plum-d:#4A3060;--plum-l:#EDE6F5;
@@ -154,6 +155,19 @@ body{padding-bottom:74px;}
 .cat-item-row .ci-name{color:var(--text);flex:1;}
 .cat-item-row .ci-qty{color:var(--muted);margin:0 10px;white-space:nowrap;}
 .cat-item-row .ci-rev{color:var(--green,#2E7D32);font-weight:600;white-space:nowrap;}
+
+/* ── Font size control ── */
+.header-btn{background:rgba(255,255,255,0.18);border:none;border-radius:8px;width:32px;height:32px;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.font-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:250;display:none;align-items:flex-end;justify-content:center;}
+.font-picker-overlay.open{display:flex;}
+.font-picker-sheet{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0));}
+.font-picker-title{font-size:0.95rem;font-weight:700;margin-bottom:14px;text-align:center;}
+.font-picker-options{display:flex;flex-direction:column;gap:8px;}
+.font-size-opt{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);background:#fff;cursor:pointer;}
+.font-size-opt.selected{border-color:var(--plum);background:var(--plum-l);}
+.font-size-opt .fso-label{font-weight:600;}
+.font-size-opt .fso-check{color:var(--plum);font-weight:700;visibility:hidden;}
+.font-size-opt.selected .fso-check{visibility:visible;}
 </style>
 </head>
 <body>
@@ -173,8 +187,19 @@ body{padding-bottom:74px;}
 
 <header>
   <div class="title">📦 訂單管理</div>
-  <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">連接中...</span></div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="header-btn" onclick="openFontPicker()" title="調整字體大小">Aa</button>
+    <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">連接中...</span></div>
+  </div>
 </header>
+
+<!-- Font size picker -->
+<div class="font-picker-overlay" id="font-picker-overlay" onclick="if(event.target===this)closeFontPicker()">
+  <div class="font-picker-sheet">
+    <div class="font-picker-title">字體大小 Font Size</div>
+    <div class="font-picker-options" id="font-picker-options"></div>
+  </div>
+</div>
 
 <!-- ORDERS PAGE -->
 <div id="page-orders-mobile">
@@ -497,6 +522,50 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══ FONT SIZE CONTROL ═══════════════════════════════════════════
+const FONT_SIZES = [
+  { key:'small',  label:'細 Small',      px:14 },
+  { key:'normal', label:'標準 Normal',   px:16 },
+  { key:'large',  label:'大 Large',      px:18 },
+  { key:'xlarge', label:'特大 X-Large',  px:20 },
+];
+
+function applyFontSize(px) {
+  document.documentElement.style.fontSize = px + 'px';
+}
+
+function getSavedFontSize() {
+  const saved = localStorage.getItem('jp-cms-mobile-font-size');
+  const found = FONT_SIZES.find(f => f.key === saved);
+  return found ? found.px : 16;
+}
+
+// Apply saved preference immediately on load, before the person can see a
+// flash of the default size.
+applyFontSize(getSavedFontSize());
+
+function openFontPicker() {
+  const currentPx = getSavedFontSize();
+  document.getElementById('font-picker-options').innerHTML = FONT_SIZES.map(f => `
+    <div class="font-size-opt${f.px===currentPx?' selected':''}" onclick="selectFontSize('${f.key}',${f.px})">
+      <span class="fso-label" style="font-size:${f.px}px;">${f.label}</span>
+      <span class="fso-check">✓</span>
+    </div>
+  `).join('');
+  document.getElementById('font-picker-overlay').classList.add('open');
+}
+
+function closeFontPicker() {
+  document.getElementById('font-picker-overlay').classList.remove('open');
+}
+
+function selectFontSize(key, px) {
+  localStorage.setItem('jp-cms-mobile-font-size', key);
+  applyFontSize(px);
+  closeFontPicker();
+  showToast('✓ 字體大小已更新');
 }
 
 // ══ BOTTOM NAV / PAGE SWITCHING ═══════════════════════════════════
