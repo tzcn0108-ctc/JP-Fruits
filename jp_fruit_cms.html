@@ -2438,18 +2438,21 @@ function viewOrder(id) {
   // Build items list
   const itemsHtml = Array.isArray(o.items)
     ? o.items.map((item, idx) => `
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4dc;">
-        <span style="flex:1;font-size:0.85rem;color:var(--text);">${escapeHTML(item.name||'—')}</span>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <button onclick="editOrderItemQty('${o.id}',${idx},-1)"
-            style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">−</button>
-          <span style="font-size:0.85rem;font-weight:600;min-width:20px;text-align:center;">${item.qty||1}</span>
-          <button onclick="editOrderItemQty('${o.id}',${idx},1)"
-            style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">+</button>
+      <div style="padding:8px 0;border-bottom:1px solid #f0e4dc;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="flex:1;font-size:0.85rem;color:var(--text);">${escapeHTML(item.name||'—')}${item.type==='set'?' <span style=\"font-size:0.68rem;background:#EDE6F5;color:#6B4C8A;padding:1px 6px;border-radius:4px;margin-left:4px;\">套餐</span>':''}</span>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button onclick="editOrderItemQty('${o.id}',${idx},-1)"
+              style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">−</button>
+            <span style="font-size:0.85rem;font-weight:600;min-width:20px;text-align:center;">${item.qty||1}</span>
+            <button onclick="editOrderItemQty('${o.id}',${idx},1)"
+              style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">+</button>
+          </div>
+          <span style="font-size:0.85rem;font-weight:600;color:var(--text);min-width:52px;text-align:right;">£${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
+          <button onclick="removeOrderItem('${o.id}',${idx})"
+            style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:0.85rem;padding:2px 4px;">✕</button>
         </div>
-        <span style="font-size:0.85rem;font-weight:600;color:var(--text);min-width:52px;text-align:right;">£${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
-        <button onclick="removeOrderItem('${o.id}',${idx})"
-          style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:0.85rem;padding:2px 4px;">✕</button>
+        ${item.type==='set'&&item.summary?`<div style="font-size:0.76rem;color:var(--muted);margin-top:4px;padding-left:2px;">↳ ${escapeHTML(item.summary)}</div>`:''}
       </div>`).join('')
     : `<div style="font-size:0.85rem;color:var(--muted);">${escapeHTML(o.items||'—')}</div>`;
 
@@ -3219,11 +3222,14 @@ function exportOrders() {
   ];
   const rows = [headers];
   orders.forEach(o => {
-    const itemsStr = (o.items||[]).map(i =>
-      i.type==='set'
-        ? `${i.name||''} x1 £${(i.price||0).toFixed(2)}`
-        : `${i.name||''} x${i.qty||1} £${((i.price||0)*(i.qty||1)).toFixed(2)}`
-    ).join(' | ');
+    const itemsStr = (o.items||[]).map(i => {
+      const qty = i.qty||1;
+      if (i.type==='set') {
+        const summaryPart = i.summary ? `（${i.summary}）` : '';
+        return `${i.name||''}${summaryPart} x${qty} £${((i.price||0)*qty).toFixed(2)}`;
+      }
+      return `${i.name||''} x${qty} £${((i.price||0)*qty).toFixed(2)}`;
+    }).join(' | ');
     const date = o.createdAt ? new Date(o.createdAt).toLocaleString('zh-HK') : '';
     rows.push([
       o.id||'', date,

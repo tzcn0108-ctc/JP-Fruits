@@ -2087,7 +2087,7 @@ function addSetToCart(sid){
       return liveName+(sel[i.id]>1?` x${sel[i.id]}`:'');
     }).join('、');
   }).join(' + ');
-  const cartKey='set_'+sid+'_'+Date.now();
+  const cartKey='set_'+sid+'_'+Date.now()+'_'+Math.floor(Math.random()*100000);
   cart[cartKey]={isSet:true,setId:sid,name:s.name,nameZh:s.nameZh||s.name,nameEn:s.nameEn||s.name,price:s.price,summary,qty:1};
   setSelections[sid]={};
   const el=document.getElementById(`setcard-${sid}`);if(el)el.outerHTML=renderSetCard(s);
@@ -2166,6 +2166,13 @@ function chQty(id,d,btn){
   } else { refreshCard(id); }
 }
 function rmSetItem(id){delete cart[id];updateCart();}
+function chSetQty(id,delta){
+  const item = cart[id];
+  if (!item || !item.isSet) return;
+  item.qty = (item.qty||1) + delta;
+  if (item.qty <= 0) delete cart[id];
+  updateCart();
+}
 function refreshCard(id){const p=products.find(x=>x.id===id);if(!p)return;const el=document.getElementById('card-'+id);if(el)el.outerHTML=pCard(p);}
 function getTieredTotal(p, qty) {
   // Returns TOTAL price for qty units using best applicable tier
@@ -2529,7 +2536,10 @@ function renderCart(cid,sfx){
   }
 
   const itemsHtml = items.map(({id,val})=>{
-    if(val&&val.isSet)return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="rmSetItem('${id}')">✕</button></div><div class="ci-price">£${parseFloat(val.price||0).toFixed(2)}</div></div>`;
+    if(val&&val.isSet){
+      const setQty = val.qty||1;
+      return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="chSetQty('${id}',-1)">−</button><div class="ci-qnum">${setQty}</div><button class="ci-qbtn" onclick="chSetQty('${id}',1)">+</button></div><div class="ci-price">£${(parseFloat(val.price||0)*setQty).toFixed(2)}</div></div>`;
+    }
     const p=products.find(x=>x.id===id);if(!p)return'';
     const ciName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
     const lineTotal = p.priceByWeight ? 0 : getTieredTotal(p, val);
@@ -2750,7 +2760,7 @@ Press OK if correct and we'll be in touch.`;
   // ── Step 3: Build order data ──
   const _wItems=[], _nItems=[];
   Object.entries(cart).forEach(([id,val])=>{
-    if(val&&val.isSet){_nItems.push(`• ${val.nameZh||val.name} x1 = £${parseFloat(val.price||0).toFixed(2)}`);return;}
+    if(val&&val.isSet){const sq=val.qty||1;const summaryLine=val.summary?`\n   ↳ ${val.summary}`:'';_nItems.push(`• ${val.nameZh||val.name} x${sq} = £${(parseFloat(val.price||0)*sq).toFixed(2)}${summaryLine}`);return;}
     const p=products.find(x=>x.id===id);
     if(!p) return;
     if(p.priceByWeight){
@@ -2784,7 +2794,7 @@ Press OK if correct and we'll be in touch.`;
     address: addr,
     postcode: pc.toUpperCase(),
     items: Object.entries(cart).map(([id,val])=>{
-      if(val&&val.isSet) return {type:'set', name:val.nameZh||val.name, price:val.price, qty:1};
+      if(val&&val.isSet) return {type:'set', name:val.nameZh||val.name, price:val.price, qty:val.qty||1, summary:val.summary||''};
       const p=products.find(x=>x.id===id);
       if(!p) return null;
       return {type:'product', productId:id, name:p.nameZh||p.zh||p.name, price:p.salePrice||p.price, qty:val};
