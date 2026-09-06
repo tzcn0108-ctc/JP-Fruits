@@ -1155,6 +1155,30 @@ body { background: var(--cream, #FFFDF9); }
   padding:12px 32px;font-size:0.92rem;font-weight:600;cursor:pointer;
 }
 
+/* ── Order submitted confirmation ── */
+.success-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);
+  z-index:650;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.success-overlay.open{display:flex;}
+.success-sheet{
+  background:#fff;border-radius:20px;max-width:400px;width:100%;
+  padding:32px 26px 26px;text-align:center;
+  animation:pauseFadeIn 0.25s ease;
+}
+.success-check{
+  width:64px;height:64px;border-radius:50%;background:#E8F5E9;color:#2E7D32;
+  display:flex;align-items:center;justify-content:center;font-size:2rem;
+  margin:0 auto 16px;
+}
+.success-title{font-size:1.15rem;font-weight:700;color:var(--ink,#2D2438);margin-bottom:8px;}
+.success-order-id{font-size:0.95rem;color:var(--plum);font-weight:700;margin-bottom:12px;font-family:var(--mono,monospace);}
+.success-msg{font-size:0.88rem;color:var(--ink-2,#6b6478);line-height:1.6;margin-bottom:24px;}
+.success-close-btn{
+  background:var(--plum);color:#fff;border:none;border-radius:10px;
+  padding:13px 32px;font-size:0.92rem;font-weight:600;cursor:pointer;width:100%;
+}
+
 </style>
 
 <!-- Firebase SDK -->
@@ -2879,6 +2903,32 @@ Press OK if correct and we'll be in touch.`;
     setTimeout(()=>{btn.disabled=false;btn.style.opacity='';btn.textContent=orig;},8000);
   });
   window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
+
+  // ── Step 7: Clear the cart and show a clear success confirmation ──
+  // Without this, the page looked exactly the same after submitting as
+  // before (same cart, same filled form, no acknowledgement at all) —
+  // customers couldn't tell their order had gone through, so many were
+  // submitting a second time just to be sure.
+  cart = {};
+  appliedPromo = null;
+  updateCart();
+  renderProducts();
+  showOrderSuccess(orderData.id);
+}
+
+function showOrderSuccess(orderId) {
+  const isZh = lang === 'zh';
+  document.getElementById('success-title').textContent = isZh ? '訂單已提交！' : 'Order Submitted!';
+  document.getElementById('success-order-id').textContent = orderId || '';
+  document.getElementById('success-msg').textContent = isZh
+    ? '已為你開啟 WhatsApp，請喺嗰度撳「傳送」完成落單。如果 WhatsApp 冇自動開啟，請檢查瀏覽器嘅彈出視窗設定。'
+    : "We've opened WhatsApp for you — please tap Send there to complete your order. If WhatsApp didn't open automatically, check your browser's pop-up settings.";
+  document.getElementById('success-close-btn').textContent = isZh ? '知道喇' : 'Got it';
+  document.getElementById('success-overlay').classList.add('open');
+}
+
+function closeSuccessModal() {
+  document.getElementById('success-overlay').classList.remove('open');
 }
 
 // ── FILTERS ───────────────────────────────────────────────────
@@ -3156,6 +3206,17 @@ setTimeout(_doLoadProducts, 3000);
     <div class="pause-emoji">🏖️</div>
     <div class="pause-msg" id="pause-msg-text"></div>
     <button class="pause-close-btn" onclick="closePauseModal()" id="pause-close-btn-text">知道喇</button>
+  </div>
+</div>
+
+<!-- Order submitted confirmation -->
+<div class="success-overlay" id="success-overlay" onclick="if(event.target===this)closeSuccessModal()">
+  <div class="success-sheet">
+    <div class="success-check">✓</div>
+    <div class="success-title" id="success-title">訂單已提交！</div>
+    <div class="success-order-id" id="success-order-id"></div>
+    <div class="success-msg" id="success-msg"></div>
+    <button class="success-close-btn" onclick="closeSuccessModal()" id="success-close-btn">知道喇</button>
   </div>
 </div>
 
