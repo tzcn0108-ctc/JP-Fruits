@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JP Fruit 訂單 (手機版)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --plum:#6B4C8A;--plum-d:#4A3060;--plum-l:#EDE6F5;
+  --green:#2E7D32;--green-l:#E8F5E9;
+  --gold:#B8860B;--gold-l:#FFF8E1;
+  --blue:#2563EB;--blue-l:#EFF6FF;
+  --red:#C0392B;--red-l:#FDEDEC;
+  --muted:#7A7F99;--border:#E5E0EA;--bg:#F7F5FA;--text:#2D2438;
+  --font:'Noto Sans HK',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:24px;}
+
+/* ── Password lock (same pattern as main CMS) ── */
+#cms-lock{position:fixed;inset:0;background:#1A1522;z-index:9999;display:flex;align-items:center;justify-content:center;}
+.lock-box{background:#fff;border-radius:20px;padding:36px 28px;width:88%;max-width:340px;text-align:center;}
+.lock-logo{font-size:2.4rem;margin-bottom:8px;}
+.lock-title{font-size:1.1rem;font-weight:700;margin-bottom:4px;}
+.lock-sub{font-size:0.78rem;color:var(--muted);margin-bottom:22px;}
+.lock-input{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:1rem;margin-bottom:12px;outline:none;}
+.lock-input:focus{border-color:var(--plum);}
+.lock-btn{width:100%;padding:14px;background:var(--plum);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;}
+.lock-err{color:var(--red);font-size:0.8rem;margin-top:8px;display:none;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.shake{animation:shake 0.35s ease;}
+
+/* ── Header ── */
+header{position:sticky;top:0;z-index:50;background:var(--plum);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+header .title{font-size:1.05rem;font-weight:700;}
+header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:5px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#F5C842;}
+.sync-dot.ok{background:#4CD964;}
+
+/* ── Status filter tabs (horizontal scroll) ── */
+.tabs{display:flex;gap:8px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:40;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:8px 14px;border-radius:20px;background:var(--bg);color:var(--text);font-size:0.82rem;font-weight:600;white-space:nowrap;cursor:pointer;border:1.5px solid transparent;display:flex;align-items:center;gap:5px;}
+.tab.active{background:var(--plum);color:#fff;}
+.tab-count{background:rgba(0,0,0,0.12);border-radius:10px;padding:1px 6px;font-size:0.7rem;}
+.tab.active .tab-count{background:rgba(255,255,255,0.25);}
+
+/* ── Order list ── */
+.list{padding:12px;display:flex;flex-direction:column;gap:10px;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-emoji{font-size:2.4rem;margin-bottom:10px;}
+
+.order-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;border-left:4px solid var(--border);}
+.order-card.st-new{border-left-color:var(--red);}
+.order-card.st-pending{border-left-color:var(--gold);}
+.order-card.st-confirmed{border-left-color:var(--blue);}
+.order-card.st-delivering{border-left-color:var(--green);}
+.order-card.st-delivered{border-left-color:var(--muted);}
+.order-card.st-cancelled{border-left-color:var(--muted);opacity:0.6;}
+
+.oc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.oc-id{font-weight:700;font-size:0.95rem;color:var(--plum-d);}
+.oc-badge{font-size:0.68rem;font-weight:700;padding:3px 9px;border-radius:12px;}
+.oc-badge.st-new{background:var(--red-l);color:var(--red);}
+.oc-badge.st-pending{background:var(--gold-l);color:var(--gold);}
+.oc-badge.st-confirmed{background:var(--blue-l);color:var(--blue);}
+.oc-badge.st-delivering{background:var(--green-l);color:var(--green);}
+.oc-badge.st-delivered{background:#F0F0F0;color:var(--muted);}
+.oc-badge.st-cancelled{background:#F0F0F0;color:var(--muted);}
+
+.oc-name{font-size:0.9rem;font-weight:600;margin-bottom:2px;}
+.oc-meta{font-size:0.76rem;color:var(--muted);margin-bottom:6px;}
+.oc-bottom{display:flex;justify-content:space-between;align-items:center;}
+.oc-total{font-size:1rem;font-weight:700;color:var(--plum);}
+.oc-items-count{font-size:0.74rem;color:var(--muted);}
+
+/* ── Order detail modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:0 0 28px;animation:slideUp 0.25s ease;}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:10px auto;}
+.modal-header{padding:6px 20px 14px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border);}
+.modal-id{font-size:1.1rem;font-weight:700;color:var(--plum-d);}
+.modal-date{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+.modal-close{background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;color:var(--muted);cursor:pointer;}
+
+.modal-section{padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-section-title{font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;}
+.cust-row{font-size:0.88rem;margin-bottom:6px;display:flex;gap:8px;}
+.cust-row b{flex-shrink:0;color:var(--muted);font-weight:500;min-width:70px;}
+.cust-row a{color:var(--plum);text-decoration:none;}
+
+.item-row{padding:10px 0;border-bottom:1px dashed var(--border);}
+.item-row:last-child{border-bottom:none;}
+.item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.item-name{font-size:0.88rem;font-weight:600;flex:1;}
+.item-set-badge{font-size:0.64rem;background:var(--plum-l);color:var(--plum);padding:1px 7px;border-radius:8px;margin-left:5px;font-weight:700;}
+.item-qty{font-size:0.82rem;color:var(--muted);white-space:nowrap;}
+.item-price{font-size:0.88rem;font-weight:700;white-space:nowrap;}
+.item-summary{font-size:0.78rem;color:var(--muted);margin-top:4px;padding-left:2px;}
+
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;font-size:1.05rem;font-weight:700;}
+.total-row span:last-child{color:var(--plum);}
+
+/* ── Status action buttons ── */
+.status-actions{padding:16px 20px;}
+.status-actions-title{font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;}
+.status-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.status-btn{padding:12px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-size:0.85rem;font-weight:600;cursor:pointer;text-align:center;color:var(--text);}
+.status-btn.current{background:var(--plum);color:#fff;border-color:var(--plum);}
+.status-btn.cancel{color:var(--red);border-color:var(--red-l);grid-column:span 2;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2D2438;color:#fff;padding:10px 20px;border-radius:24px;font-size:0.85rem;z-index:300;opacity:0;transition:opacity 0.25s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- Password lock -->
+<div id="cms-lock">
+  <div class="lock-box">
+    <div class="lock-logo">📦</div>
+    <div class="lock-title">JP Fruit 訂單管理</div>
+    <div class="lock-sub">手機版 · 主要作瀏覽及更新訂單狀態</div>
+    <input type="password" class="lock-input" id="cms-pw-input" placeholder="Password"
+      onkeydown="if(event.key==='Enter')cmsUnlock()">
+    <button class="lock-btn" onclick="cmsUnlock()">進入</button>
+    <div class="lock-err" id="cms-pw-err">密碼錯誤，請重試</div>
+  </div>
+</div>
+
+<header>
+  <div class="title">📦 訂單管理</div>
+  <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">連接中...</span></div>
+</header>
+
+<div class="tabs" id="tabs"></div>
+<div class="list" id="order-list"></div>
+
+<!-- Order detail modal -->
+<div class="modal-overlay" id="order-modal" onclick="if(event.target===this)closeOrderModal()">
+  <div class="modal-sheet" id="order-modal-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBw9aUAk0SzTGTZnA7S5M-ehFBnRO0dcuo",
+    authDomain: "jp-fruits.firebaseapp.com",
+    databaseURL: "https://jp-fruits-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "jp-fruits",
+    storageBucket: "jp-fruits.firebasestorage.app",
+    messagingSenderId: "1029234694754",
+    appId: "1:1029234694754:web:fd7406ac027043219d0f3b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+  window._fbDb = db;
+  window._fbRef = ref;
+  window._fbGet = get;
+  window._fbUpdate = update;
+  window._firebaseReady = true;
+
+  // ── Real-time orders listener (same pattern as main CMS) ──
+  onValue(ref(db, 'orders'), (snapshot) => {
+    const data = snapshot.val();
+    const orders = data
+      ? Object.entries(data).map(([key, val]) => ({ ...val, firebaseId: key, id: val.id || key }))
+          .sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0))
+      : [];
+    window._allOrders = orders;
+    setSyncStatus(true);
+    renderTabs();
+    renderList();
+    // If the detail modal is open, refresh it in place so status stays live
+    if (window._openOrderId) {
+      const stillExists = orders.find(o => o.id === window._openOrderId);
+      if (stillExists) openOrderModal(window._openOrderId, true);
+    }
+  }, (err) => {
+    console.error('Orders listener error:', err);
+    setSyncStatus(false);
+  });
+
+  // ── Also fetch products catalogue (read-only) — needed for applyStockDelta on cancel ──
+  get(ref(db, 'catalogue/products')).then(snap => {
+    window._allProducts = snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
+  }).catch(() => { window._allProducts = []; });
+
+  function setSyncStatus(ok) {
+    const dot = document.getElementById('sync-dot');
+    const text = document.getElementById('sync-text');
+    if (dot) dot.classList.toggle('ok', ok);
+    if (text) text.textContent = ok ? '已連接' : '連接失敗';
+  }
+</script>
+
+<script>
+// ══ PASSWORD PROTECTION (same as main CMS, independent 30-day-style session) ══
+const CMS_PASSWORD = 'jpfruit2026';
+
+(function() {
+  const stored = sessionStorage.getItem('cms-mobile-auth');
+  if (stored === CMS_PASSWORD) {
+    const hide = () => { const el = document.getElementById('cms-lock'); if (el) el.style.display = 'none'; };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hide);
+    else hide();
+  }
+})();
+
+function cmsUnlock() {
+  const val = document.getElementById('cms-pw-input').value;
+  if (val === CMS_PASSWORD) {
+    sessionStorage.setItem('cms-mobile-auth', CMS_PASSWORD);
+    document.getElementById('cms-lock').style.display = 'none';
+    document.getElementById('cms-pw-err').style.display = 'none';
+  } else {
+    document.getElementById('cms-pw-err').style.display = 'block';
+    document.getElementById('cms-pw-input').value = '';
+    document.getElementById('cms-pw-input').focus();
+    const box = document.querySelector('.lock-box');
+    box.classList.remove('shake'); box.offsetHeight; box.classList.add('shake');
+  }
+}
+
+// ══ ORDER LIST / STATUS MANAGEMENT ══════════════════════════════════
+const STATUS_META = {
+  new:        { label:'新訂單',  emoji:'🆕' },
+  pending:    { label:'待確認',  emoji:'⏳' },
+  confirmed:  { label:'已確認',  emoji:'✅' },
+  delivering: { label:'送緊貨',  emoji:'🚚' },
+  delivered:  { label:'已完成',  emoji:'🎉' },
+  cancelled:  { label:'已取消',  emoji:'✕' },
+};
+const STATUS_ORDER = ['new','pending','confirmed','delivering','delivered','cancelled'];
+
+let activeFilter = 'active'; // 'active' = everything except delivered/cancelled
+
+function getOrders() { return window._allOrders || []; }
+
+function getFilteredOrders() {
+  const orders = getOrders();
+  if (activeFilter === 'all') return orders;
+  if (activeFilter === 'active') return orders.filter(o => !['delivered','cancelled'].includes(o.status));
+  return orders.filter(o => o.status === activeFilter);
+}
+
+function renderTabs() {
+  const orders = getOrders();
+  const counts = {};
+  STATUS_ORDER.forEach(s => counts[s] = orders.filter(o=>o.status===s).length);
+  const activeCount = orders.filter(o => !['delivered','cancelled'].includes(o.status)).length;
+
+  const tabs = [
+    { key:'active', label:'進行中', count:activeCount },
+    ...STATUS_ORDER.map(s => ({ key:s, label:STATUS_META[s].label, count:counts[s] })),
+    { key:'all', label:'全部', count:orders.length },
+  ];
+
+  document.getElementById('tabs').innerHTML = tabs.map(t => `
+    <div class="tab${activeFilter===t.key?' active':''}" onclick="setFilter('${t.key}')">
+      ${t.label}${t.count>0?`<span class="tab-count">${t.count}</span>`:''}
+    </div>
+  `).join('');
+}
+
+function setFilter(key) {
+  activeFilter = key;
+  renderTabs();
+  renderList();
+}
+
+function renderList() {
+  const orders = getFilteredOrders();
+  const listEl = document.getElementById('order-list');
+  if (!orders.length) {
+    listEl.innerHTML = `<div class="empty"><div class="empty-emoji">📭</div>暫時冇符合嘅訂單</div>`;
+    return;
+  }
+  listEl.innerHTML = orders.map(o => {
+    const meta = STATUS_META[o.status] || { label:o.status, emoji:'' };
+    const itemCount = (o.items||[]).reduce((s,i)=>s+(i.qty||1), 0);
+    const date = o.createdAt ? new Date(o.createdAt).toLocaleString('zh-HK', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="order-card st-${o.status}" onclick="openOrderModal('${o.id}')">
+      <div class="oc-top">
+        <span class="oc-id">${escapeHTML(o.id||'')}</span>
+        <span class="oc-badge st-${o.status}">${meta.emoji} ${meta.label}</span>
+      </div>
+      <div class="oc-name">${escapeHTML(o.name||'—')}</div>
+      <div class="oc-meta">${escapeHTML(o.postcode||'')} · ${date}</div>
+      <div class="oc-bottom">
+        <span class="oc-total">£${parseFloat(o.total||0).toFixed(2)}</span>
+        <span class="oc-items-count">${itemCount} 件產品</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function openOrderModal(id, silentRefresh) {
+  const o = getOrders().find(x => x.id === id);
+  if (!o) return;
+  window._openOrderId = id;
+
+  const meta = STATUS_META[o.status] || { label:o.status, emoji:'' };
+  const date = o.createdAt ? new Date(o.createdAt).toLocaleString('zh-HK') : '';
+
+  const itemsHtml = (o.items||[]).map(item => `
+    <div class="item-row">
+      <div class="item-top">
+        <span class="item-name">${escapeHTML(item.name||'—')}${item.type==='set'?'<span class="item-set-badge">套餐</span>':''}</span>
+        <span class="item-qty">x${item.qty||1}</span>
+        <span class="item-price">£${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
+      </div>
+      ${item.type==='set'&&item.summary?`<div class="item-summary">↳ ${escapeHTML(item.summary)}</div>`:''}
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:0.85rem;">冇產品資料</div>';
+
+  const statusBtns = STATUS_ORDER.filter(s=>s!=='cancelled').map(s => {
+    const m = STATUS_META[s];
+    return `<button class="status-btn${o.status===s?' current':''}" onclick="changeStatus('${o.id}','${s}')">${m.emoji} ${m.label}</button>`;
+  }).join('') + `<button class="status-btn cancel" onclick="changeStatus('${o.id}','cancelled')">✕ 取消訂單</button>`;
+
+  document.getElementById('order-modal-content').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div>
+        <div class="modal-id">${escapeHTML(o.id||'')}</div>
+        <div class="modal-date">${date}</div>
+      </div>
+      <button class="modal-close" onclick="closeOrderModal()">✕</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">客人資料</div>
+      <div class="cust-row"><b>姓名</b>${escapeHTML(o.name||'—')}</div>
+      <div class="cust-row"><b>電話</b><a href="tel:${escapeHTML(o.phone||'')}">${escapeHTML(o.phone||'—')}</a></div>
+      <div class="cust-row"><b>地址</b>${escapeHTML(o.address||'')}, ${escapeHTML(o.postcode||'')}</div>
+      ${o.notes?`<div class="cust-row"><b>備註</b>${escapeHTML(o.notes)}</div>`:''}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">訂購產品</div>
+      ${itemsHtml}
+    </div>
+    <div class="total-row"><span>合計</span><span>£${parseFloat(o.total||0).toFixed(2)}</span></div>
+    <div class="status-actions">
+      <div class="status-actions-title">更改訂單狀態</div>
+      <div class="status-btns">${statusBtns}</div>
+    </div>
+  `;
+
+  if (!silentRefresh) document.getElementById('order-modal').classList.add('open');
+}
+
+function closeOrderModal() {
+  document.getElementById('order-modal').classList.remove('open');
+  window._openOrderId = null;
+}
+
+// Restores stock for an order's items when it gets cancelled — mirrors
+// applyStockDelta() in the main CMS, kept read/write scoped to just this
+// order's items so the mobile page doesn't need the full product catalogue
+// management logic.
+async function restoreStockForOrder(order) {
+  if (!order || !Array.isArray(order.items) || !window._fbDb) return;
+  const trackedItems = order.items.filter(i => i.type !== 'set' && i.productId);
+  if (!trackedItems.length) return;
+  try {
+    const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue/products'));
+    if (!snap.exists()) return;
+    const prods = snap.val();
+    const prodList = Array.isArray(prods) ? prods : Object.values(prods);
+    let changed = false;
+    trackedItems.forEach(item => {
+      const p = prodList.find(x => x && x.id === item.productId);
+      if (!p || p.stock === -1) return;
+      p.stock = Math.max(0, p.stock + (item.qty||1));
+      changed = true;
+    });
+    if (changed) {
+      await window._fbUpdate(window._fbRef(window._fbDb, 'catalogue'), { products: prodList });
+    }
+  } catch (e) {
+    console.warn('Stock restore failed:', e);
+  }
+}
+
+async function changeStatus(id, newStatus) {
+  const o = getOrders().find(x => x.id === id);
+  if (!o || !o.firebaseId) return;
+
+  if (newStatus === 'cancelled') {
+    if (!confirm('確定取消呢張訂單？庫存會自動回復。')) return;
+    if (o.status !== 'cancelled') await restoreStockForOrder(o);
+  }
+
+  try {
+    await window._fbUpdate(
+      window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
+      { status: newStatus, updatedAt: new Date().toISOString() }
+    );
+    showToast(`✓ 已更新為「${STATUS_META[newStatus]?.label||newStatus}」`);
+    // onValue listener will refresh the list + modal automatically
+  } catch (e) {
+    showToast('❌ 更新失敗，請檢查網絡');
+    console.error(e);
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Initial render (in case onValue fires before these functions are defined,
+// this ensures something sensible is shown immediately)
+renderTabs();
+renderList();
+</script>
+</body>
+</html>
