@@ -3936,8 +3936,14 @@ function renderRTab(tab, orders) {
 }
 
 
+// Global so the expand/collapse onclick handlers (rendered as HTML strings)
+// can reach the per-category item breakdown without re-computing it.
+window._catReportItemsData = {};
+
 function renderCategoriesReport(el, orders) {
-  // Aggregate by category
+  // Aggregate by category, AND by individual item name within each category
+  // (so a category row can be expanded to show exactly what sold — e.g.
+  // 港式點心 → 燒賣 x40, 粉果 x22, 奶皇包 x15).
   const catMap = {};
   orders.forEach(o => {
     if (!Array.isArray(o.items)) return;
@@ -3947,7 +3953,8 @@ function renderCategoriesReport(el, orders) {
         // Set meals bundle several products together and aren't tied to a
         // single category — shown as their own row rather than lumped into
         // "未分類 Uncategorised", which would otherwise wrongly suggest a
-        // data problem rather than "this is a set".
+        // data problem rather than "this is a set". Within this row, each
+        // DIFFERENT set (by name) is its own breakdown line.
         catName = '📦 套餐 Set Meals';
       } else {
         // Find product to get category (try productId first, then name match)
@@ -3957,23 +3964,37 @@ function renderCategoriesReport(el, orders) {
         const cat = catId ? state.categories.find(x => x.id === catId) : null;
         catName = cat ? (cat.zh || cat.name) : (p ? '其他' : '未分類');
       }
-      if (!catMap[catName]) catMap[catName] = { qty: 0, revenue: 0, orders: new Set(), products: new Set() };
-      catMap[catName].qty += parseInt(item.qty) || 1;
-      catMap[catName].revenue += parseFloat(item.price || 0) * (parseInt(item.qty) || 1);
+      if (!catMap[catName]) catMap[catName] = { qty: 0, revenue: 0, orders: new Set(), items: {} };
+      const qty = parseInt(item.qty) || 1;
+      const rev = parseFloat(item.price || 0) * qty;
+      catMap[catName].qty += qty;
+      catMap[catName].revenue += rev;
       catMap[catName].orders.add(o.id);
-      catMap[catName].products.add(item.name || '');
+      const itemName = item.name || '未命名';
+      if (!catMap[catName].items[itemName]) catMap[catName].items[itemName] = { qty: 0, revenue: 0 };
+      catMap[catName].items[itemName].qty += qty;
+      catMap[catName].items[itemName].revenue += rev;
     });
   });
 
   const sorted = Object.entries(catMap)
-    .map(([cat, d]) => ({ cat, qty: d.qty, revenue: d.revenue, orders: d.orders.size, prods: d.products.size }))
+    .map(([cat, d]) => ({
+      cat, qty: d.qty, revenue: d.revenue, orders: d.orders.size,
+      prods: Object.keys(d.items).length,
+      itemsBreakdown: Object.entries(d.items)
+        .map(([name, v]) => ({ name, qty: v.qty, revenue: v.revenue }))
+        .sort((a, b) => b.qty - a.qty),
+    }))
     .sort((a, b) => b.revenue - a.revenue);
+
+  window._catReportItemsData = {};
+  sorted.forEach((r, i) => { window._catReportItemsData['cat-row-'+i] = r.itemsBreakdown; });
 
   const totalRev = sorted.reduce((s, r) => s + r.revenue, 0);
 
   el.innerHTML = `
     <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-size:0.82rem;color:var(--muted);">共 ${sorted.length} 個分類 · ${orders.length} 個訂單</div>
+      <div style="font-size:0.82rem;color:var(--muted);">共 ${sorted.length} 個分類 · ${orders.length} 個訂單 · 撳分類名稱可以睇返個別產品明細</div>
     </div>
     <table class="data-table">
       <thead>
@@ -3987,8 +4008,8 @@ function renderCategoriesReport(el, orders) {
         </tr>
       </thead>
       <tbody>
-        ${sorted.map(r => `<tr>
-          <td><div style="font-weight:600;">${r.cat}</div></td>
+        ${sorted.map((r, i) => `<tr class="cat-report-row" style="cursor:pointer;" onclick="toggleCatBreakdown('cat-row-${i}')">
+          <td><div style="font-weight:600;">▸ <span id="cat-row-${i}-arrow">▸</span> ${r.cat}</div></td>
           <td style="color:var(--muted);font-size:0.78rem;">${r.prods} 款</td>
           <td style="text-align:right">${r.orders}</td>
           <td style="text-align:right;font-weight:500;">${r.qty}</td>
@@ -3998,6 +4019,19 @@ function renderCategoriesReport(el, orders) {
               <div style="background:var(--green);height:6px;border-radius:3px;width:${totalRev>0?Math.round(r.revenue/totalRev*60):0}px;opacity:0.7;"></div>
               ${totalRev > 0 ? (r.revenue/totalRev*100).toFixed(1) : 0}%
             </div>
+          </td>
+        </tr>
+        <tr id="cat-row-${i}-breakdown" style="display:none;background:var(--surface2);">
+          <td colspan="6" style="padding:0;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                ${r.itemsBreakdown.map(it => `<tr>
+                  <td style="padding:7px 20px 7px 44px;font-size:0.82rem;color:var(--text);width:40%;">${it.name}</td>
+                  <td style="padding:7px 12px;font-size:0.82rem;text-align:right;color:var(--muted);">x${it.qty}</td>
+                  <td style="padding:7px 20px 7px 12px;font-size:0.82rem;text-align:right;color:var(--green);font-weight:600;">£${it.revenue.toFixed(2)}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
           </td>
         </tr>`).join('')}
         <tr style="font-weight:700;border-top:2px solid var(--border);background:var(--surface2);">
@@ -4010,6 +4044,15 @@ function renderCategoriesReport(el, orders) {
         </tr>
       </tbody>
     </table>`;
+}
+
+function toggleCatBreakdown(rowId) {
+  const row = document.getElementById(rowId+'-breakdown');
+  const arrow = document.getElementById(rowId+'-arrow');
+  if (!row) return;
+  const isOpen = row.style.display !== 'none';
+  row.style.display = isOpen ? 'none' : 'table-row';
+  if (arrow) arrow.textContent = isOpen ? '▸' : '▾';
 }
 
 

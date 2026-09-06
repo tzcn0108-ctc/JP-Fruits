@@ -144,6 +144,16 @@ body{padding-bottom:74px;}
 .cat-bar-track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:6px;}
 .cat-bar-fill{height:100%;background:var(--plum);border-radius:3px;}
 .cat-row-meta{display:flex;justify-content:space-between;font-size:0.74rem;color:var(--muted);}
+
+.cat-row{cursor:pointer;}
+.cat-row-arrow{display:inline-block;transition:transform 0.15s;margin-right:4px;font-size:0.7rem;color:var(--muted);}
+.cat-row-arrow.open{transform:rotate(90deg);}
+.cat-item-breakdown{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);display:none;}
+.cat-item-breakdown.open{display:block;}
+.cat-item-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:0.8rem;}
+.cat-item-row .ci-name{color:var(--text);flex:1;}
+.cat-item-row .ci-qty{color:var(--muted);margin:0 10px;white-space:nowrap;}
+.cat-item-row .ci-rev{color:var(--green,#2E7D32);font-weight:600;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -548,12 +558,13 @@ function renderReports() {
   document.getElementById('rpt-total').textContent = `£${totalRev.toFixed(2)}`;
   document.getElementById('rpt-orders').textContent = orders.length;
 
-  // ── Group revenue by category. Regular products are attributed to their
-  // own catalogue category; set meals are bucketed into a single separate
-  // "套餐 Set Meals" row rather than trying to split their price across the
-  // categories of whatever products happen to be inside them. ──
+  // ── Group revenue by category, AND by individual item within each
+  // category (so a category row can be expanded to show exactly what
+  // sold). Regular products are attributed to their own catalogue
+  // category; set meals are bucketed into a single separate "套餐 Set
+  // Meals" row, broken down by individual set name inside it. ──
   const products = window._allProducts || [];
-  const catMap = {}; // key -> {label, revenue, qty, orderIds:Set}
+  const catMap = {}; // key -> {label, revenue, qty, orderIds:Set, items:{name:{qty,revenue}}}
 
   orders.forEach(o => {
     (o.items||[]).forEach(item => {
@@ -565,14 +576,27 @@ function renderReports() {
         key = p ? (p.cat || '__uncat__') : '__uncat__';
         label = p ? catNameOf(p.cat) : '未分類 Uncategorised';
       }
-      if (!catMap[key]) catMap[key] = { label, revenue: 0, qty: 0, orderIds: new Set() };
-      catMap[key].revenue += (item.price||0) * (item.qty||1);
-      catMap[key].qty += (item.qty||1);
+      if (!catMap[key]) catMap[key] = { label, revenue: 0, qty: 0, orderIds: new Set(), items: {} };
+      const qty = item.qty||1;
+      const rev = (item.price||0) * qty;
+      catMap[key].revenue += rev;
+      catMap[key].qty += qty;
       catMap[key].orderIds.add(o.id);
+      const itemName = item.name || '未命名';
+      if (!catMap[key].items[itemName]) catMap[key].items[itemName] = { qty: 0, revenue: 0 };
+      catMap[key].items[itemName].qty += qty;
+      catMap[key].items[itemName].revenue += rev;
     });
   });
 
-  const rows = Object.values(catMap).sort((a,b) => b.revenue - a.revenue);
+  const rows = Object.values(catMap)
+    .map(r => ({
+      ...r,
+      itemsBreakdown: Object.entries(r.items)
+        .map(([name, v]) => ({ name, qty: v.qty, revenue: v.revenue }))
+        .sort((a,b) => b.qty - a.qty),
+    }))
+    .sort((a,b) => b.revenue - a.revenue);
   const maxRev = rows.length ? rows[0].revenue : 1;
 
   const listEl = document.getElementById('cat-report-list');
@@ -580,18 +604,34 @@ function renderReports() {
     listEl.innerHTML = `<div class="empty"><div class="empty-emoji">📊</div>呢個星期暫時冇銷售資料</div>`;
     return;
   }
-  listEl.innerHTML = rows.map(r => {
+  listEl.innerHTML = rows.map((r, i) => {
     const isSet = r.label.includes('套餐');
     const pct = maxRev ? (r.revenue / maxRev * 100).toFixed(0) : 0;
-    return `<div class="cat-row">
+    const breakdownHtml = r.itemsBreakdown.map(it => `
+      <div class="cat-item-row">
+        <span class="ci-name">${escapeHTML(it.name)}</span>
+        <span class="ci-qty">x${it.qty}</span>
+        <span class="ci-rev">£${it.revenue.toFixed(2)}</span>
+      </div>`).join('');
+    return `<div class="cat-row" onclick="toggleCatRow(${i})">
       <div class="cat-row-top">
-        <span class="cat-name${isSet?' is-set':''}">${escapeHTML(r.label)}</span>
+        <span class="cat-name${isSet?' is-set':''}"><span class="cat-row-arrow" id="cat-arrow-${i}">▸</span>${escapeHTML(r.label)}</span>
         <span class="cat-revenue">£${r.revenue.toFixed(2)}</span>
       </div>
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;${isSet?'background:var(--gold);':''}"></div></div>
       <div class="cat-row-meta"><span>${r.qty} 件</span><span>${r.orderIds.size} 張訂單</span></div>
+      <div class="cat-item-breakdown" id="cat-breakdown-${i}">${breakdownHtml}</div>
     </div>`;
   }).join('');
+}
+
+function toggleCatRow(i) {
+  const breakdown = document.getElementById('cat-breakdown-'+i);
+  const arrow = document.getElementById('cat-arrow-'+i);
+  if (!breakdown) return;
+  const isOpen = breakdown.classList.contains('open');
+  breakdown.classList.toggle('open', !isOpen);
+  if (arrow) arrow.classList.toggle('open', !isOpen);
 }
 
 // Initial render (in case onValue fires before these functions are defined,
