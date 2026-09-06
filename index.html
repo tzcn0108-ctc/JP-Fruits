@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JP Fruit — 南倫敦亞洲美食專門</title>
+<title>JP Fruit — 西南倫敦亞洲美食專門</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Noto+Sans+HK:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -133,7 +133,8 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 /* ── PRODUCT CARD ── */
 /* .product-card base: see full definition below */
 .product-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-md);border-color:var(--peach-m);}
-.product-card.oos{opacity:0.55;}
+.product-card.oos{position:relative;}
+.pc-oos-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);z-index:1;pointer-events:none;border-radius:inherit;}
 .product-card.oos:hover{transform:none;box-shadow:none;}
 
 /* Thumb */
@@ -146,7 +147,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .p-badge-sale{background:linear-gradient(135deg,#E74C3C,#C0392B);color:white;box-shadow:0 3px 10px rgba(192,57,43,0.55);animation:saleBadgePulse 1.8s ease-in-out infinite;}
 @keyframes saleBadgePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
 .p-badge-new{background:var(--leaf);color:white;box-shadow:0 2px 6px rgba(61,107,53,0.4);}
-.p-badge-oos{background:rgba(0,0,0,0.45);color:white;backdrop-filter:blur(4px);}
+.p-badge-oos{background:rgba(0,0,0,0.45);color:#FF4D4D;backdrop-filter:blur(4px);}
 .p-badge-hot{background:linear-gradient(135deg,#FF6B35,#F7C59F);color:white;box-shadow:0 2px 6px rgba(255,107,53,0.4);}
 
 /* Info */
@@ -523,7 +524,7 @@ body { background: var(--cream, #FFFDF9); }
 /* OOS badge - muted */
 .p-badge-oos {
   background: var(--muted, #9A8880) !important;
-  color: white !important;
+  color: #FF4D4D !important;
 }
 
 /* ── 4. TYPOGRAPHY HIERARCHY ── */
@@ -1610,7 +1611,7 @@ const SEED_CATEGORIES = [
 
 async function loadSeedData() {
   // Fallback: load seed data directly into the order form
-  products = SEED_PRODUCTS.filter(p => p.active !== false && p.price > 0 && p.stock !== 0);
+  products = SEED_PRODUCTS.filter(p => p.active !== false && p.price > 0); // sold-out (stock 0) still shows, badged as sold out — only active:false hides a product entirely
   categories = SEED_CATEGORIES;
   sets = [];
   buildCatNav();
@@ -1692,7 +1693,7 @@ async function loadProducts() {
   try {
     const data = await getDB();
     if (data) {
-      products = (data.products||[]).filter(p=>p.active!==false && (p.priceByWeight || p.price>0) && p.stock!==0);
+      products = (data.products||[]).filter(p=>p.active!==false && (p.priceByWeight || p.price>0)); // sold-out (stock 0) still shows, badged as sold out — only active:false hides a product entirely
       sets = data.sets||[];
       categories = data.categories||[];
       promos = data.promos||[];
@@ -2004,8 +2005,9 @@ function pCard(p){
     ? `<div class="pc-img-wrap" onclick="openPD('${p.id}')" style="cursor:pointer;"><img src="${allImgs[0]}" alt="${pName}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"></div>`
     : `<div class="pc-img-wrap" onclick="openPD('${p.id}')" style="cursor:pointer;"><div class="pc-emoji">${EMOJI[p.cat]||''}</div></div>`;
 
-  return`<div class="product-card" id="card-${p.id}" onclick="if(!event.target.closest('button')){}">
+  return`<div class="product-card${oos?' oos':''}" id="card-${p.id}" onclick="if(!event.target.closest('button')){}">
     ${badge}
+    ${oos?'<div class="pc-oos-overlay"></div>':''}
     ${imgSection}
     <div class="pc-body">
       <div class="pc-name">${pName}</div>
