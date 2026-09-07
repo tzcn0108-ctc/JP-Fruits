@@ -2105,16 +2105,24 @@ function toggleSetItem(sid,gi,itemId){
 function addSetToCart(sid){
   const s=sets.find(x=>x.id===sid);if(!s||!isSetReady(sid,s))return;
   const isZh = lang==='zh';
+  // Structured breakdown (id/name/qty per chosen item) — kept alongside the
+  // human-readable `summary` string. Reports/exports that need to COUNT
+  // set contents across many orders (e.g. "how many cocktail buns did we
+  // sell this week, from sets and direct orders combined") should use this
+  // rather than parsing the display string.
+  const selectionsArr = [];
   const summary=(s.groups||[]).map((g,gi)=>{
     const sel=setSelections[sid][gi]||{};
     return g.items.filter(i=>sel[i.id]).map(i=>{
       const p=products.find(x=>x.id===i.id);
       const liveName=p?(isZh?(p.nameZh||p.zh||p.name):(p.nameEn||p.name)):(i.zh||i.name);
-      return liveName+(sel[i.id]>1?` x${sel[i.id]}`:'');
+      const qty = sel[i.id];
+      selectionsArr.push({ id: i.id, name: liveName, qty });
+      return liveName+(qty>1?` x${qty}`:'');
     }).join('、');
   }).join(' + ');
   const cartKey='set_'+sid+'_'+Date.now()+'_'+Math.floor(Math.random()*100000);
-  cart[cartKey]={isSet:true,setId:sid,name:s.name,nameZh:s.nameZh||s.name,nameEn:s.nameEn||s.name,price:s.price,summary,qty:1};
+  cart[cartKey]={isSet:true,setId:sid,name:s.name,nameZh:s.nameZh||s.name,nameEn:s.nameEn||s.name,price:s.price,summary,selections:selectionsArr,qty:1};
   setSelections[sid]={};
   const el=document.getElementById(`setcard-${sid}`);if(el)el.outerHTML=renderSetCard(s);
   updateCart();showToast(lang==='zh'?'套餐已加入購物車 ✓':'Set meal added ✓');
@@ -2820,7 +2828,7 @@ Press OK if correct and we'll be in touch.`;
     address: addr,
     postcode: pc.toUpperCase(),
     items: Object.entries(cart).map(([id,val])=>{
-      if(val&&val.isSet) return {type:'set', name:val.nameZh||val.name, price:val.price, qty:val.qty||1, summary:val.summary||''};
+      if(val&&val.isSet) return {type:'set', name:val.nameZh||val.name, price:val.price, qty:val.qty||1, summary:val.summary||'', selections:val.selections||[]};
       const p=products.find(x=>x.id===id);
       if(!p) return null;
       return {type:'product', productId:id, name:p.nameZh||p.zh||p.name, price:p.salePrice||p.price, qty:val};

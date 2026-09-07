@@ -4298,6 +4298,32 @@ function exportXeroCSV() {
   showToast(`✓ Xero CSV 已匯出（${orders.length} 張已付款訂單）`);
 }
 
+// Parses the legacy plain-text set summary ("雞尾包 x2、麻糬肉鬆包、菠蘿包 x3")
+// into {name, qty} pairs. Only used as a fallback for orders saved before
+// selections[] was tracked as structured data — new orders use selections
+// directly, which is exact rather than parsed from a display string.
+function parseSetSummaryText(summaryStr) {
+  if (!summaryStr) return [];
+  return summaryStr.split(/\s*\+\s*/).flatMap(group =>
+    group.split('、').map(piece => {
+      const m = piece.trim().match(/^(.*?)(?:\s*x(\d+))?$/);
+      const name = (m && m[1] ? m[1] : piece).trim();
+      const qty = (m && m[2]) ? parseInt(m[2], 10) : 1;
+      return name ? { name, qty } : null;
+    }).filter(Boolean)
+  );
+}
+
+// Returns [{name, qty}] for everything inside a set order-item, with qty
+// already multiplied by how many of that set config the customer ordered.
+function getSetComponents(item) {
+  const setQty = item.qty || 1;
+  if (Array.isArray(item.selections) && item.selections.length) {
+    return item.selections.map(s => ({ name: s.name, qty: (s.qty||1) * setQty }));
+  }
+  return parseSetSummaryText(item.summary).map(s => ({ name: s.name, qty: s.qty * setQty }));
+}
+
 function exportWeeklyCSV() {
   // Sync Firebase orders first
   if (window._firebaseOrders && window._firebaseOrders.length > 0) {
@@ -4319,33 +4345,56 @@ function exportWeeklyCSV() {
     return da.localeCompare(db);
   });
 
-  // ── Collect ALL unique products across orders ──
+  // ── Collect unique product/component rows, AND unique set names ──
+  // Set contents are broken out into their own rows (merged with any
+  // standalone product that has the exact same name), so a total across
+  // ALL orders is available directly for ordering/procurement — instead of
+  // being buried as text inside one crammed set-order cell.
   const allProds = [];
   const prodSet = new Set();
+  const setNames = [];
+  const setNameSet = new Set();
   sorted.forEach(o => {
-    if (Array.isArray(o.items)) {
-      o.items.forEach(i => {
-        if (i.name && !prodSet.has(i.name)) {
-          prodSet.add(i.name);
-          allProds.push(i.name);
-        }
-      });
-    }
+    if (!Array.isArray(o.items)) return;
+    o.items.forEach(i => {
+      if (i.type === 'set') {
+        if (i.name && !setNameSet.has(i.name)) { setNameSet.add(i.name); setNames.push(i.name); }
+        getSetComponents(i).forEach(c => {
+          if (c.name && !prodSet.has(c.name)) { prodSet.add(c.name); allProds.push(c.name); }
+        });
+      } else if (i.name && !prodSet.has(i.name)) {
+        prodSet.add(i.name); allProds.push(i.name);
+      }
+    });
   });
 
-  // ── Build order → product map ──
-  // For set items, keep the qty AND the summary (what the customer actually
-  // chose inside the set) together, so the matrix cell can show both —
-  // otherwise a "麵包套餐" row tells you someone bought it, but not which
-  // breads they picked.
-  const orderMap = {};
+  // ── Build order → product map (component qty accumulated per order,
+  // merging set contents with any direct-order line of the same name) ──
+  const orderMap = {};     // orderId -> { productOrComponentName: qty }
+  const setOrderMap = {};  // orderId -> { setName: qty of that set ordered }
   sorted.forEach(o => {
     orderMap[o.id] = {};
-    if (Array.isArray(o.items)) {
-      o.items.forEach(i => {
-        if (i.name) orderMap[o.id][i.name] = { qty: i.qty || 1, summary: (i.type==='set' && i.summary) || '' };
-      });
-    }
+    setOrderMap[o.id] = {};
+    if (!Array.isArray(o.items)) return;
+    o.items.forEach(i => {
+      if (i.type === 'set') {
+        setOrderMap[o.id][i.name] = (setOrderMap[o.id][i.name]||0) + (i.qty||1);
+        getSetComponents(i).forEach(c => {
+          if (!c.name) return;
+          orderMap[o.id][c.name] = (orderMap[o.id][c.name]||0) + c.qty;
+        });
+      } else if (i.name) {
+        orderMap[o.id][i.name] = (orderMap[o.id][i.name]||0) + (i.qty||1);
+      }
+    });
+  });
+
+  // Sort products by total quantity sold (highest first) — makes it easy
+  // to scan "what do we need most of" at a glance when ordering supplies.
+  allProds.sort((a, b) => {
+    const totalA = sorted.reduce((s,o) => s + (orderMap[o.id][a]||0), 0);
+    const totalB = sorted.reduce((s,o) => s + (orderMap[o.id][b]||0), 0);
+    return totalB - totalA;
   });
 
   const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
@@ -4359,18 +4408,31 @@ function exportWeeklyCSV() {
   rows.push(['地址 Address',       '', ...sorted.map(o => o.address || '')]);
   rows.push(['']); // blank separator
 
-  // ── PRODUCT ROWS (one per product, qty in each order column) ──
+  // ── SET ORDERS (how many of each set config was ordered — for revenue/
+  // order-count tracking; the actual bread/item counts you need to order
+  // are in the product rows below, already broken out and totalled) ──
+  if (setNames.length) {
+    rows.push(['── 套餐訂購 Set Meals Ordered ──', '', ...sorted.map(()=>'')]);
+    setNames.forEach(setName => {
+      const total = sorted.reduce((s,o) => s + (setOrderMap[o.id][setName]||0), 0);
+      rows.push([
+        '📦 ' + setName, total || '',
+        ...sorted.map(o => setOrderMap[o.id][setName] || '')
+      ]);
+    });
+    rows.push(['']); // blank separator
+  }
+
+  // ── PRODUCT ROWS (one per product/component, qty in each order column,
+  // sorted by total descending — includes set contents, merged with any
+  // standalone product of the same name) ──
+  rows.push(['── 產品銷售 Product Sales（包括套餐內容 incl. set contents）──', '', ...sorted.map(()=>'')]);
   allProds.forEach(prod => {
-    const total = sorted.reduce((s, o) => s + (parseInt(orderMap[o.id][prod]?.qty) || 0), 0);
+    const total = sorted.reduce((s, o) => s + (parseInt(orderMap[o.id][prod]) || 0), 0);
     rows.push([
       prod,
-      total || '',  // total qty column
-      ...sorted.map(o => {
-        const cell = orderMap[o.id][prod];
-        if (!cell) return '';
-        // Sets: show quantity + what was chosen, e.g. "1（即食黃咖喱、即食帕能咖喱）"
-        return cell.summary ? `${cell.qty}（${cell.summary}）` : cell.qty;
-      })
+      total || '',
+      ...sorted.map(o => orderMap[o.id][prod] || '')
     ]);
   });
 
