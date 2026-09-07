@@ -611,6 +611,31 @@ function catNameOf(catId) {
   return (c && (c.zh || c.name)) || catId || '未分類';
 }
 
+// Parses the legacy plain-text set summary ("雞尾包 x2、麻糬肉鬆包、菠蘿包 x3")
+// into {name, qty} pairs. Only used as a fallback for orders saved before
+// selections[] was tracked as structured data.
+function parseSetSummaryText(summaryStr) {
+  if (!summaryStr) return [];
+  return summaryStr.split(/\s*\+\s*/).flatMap(group =>
+    group.split('、').map(piece => {
+      const m = piece.trim().match(/^(.*?)(?:\s*x(\d+))?$/);
+      const name = (m && m[1] ? m[1] : piece).trim();
+      const qty = (m && m[2]) ? parseInt(m[2], 10) : 1;
+      return name ? { name, qty } : null;
+    }).filter(Boolean)
+  );
+}
+
+// Returns [{name, qty}] for everything inside a set order-item, with qty
+// already multiplied by how many of that set config the customer ordered.
+function getSetComponents(item) {
+  const setQty = item.qty || 1;
+  if (Array.isArray(item.selections) && item.selections.length) {
+    return item.selections.map(s => ({ name: s.name, qty: (s.qty||1) * setQty }));
+  }
+  return parseSetSummaryText(item.summary).map(s => ({ name: s.name, qty: s.qty * setQty }));
+}
+
 function renderReports() {
   const { start, end } = getWeekRange(weekOffset);
   document.getElementById('week-label').textContent = `${fmtShortDate(start)} – ${fmtShortDate(end)}`;
@@ -649,12 +674,24 @@ function renderReports() {
       const qty = item.qty||1;
       const rev = (item.price||0) * qty;
       catMap[key].revenue += rev;
-      catMap[key].qty += qty;
       catMap[key].orderIds.add(o.id);
-      const itemName = item.name || '未命名';
-      if (!catMap[key].items[itemName]) catMap[key].items[itemName] = { qty: 0, revenue: 0 };
-      catMap[key].items[itemName].qty += qty;
-      catMap[key].items[itemName].revenue += rev;
+      if (item.type === 'set') {
+        // Break the set open into its actual contents (e.g. which breads
+        // were chosen) rather than just counting "sets sold" — this is
+        // what's actually useful for ordering supplies.
+        getSetComponents(item).forEach(c => {
+          if (!c.name) return;
+          catMap[key].qty += c.qty;
+          if (!catMap[key].items[c.name]) catMap[key].items[c.name] = { qty: 0, revenue: 0 };
+          catMap[key].items[c.name].qty += c.qty;
+        });
+      } else {
+        catMap[key].qty += qty;
+        const itemName = item.name || '未命名';
+        if (!catMap[key].items[itemName]) catMap[key].items[itemName] = { qty: 0, revenue: 0 };
+        catMap[key].items[itemName].qty += qty;
+        catMap[key].items[itemName].revenue += rev;
+      }
     });
   });
 
@@ -680,7 +717,7 @@ function renderReports() {
       <div class="cat-item-row">
         <span class="ci-name">${escapeHTML(it.name)}</span>
         <span class="ci-qty">x${it.qty}</span>
-        <span class="ci-rev">£${it.revenue.toFixed(2)}</span>
+        ${isSet ? '' : `<span class="ci-rev">£${it.revenue.toFixed(2)}</span>`}
       </div>`).join('');
     return `<div class="cat-row" onclick="toggleCatRow(${i})">
       <div class="cat-row-top">
