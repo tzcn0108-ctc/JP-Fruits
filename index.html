@@ -2653,10 +2653,24 @@ async function sendWA(sfx){
     }, 5000); // re-enable after 5s
   }
 
+  // ── Open WhatsApp window NOW (before any awaits) ──────────────────────
+  // Browsers (especially Safari iOS / Chrome Android) block window.open()
+  // unless it is called synchronously within the same user-gesture event
+  // frame. Every `await` below breaks that frame, so a window.open() call
+  // placed AFTER the awaits gets silently blocked — the customer sees the
+  // button stuck on "處理中..." with nothing happening and re-submits.
+  //
+  // Strategy: open a blank window immediately while we're still in the
+  // gesture frame, store the reference, and later (Step 6) navigate it to
+  // the real WhatsApp URL once the message text is fully built. If anything
+  // fails before Step 6 (validation, stock shortfall) we close the window.
+  window._waWindow = window.open('', '_blank');
+
   // ── Step 1: Validate cart ──
   if(getCount()===0){
     if(waBtn){ waBtn.disabled=false; waBtn.dataset.submitting='false'; }
     showToast(lang==='zh'?'請先加產品入購物車':'Please add items to your cart first');
+    if(window._waWindow && !window._waWindow.closed){ window._waWindow.close(); window._waWindow=null; }
     return;
   }
 
@@ -2717,6 +2731,7 @@ async function sendWA(sfx){
       b.classList.add('btn-shake');
       setTimeout(()=>b.classList.remove('btn-shake'),400);
     });
+    if(window._waWindow && !window._waWindow.closed){ window._waWindow.close(); window._waWindow=null; }
     return;
   }
   // Postcode coverage check
@@ -2728,7 +2743,7 @@ async function sendWA(sfx){
 如地址正確，按「確認」繼續，我們會聯絡您。`
       : `⚠️ ${pc} may be outside our delivery zone (SM/KT/CR/SW South London).
 Press OK if correct and we'll be in touch.`;
-    if(!confirm(_warn)) return;
+    if(!confirm(_warn)){ if(window._waWindow && !window._waWindow.closed){ window._waWindow.close(); window._waWindow=null; } return; }
   }
 
   // ── Step 2.5: Final live stock check — re-fetch fresh stock from Firebase
@@ -2781,6 +2796,7 @@ Press OK if correct and we'll be in touch.`;
           alert(summary);
           renderProducts();
           updateCart();
+          if(window._waWindow && !window._waWindow.closed) { window._waWindow.close(); window._waWindow=null; }
           return;
         }
       }
@@ -2903,20 +2919,38 @@ Press OK if correct and we'll be in touch.`;
   }catch(e){}
 
   // ── Step 6: Open WhatsApp ──
-  // Disable WA buttons for 8s to prevent duplicate orders on double-tap
+  // IMPORTANT: window.open() must be called BEFORE any async operations
+  // to avoid being blocked by the browser's popup blocker. Modern browsers
+  // (especially Safari on iOS and Chrome on Android) only allow window.open()
+  // when triggered directly by a user gesture. By the time all the awaits
+  // above finish, the browser no longer considers this a direct gesture —
+  // so it silently blocks the popup with no error, leaving the customer
+  // staring at "處理中..." with nothing happening. The fix is to open the
+  // WhatsApp window immediately at the TOP of sendWA (before any awaits),
+  // then update its URL once the message is ready. If something goes wrong
+  // (validation, stock shortfall) we close the window we opened.
+  //
+  // Since we already opened waWindow at the top of this function and kept
+  // it in scope, we just navigate it to the real URL now.
+  if (window._waWindow && !window._waWindow.closed) {
+    window._waWindow.location.href = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
+    window._waWindow = null;
+  } else {
+    // Fallback: if the pre-opened window was somehow closed or unavailable,
+    // try opening directly (may be blocked on some browsers in this path,
+    // but it's the best we can do).
+    window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
+  }
+
+  // Disable WA buttons for 8s to prevent double-tap re-submission
   document.querySelectorAll('.whatsapp-btn').forEach(btn=>{
     btn.disabled=true; btn.style.opacity='0.6';
     const orig=btn.textContent;
-    btn.textContent=lang==='zh'?'傳送中...':'Sending...';
+    btn.textContent=lang==='zh'?'已開啟 WhatsApp ✓':'WhatsApp Opened ✓';
     setTimeout(()=>{btn.disabled=false;btn.style.opacity='';btn.textContent=orig;},8000);
   });
-  window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`,'_blank');
 
   // ── Step 7: Clear the cart and show a clear success confirmation ──
-  // Without this, the page looked exactly the same after submitting as
-  // before (same cart, same filled form, no acknowledgement at all) —
-  // customers couldn't tell their order had gone through, so many were
-  // submitting a second time just to be sure.
   cart = {};
   appliedPromo = null;
   updateCart();
