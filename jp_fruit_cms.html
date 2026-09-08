@@ -4423,18 +4423,60 @@ function exportWeeklyCSV() {
     rows.push(['']); // blank separator
   }
 
-  // ── PRODUCT ROWS (one per product/component, qty in each order column,
-  // sorted by total descending — includes set contents, merged with any
-  // standalone product of the same name) ──
+  // ── PRODUCT ROWS — grouped by category (in the same order categories
+  // are arranged in the CMS/Order Form), then sorted by total descending
+  // WITHIN each category. Includes set contents, merged with any
+  // standalone product of the same name. Grouping by category means you
+  // can go supplier-by-supplier / category-by-category when placing
+  // orders, instead of one long list mixing dim sum, bread, and grocery
+  // items together by raw sales volume. ──
   rows.push(['── 產品銷售 Product Sales（包括套餐內容 incl. set contents）──', '', ...sorted.map(()=>'')]);
+
+  // Figure out which category each product/component belongs to (by
+  // matching its name against the product catalogue); anything that
+  // doesn't match a known product falls into "未分類".
+  const prodCatOf = {};
+  allProds.forEach(prod => {
+    const p = state.products.find(x => (x.nameZh||x.zh||x.name) === prod);
+    prodCatOf[prod] = p ? (p.cat || '') : '';
+  });
+
+  // Group product names by category id, preserving the CMS's own
+  // drag-ordered category sequence; unmatched items go in a trailing
+  // "未分類" bucket.
+  const catOrder = state.categories.map(c => c.id);
+  const byCat = {}; // catId -> [{prod, total}]
+  const uncatItems = [];
   allProds.forEach(prod => {
     const total = sorted.reduce((s, o) => s + (parseInt(orderMap[o.id][prod]) || 0), 0);
-    rows.push([
-      prod,
-      total || '',
-      ...sorted.map(o => orderMap[o.id][prod] || '')
-    ]);
+    const catId = prodCatOf[prod];
+    if (catId && catOrder.includes(catId)) {
+      if (!byCat[catId]) byCat[catId] = [];
+      byCat[catId].push({ prod, total });
+    } else {
+      uncatItems.push({ prod, total });
+    }
   });
+  // Sort within each category by total descending
+  Object.values(byCat).forEach(list => list.sort((a,b) => b.total - a.total));
+  uncatItems.sort((a,b) => b.total - a.total);
+
+  catOrder.forEach(catId => {
+    const items = byCat[catId];
+    if (!items || !items.length) return;
+    const cat = state.categories.find(c => c.id === catId);
+    const catLabel = cat ? (cat.zh || cat.name) : catId;
+    rows.push([`▸ ${catLabel}`, '', ...sorted.map(()=>'')]);
+    items.forEach(({prod, total}) => {
+      rows.push([prod, total || '', ...sorted.map(o => orderMap[o.id][prod] || '')]);
+    });
+  });
+  if (uncatItems.length) {
+    rows.push(['▸ 未分類 Uncategorised', '', ...sorted.map(()=>'')]);
+    uncatItems.forEach(({prod, total}) => {
+      rows.push([prod, total || '', ...sorted.map(o => orderMap[o.id][prod] || '')]);
+    });
+  }
 
   rows.push(['']); // blank separator
 

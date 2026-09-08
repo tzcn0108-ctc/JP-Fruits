@@ -33,22 +33,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .shake{animation:shake 0.35s ease;}
 
 /* ── Header ── */
-header{position:sticky;top:0;z-index:50;background:var(--plum);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+header{background:var(--plum);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
 header .title{font-size:1.05rem;font-weight:700;}
 header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:5px;}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#F5C842;}
 .sync-dot.ok{background:#4CD964;}
 
-/* ── Bottom nav ── */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:60;padding-bottom:env(safe-area-inset-bottom,0);}
-.nav-btn{flex:1;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:var(--font);}
-.nav-btn.active{color:var(--plum);}
+/* ── Bottom nav (was bottom-fixed; now used as a top tab bar instead) ── */
+.top-nav-wrap{position:sticky;top:0;z-index:55;}
+.top-nav{background:#fff;border-bottom:1px solid var(--border);display:flex;}
+.nav-btn{flex:1;padding:12px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:var(--font);}
+.nav-btn.active{color:var(--plum);border-bottom:2.5px solid var(--plum);}
 .nav-btn .nav-icon{font-size:1.25rem;}
 .nav-btn .nav-label{font-size:0.68rem;font-weight:600;}
-body{padding-bottom:74px;}
 
 /* ── Status filter tabs (horizontal scroll) ── */
-.tabs{display:flex;gap:8px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:40;}
+.tabs{display:flex;gap:8px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;background:#fff;border-bottom:1px solid var(--border);position:sticky;z-index:40;}
 .tabs::-webkit-scrollbar{display:none;}
 .tab{flex-shrink:0;padding:8px 14px;border-radius:20px;background:var(--bg);color:var(--text);font-size:0.82rem;font-weight:600;white-space:nowrap;cursor:pointer;border:1.5px solid transparent;display:flex;align-items:center;gap:5px;}
 .tab.active{background:var(--plum);color:#fff;}
@@ -185,6 +185,7 @@ body{padding-bottom:74px;}
   </div>
 </div>
 
+<div class="top-nav-wrap">
 <header>
   <div class="title">📦 訂單管理</div>
   <div style="display:flex;align-items:center;gap:10px;">
@@ -192,6 +193,15 @@ body{padding-bottom:74px;}
     <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">連接中...</span></div>
   </div>
 </header>
+<div class="top-nav">
+  <button class="nav-btn active" id="nav-btn-orders" onclick="switchPage('orders')">
+    <span class="nav-icon">📦</span><span class="nav-label">訂單</span>
+  </button>
+  <button class="nav-btn" id="nav-btn-reports" onclick="switchPage('reports')">
+    <span class="nav-icon">📊</span><span class="nav-label">報告</span>
+  </button>
+</div>
+</div>
 
 <!-- Font size picker -->
 <div class="font-picker-overlay" id="font-picker-overlay" onclick="if(event.target===this)closeFontPicker()">
@@ -224,15 +234,6 @@ body{padding-bottom:74px;}
     </div>
     <div class="cat-report-list" id="cat-report-list"></div>
   </div>
-</div>
-
-<div class="bottom-nav">
-  <button class="nav-btn active" id="nav-btn-orders" onclick="switchPage('orders')">
-    <span class="nav-icon">📦</span><span class="nav-label">訂單</span>
-  </button>
-  <button class="nav-btn" id="nav-btn-reports" onclick="switchPage('reports')">
-    <span class="nav-icon">📊</span><span class="nav-label">報告</span>
-  </button>
 </div>
 
 <!-- Order detail modal -->
@@ -534,6 +535,15 @@ const FONT_SIZES = [
 
 function applyFontSize(px) {
   document.documentElement.style.fontSize = px + 'px';
+  // .tabs sticks right below the header+nav bar — its height changes with
+  // font size, so recompute the offset each time rather than hardcoding it.
+  requestAnimationFrame(updateStickyOffsets);
+}
+
+function updateStickyOffsets() {
+  const wrap = document.querySelector('.top-nav-wrap');
+  const tabs = document.getElementById('tabs');
+  if (wrap && tabs) tabs.style.top = wrap.offsetHeight + 'px';
 }
 
 function getSavedFontSize() {
