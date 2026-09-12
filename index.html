@@ -2919,7 +2919,15 @@ Press OK if correct and we'll be in touch.`;
       if(val&&val.isSet) return {type:'set', name:val.nameZh||val.name, price:val.price, qty:val.qty||1, summary:val.summary||'', selections:val.selections||[]};
       const p=products.find(x=>x.id===id);
       if(!p) return null;
-      return {type:'product', productId:id, name:p.nameZh||p.zh||p.name, price:p.salePrice||p.price, qty:val};
+      // Use the TIER-AWARE per-unit price so item.price*item.qty (used by
+      // CMS's order view, CSV export, etc.) reproduces the actual tiered
+      // total the customer paid — previously this stored the flat regular/
+      // sale price, so tiered orders showed the wrong (higher) line total
+      // in the CMS with no indication a tier discount had applied at all.
+      const hasTier = !p.priceByWeight && p.tiers && p.tiers.length;
+      const unitPrice = p.priceByWeight ? (p.salePrice||p.price||0)
+        : (val > 0 ? parseFloat((getTieredTotal(p, val) / val).toFixed(4)) : (p.salePrice||p.price||0));
+      return {type:'product', productId:id, name:p.nameZh||p.zh||p.name, price:unitPrice, qty:val, tierApplied: !!hasTier};
     }).filter(Boolean),
     total: parseFloat(getFinalTotal().toFixed(2)),
     subtotal: parseFloat(total.toFixed(2)),

@@ -2481,7 +2481,7 @@ function viewOrder(id) {
     ? o.items.map((item, idx) => `
       <div style="padding:8px 0;border-bottom:1px solid #f0e4dc;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="flex:1;font-size:0.85rem;color:var(--text);">${escapeHTML(item.name||'—')}${item.type==='set'?' <span style=\"font-size:0.68rem;background:#EDE6F5;color:#6B4C8A;padding:1px 6px;border-radius:4px;margin-left:4px;\">套餐</span>':''}</span>
+          <span style="flex:1;font-size:0.85rem;color:var(--text);">${escapeHTML(item.name||'—')}${item.type==='set'?' <span style=\"font-size:0.68rem;background:#EDE6F5;color:#6B4C8A;padding:1px 6px;border-radius:4px;margin-left:4px;\">套餐</span>':''}${item.tierApplied?' <span style=\"font-size:0.68rem;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:4px;margin-left:4px;\">階梯優惠</span>':''}</span>
           <div style="display:flex;align-items:center;gap:4px;">
             <button onclick="editOrderItemQty('${o.id}',${idx},-1)"
               style="width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">−</button>
