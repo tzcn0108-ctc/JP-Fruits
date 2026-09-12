@@ -1808,17 +1808,58 @@ async function loadData() {
   checkAutoLockAfterCutoff();
 }
 
+// ── UK TIME HELPERS ─────────────────────────────────────────────────
+// The cutoff schedule ("Tuesday 1pm") is always meant in UK LOCAL time,
+// but if TC or a colleague opens the CMS while their own computer is set
+// to a different timezone (travelling, misconfigured), plain new Date()
+// would judge "has cutoff passed?" against the WRONG time. These helpers
+// force the check to use real UK time (Europe/London), which also
+// automatically handles the BST/GMT switch twice a year.
+function getLondonOffsetMinutes(date) {
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/London', timeZoneName: 'shortOffset' });
+  const part = fmt.formatToParts(date).find(p => p.type === 'timeZoneName')?.value || 'GMT';
+  const m = part.match(/GMT([+-]\d+)?/);
+  return (m && m[1] ? parseInt(m[1], 10) : 0) * 60;
+}
+
+function getUKNow() {
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London', weekday: 'short', year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+  });
+  const map = {};
+  fmt.formatToParts(new Date()).forEach(p => { map[p.type] = p.value; });
+  const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return {
+    year: parseInt(map.year, 10), month: parseInt(map.month, 10), date: parseInt(map.day, 10),
+    day: weekdayMap[map.weekday],
+    hour: map.hour === '24' ? 0 : parseInt(map.hour, 10),
+    minute: parseInt(map.minute, 10),
+  };
+}
+
+function ukLocalToInstant(year, month, date, hour, minute) {
+  const guess = new Date(Date.UTC(year, month - 1, date, hour, minute, 0));
+  const offsetMin = getLondonOffsetMinutes(guess);
+  return new Date(guess.getTime() - offsetMin * 60000);
+}
+
 // ── AUTO-LOCK AFTER CUTOFF ───────────────────────────────────────────
 // Finds the most recent cutoff moment (this week's cutoffDay+cutoffTime,
-// or last week's if this week's hasn't happened yet) that is <= now.
+// or last week's if this week's hasn't happened yet) that is <= now,
+// evaluated in real UK time regardless of the admin's own device timezone.
 function getLastCutoffMoment(cutoffDay, cutoffTime) {
   const [ch, cm] = (cutoffTime || '13:00').split(':').map(Number);
+  const ukNow = getUKNow();
   const now = new Date();
   for (let i = 0; i < 8; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    d.setHours(ch, cm, 0, 0);
-    if (d.getDay() === cutoffDay && d <= now) return d;
+    const candidateDay = new Date(Date.UTC(ukNow.year, ukNow.month - 1, ukNow.date));
+    candidateDay.setUTCDate(candidateDay.getUTCDate() - i);
+    const y = candidateDay.getUTCFullYear(), mo = candidateDay.getUTCMonth() + 1, da = candidateDay.getUTCDate();
+    const weekday = new Date(Date.UTC(y, mo - 1, da)).getUTCDay(); // weekday of a calendar date is timezone-independent
+    if (weekday !== cutoffDay) continue;
+    const candidateInstant = ukLocalToInstant(y, mo, da, ch, cm);
+    if (candidateInstant <= now) return candidateInstant;
   }
   return null;
 }
@@ -2949,7 +2990,7 @@ function openVIPModal(uid=null) {
 }
 
 function updateVIPLinkPreview(uid, v) {
-  const base = window.location.origin + window.location.pathname.replace('jp_fruit_cms.html','jp_fruit_order.html');
+  const base = window.location.origin + '/';
   const phone = (v?.phone||'').replace(/\s/g,'');
   const params = [`vip=${uid}`];
   const link = `${base}?${params.join('&')}`;
@@ -2973,7 +3014,7 @@ function copyVIPLink() {
 
 function genVIPLink(uid) {
   const v = (state.vips||{})[uid];
-  const base = window.location.origin + window.location.pathname.replace('jp_fruit_cms.html','jp_fruit_order.html');
+  const base = window.location.origin + '/';
   const link = `${base}?vip=${uid}`;
   navigator.clipboard.writeText(link)
     .then(() => showToast(`✓ ${uid} Magic Link 已複製！`))

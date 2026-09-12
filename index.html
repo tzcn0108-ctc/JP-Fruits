@@ -3025,17 +3025,68 @@ function closeMobileCart(e){
 }
 
 // ── COUNTDOWN ────────────────────────────────────────────────
+// ── UK TIME HELPERS ─────────────────────────────────────────────────
+// The cutoff schedule ("Tuesday 1pm") is always meant in UK LOCAL time,
+// but plain `new Date()` / getHours() / setHours() operate in whatever
+// timezone the customer's own device happens to be set to. A customer
+// whose phone is set to a different timezone (travelling, misconfigured,
+// or just not in the UK) would see an incorrect countdown otherwise.
+// These helpers force every cutoff calculation to use real UK time
+// (Europe/London), which also automatically handles the BST/GMT switch
+// twice a year — no manual clock-change handling needed.
+
+// Returns the UTC offset, in minutes, that Europe/London is at for the
+// given instant (0 in winter/GMT, 60 in summer/BST).
+function getLondonOffsetMinutes(date) {
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/London', timeZoneName: 'shortOffset' });
+  const part = fmt.formatToParts(date).find(p => p.type === 'timeZoneName')?.value || 'GMT';
+  const m = part.match(/GMT([+-]\d+)?/);
+  return (m && m[1] ? parseInt(m[1], 10) : 0) * 60;
+}
+
+// Returns the CURRENT wall-clock date/time as seen in the UK, regardless
+// of the device's own timezone: { year, month(1-12), date, day(0=Sun..6=Sat), hour, minute }.
+function getUKNow() {
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London', weekday: 'short', year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+  });
+  const map = {};
+  fmt.formatToParts(new Date()).forEach(p => { map[p.type] = p.value; });
+  const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return {
+    year: parseInt(map.year, 10), month: parseInt(map.month, 10), date: parseInt(map.day, 10),
+    day: weekdayMap[map.weekday],
+    hour: map.hour === '24' ? 0 : parseInt(map.hour, 10), // midnight can format as "24"
+    minute: parseInt(map.minute, 10),
+  };
+}
+
+// Builds the correct real-world instant (a normal Date/timestamp) for a
+// given UK LOCAL wall-clock date+time, correctly accounting for whether
+// that date falls in BST or GMT.
+function ukLocalToInstant(year, month, date, hour, minute) {
+  const guess = new Date(Date.UTC(year, month - 1, date, hour, minute, 0));
+  const offsetMin = getLondonOffsetMinutes(guess);
+  return new Date(guess.getTime() - offsetMin * 60000);
+}
+
 function updateCountdown(){
   const el=document.getElementById('countdown');
   // Use Firebase settings if available, else fall back to defaults (Tue=2, 13:00)
   const settings = (siteSettings && siteSettings.cutoffDay !== undefined)
     ? siteSettings
     : { cutoffDay: 2, cutoffTime: '13:00' };  // default: Tue 1pm cutoff
-  const now=new Date(),day=now.getDay();
   const cutDay=settings.cutoffDay??2, cutTime=settings.cutoffTime||'13:00';
   const [ch,cm]=cutTime.split(':').map(Number);
-  const d=(cutDay-day+7)%7||7, tgt=new Date(now);
-  tgt.setDate(now.getDate()+d);tgt.setHours(ch,cm,0,0);
+
+  const ukNow = getUKNow();
+  const daysAhead = (cutDay - ukNow.day + 7) % 7 || 7;
+  const targetDay = new Date(Date.UTC(ukNow.year, ukNow.month - 1, ukNow.date));
+  targetDay.setUTCDate(targetDay.getUTCDate() + daysAhead);
+  const tgt = ukLocalToInstant(targetDay.getUTCFullYear(), targetDay.getUTCMonth() + 1, targetDay.getUTCDate(), ch, cm);
+
+  const now = new Date();
   const diff=tgt-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
   const text=`${h}hr ${m}min`;
   if(el) el.textContent=text;
