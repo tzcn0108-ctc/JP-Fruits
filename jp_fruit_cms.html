@@ -904,13 +904,13 @@ function cmsUnlock() {
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>專屬優惠碼（可選）</label>
-              <input type="text" id="vip-promo" placeholder="例：VIP0001" style="width:100%"
-                oninput="this.value=this.value.toUpperCase()">
+              <label>專屬優惠碼（自動生成）</label>
+              <input type="text" id="vip-promo" style="width:100%;background:var(--surface3);color:var(--muted);" readonly>
             </div>
             <div class="form-group">
               <label>折扣 %</label>
-              <input type="number" id="vip-discount" placeholder="10" min="0" max="100" style="width:100%">
+              <input type="number" id="vip-discount" placeholder="10" min="0" max="100" style="width:100%"
+                oninput="updateVIPPromoPreview()">
             </div>
           </div>
           <div class="form-group">
@@ -2981,12 +2981,23 @@ function openVIPModal(uid=null) {
   document.getElementById('vip-phone').value    = v?.phone||'';
   document.getElementById('vip-postcode').value = v?.postcode||'';
   document.getElementById('vip-address').value  = v?.address||'';
-  document.getElementById('vip-promo').value    = v?.promoCode||'';
   document.getElementById('vip-discount').value = v?.discount||'';
   document.getElementById('vip-notes').value    = v?.notes||'';
+  updateVIPPromoPreview(); // fills in vip-promo based on uid + discount
   // Show magic link preview
   updateVIPLinkPreview(newUid, v);
   document.getElementById('vip-modal').classList.add('open');
+}
+
+// Keeps the (read-only) "專屬優惠碼" preview in sync with the uid + discount
+// fields, so the person can see exactly what code will be generated —
+// without needing to type or manage it themselves.
+function updateVIPPromoPreview() {
+  const uid = document.getElementById('vip-uid').value.trim();
+  const discount = parseFloat(document.getElementById('vip-discount').value)||0;
+  const promoEl = document.getElementById('vip-promo');
+  if (!promoEl) return;
+  promoEl.value = discount > 0 ? ('VIP' + uid.replace(/[^A-Z0-9]/gi,'').toUpperCase()) : '（未設折扣）';
 }
 
 function updateVIPLinkPreview(uid, v) {
@@ -3024,23 +3035,57 @@ function genVIPLink(uid) {
 function saveVIP() {
   const uid = document.getElementById('vip-uid').value.trim();
   if (!uid) return;
+  const discount = parseFloat(document.getElementById('vip-discount').value)||0;
+
+  // The VIP's discount% is the single source of truth — the matching promo
+  // code is generated and kept in sync automatically, so filling in
+  // "折扣%" alone is enough. (Previously these were two separate fields
+  // that had to be manually kept matching, which was easy to forget.)
+  const autoPromoCode = 'VIP' + uid.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+
   const vip = {
     uid,
     name:      document.getElementById('vip-name').value.trim(),
     phone:     document.getElementById('vip-phone').value.trim(),
     postcode:  document.getElementById('vip-postcode').value.trim().toUpperCase(),
     address:   document.getElementById('vip-address').value.trim(),
-    promoCode: document.getElementById('vip-promo').value.trim().toUpperCase(),
-    discount:  parseFloat(document.getElementById('vip-discount').value)||0,
+    promoCode: discount > 0 ? autoPromoCode : '',
+    discount,
     notes:     document.getElementById('vip-notes').value.trim(),
     createdAt: (state.vips||{})[uid]?.createdAt || new Date().toISOString(),
   };
   if (!state.vips) state.vips = {};
   state.vips[uid] = vip;
+
+  // Keep a matching promo record in sync: create it if it doesn't exist,
+  // update its % if the VIP's discount changed, deactivate it if the VIP's
+  // discount was set back to 0 (kept rather than deleted, in case past
+  // orders reference it).
+  if (!state.promos) state.promos = [];
+  const existingIdx = state.promos.findIndex(p => p.code === autoPromoCode);
+  if (discount > 0) {
+    const promo = {
+      id: existingIdx >= 0 ? state.promos[existingIdx].id : 'vip-promo-'+uid,
+      code: autoPromoCode,
+      type: 'percent',
+      value: discount,
+      minOrder: 0,
+      maxUses: 0,
+      startDate: '',
+      endDate: '',
+      desc: `VIP 專屬折扣 — ${vip.name || uid}`,
+      usedCount: existingIdx >= 0 ? (state.promos[existingIdx].usedCount||0) : 0,
+      active: true,
+    };
+    if (existingIdx >= 0) state.promos[existingIdx] = promo; else state.promos.push(promo);
+  } else if (existingIdx >= 0) {
+    state.promos[existingIdx].active = false;
+  }
+
   saveData();
   renderVIPPage();
   closeModal('vip-modal');
-  showToast(`✓ VIP ${uid} 已儲存！`);
+  showToast(`✓ VIP ${uid} 已儲存！${discount>0?`專屬優惠碼 ${autoPromoCode} 已自動同步`:''}`);
 }
 
 function deleteVIP() {
