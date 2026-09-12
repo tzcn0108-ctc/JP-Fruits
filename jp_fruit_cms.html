@@ -2527,7 +2527,16 @@ function viewOrder(id) {
         </div>
         <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.5px;">訂購產品</div>
         ${itemsHtml}
-        <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:1.05rem;font-weight:700;color:var(--plum,#6B4C8A);border-top:2px solid #f0e4dc;margin-top:4px;">
+        ${o.discount>0?`
+        <div style="padding:10px 0 0;border-top:1px solid #f0e4dc;margin-top:4px;font-size:0.85rem;color:var(--muted);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span>小計</span><span>£${parseFloat(o.subtotal??o.total??0).toFixed(2)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:var(--leaf,#2E7D32);">
+            <span>🎫 優惠碼 ${escapeHTML(o.promoCode||'')}</span><span>-£${parseFloat(o.discount||0).toFixed(2)}</span>
+          </div>
+        </div>`:''}
+        <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:1.05rem;font-weight:700;color:var(--plum,#6B4C8A);border-top:${o.discount>0?'none':'2px solid #f0e4dc'};margin-top:${o.discount>0?'8px':'4px'};">
           <span>合計</span><span>£${parseFloat(o.total||0).toFixed(2)}</span>
         </div>
         <!-- Delivery assignment -->

@@ -1823,7 +1823,7 @@ const TX = {
     i2h:'最低消費', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
     i3h:'聯絡我們', i3p:'截單後我們會透過 WhatsApp 確認訂單。\n營業時間：週一至五 9:30am – 4:00pm',
     footerP:'關注我們 Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
+    waMsg:(name,phone,addr,pc,items,total,notes,totalsBreakdown)=>`🛒 *JP Fruit 訂單*\n━━━━━━━━━━\n👤 *姓名:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *地址:* ${addr}, ${pc}\n━━━━━━━━━━\n*訂購產品:*\n${items}\n━━━━━━━━━━\n${totalsBreakdown||''}💷 *合計: £${total}*${notes?'\n📝 *備註:* '+notes:''}\n\n_透過 JP Fruit 網站提交_`,
   },
   en:{
     topbar:'Order Cutoff: <strong>Tuesday 1:00 PM</strong> &nbsp;·&nbsp; Delivery: <strong>Friday</strong> &nbsp;·&nbsp; Pay on Delivery &nbsp;·&nbsp; Countdown: <strong id="countdown">--</strong>',
@@ -1846,7 +1846,7 @@ const TX = {
     i2h:'Minimum Order', i2r3:'Banstead / Kingston / Wimbledon / Epsom / Croydon', i2r4:'Tadworth / Purley / Coulsdon',
     i3h:'Contact Us', i3p:"We'll confirm your order via WhatsApp after cutoff.\nBusiness hours: Mon–Fri, 9:30am – 4:00pm",
     footerP:'Follow us for updates',
-    waMsg:(name,phone,addr,pc,items,total,notes)=>`🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
+    waMsg:(name,phone,addr,pc,items,total,notes,totalsBreakdown)=>`🛒 *JP Fruit Order*\n━━━━━━━━━━\n👤 *Name:* ${name}\n📱 *WhatsApp:* ${phone}\n📍 *Address:* ${addr}, ${pc}\n━━━━━━━━━━\n*Items Ordered:*\n${items}\n━━━━━━━━━━\n${totalsBreakdown||''}💷 *Total: £${total}*${notes?'\n📝 *Remarks:* '+notes:''}\n\n_Submitted via JP Fruit website_`,
   }
 };
 
@@ -2892,8 +2892,16 @@ Press OK if correct and we'll be in touch.`;
   const total = getTotal();
   const waNum = '447762929455';
   const finalTot = getFinalTotal();
-  const promoLine = appliedPromo ? `\n🎫 優惠碼：${appliedPromo.code} (-£${getDiscount().toFixed(2)})` : '';
-  const msg   = tx('waMsg',name,phone,addr,pc.toUpperCase(),items+promoLine,finalTot.toFixed(2),notes);
+  const isZh = lang==='zh';
+  // Only show the subtotal→discount breakdown when a promo is actually
+  // applied — otherwise subtotal and total are the same number and
+  // showing both would just be redundant clutter.
+  const totalsBreakdown = appliedPromo
+    ? (isZh
+        ? `💰 小計: £${total.toFixed(2)}\n🎫 優惠碼 ${appliedPromo.code}: -£${getDiscount().toFixed(2)}\n`
+        : `💰 Subtotal: £${total.toFixed(2)}\n🎫 Promo ${appliedPromo.code}: -£${getDiscount().toFixed(2)}\n`)
+    : '';
+  const msg   = tx('waMsg',name,phone,addr,pc.toUpperCase(),items,finalTot.toFixed(2),notes,totalsBreakdown);
 
   // ── Step 4: Save to Firebase FIRST ──
   const orderData = {
