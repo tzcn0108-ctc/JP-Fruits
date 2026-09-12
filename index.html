@@ -1721,6 +1721,7 @@ async function loadProducts() {
       sets = data.sets||[];
       categories = data.categories||[];
       promos = data.promos||[];
+      vips = data.vips||{};
       if (data.banner) { currentBannerData = data.banner; applyBanner(data.banner); }
       if (data.settings) { siteSettings = data.settings; applySettings(data.settings); }
     } else {
@@ -1734,6 +1735,42 @@ async function loadProducts() {
   }
   buildCatNav();
   renderProducts();
+  updateCart();
+  applyVIPFromLink();
+}
+
+// If the page was opened via a VIP magic link (?vip=JP0001), pre-fill the
+// checkout form with that VIP's saved contact details and auto-apply their
+// promo code — that's the whole point of sending them a personal link
+// instead of the plain site URL.
+function applyVIPFromLink() {
+  const uid = new URLSearchParams(window.location.search).get('vip');
+  if (!uid) return;
+  const vip = vips[uid.toUpperCase()] || vips[uid];
+  if (!vip) return;
+
+  // Fill both the desktop (no suffix) and mobile (-m suffix) copies of the
+  // checkout form, since only one is visible depending on screen size.
+  ['', '-m'].forEach(sfx => {
+    const setVal = (id, val) => { const el = document.getElementById(id+sfx); if (el && val) el.value = val; };
+    setVal('cf-name', vip.name);
+    setVal('cf-phone', vip.phone);
+    setVal('cf-addr', vip.address);
+    setVal('cf-post', vip.postcode);
+  });
+
+  if (vip.promoCode) {
+    ['', '-m'].forEach(sfx => {
+      const promoInput = document.getElementById('cf-promo'+sfx);
+      if (promoInput) promoInput.value = vip.promoCode;
+    });
+    if (typeof applyPromo === 'function') {
+      applyPromo(vip.promoCode, '');
+      applyPromo(vip.promoCode, '-m');
+    }
+  }
+
+  showToast(lang==='zh' ? `👋 歡迎返嚟，${vip.name||'VIP'}！已幫你填好資料` : `👋 Welcome back, ${vip.name||'VIP'}! Your details are filled in`);
 }
 
 
@@ -1814,7 +1851,7 @@ const TX = {
 };
 
 // ── STATE ──────────────────────────────────────────────────────
-let lang=localStorage.getItem('jpfruit-lang')||'zh', products=[], categories=[], sets=[], promos=[], cart={}, appliedPromo=null, searchQuery='', activeCat='all';
+let lang=localStorage.getItem('jpfruit-lang')||'zh', products=[], categories=[], sets=[], promos=[], vips={}, cart={}, appliedPromo=null, searchQuery='', activeCat='all';
 let currentBannerData=null; // last banner data applied — re-used on language switch
 let siteSettings={};
 const setSelections={};
@@ -2541,6 +2578,33 @@ function updateCart(){
       sticky.classList.remove('show');
     }
   }
+  saveCartToStorage();
+}
+
+// ── CART PERSISTENCE ─────────────────────────────────────────────────
+// Saves the cart (and any applied promo code) to localStorage on every
+// change, and restores it when the page loads again. Without this, a
+// customer who picks items but doesn't finish checking out — gets
+// interrupted, closes the tab, their WhatsApp doesn't open properly, the
+// page reloads for any reason — loses their whole selection and has to
+// start over. This applies to every visitor, not just VIP links, since
+// anyone can be interrupted mid-order.
+function saveCartToStorage() {
+  try {
+    localStorage.setItem('jpfruit-cart-v1', JSON.stringify({ cart, appliedPromo }));
+  } catch(e) {}
+}
+
+function restoreCartFromStorage() {
+  try {
+    const raw = localStorage.getItem('jpfruit-cart-v1');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (saved && saved.cart && Object.keys(saved.cart).length) {
+      cart = saved.cart;
+      appliedPromo = saved.appliedPromo || null;
+    }
+  } catch(e) {}
 }
 
 
@@ -3232,7 +3296,7 @@ window.addEventListener('resize', () => {
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 
 // ── INIT ──────────────────────────────────────────────────────
-applyTX();updateCart();updateCountdown();
+restoreCartFromStorage();applyTX();updateCart();updateCountdown();
 document.addEventListener('firebaseReady', async ()=>{
   try {
     let pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
