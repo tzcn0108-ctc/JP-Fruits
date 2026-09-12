@@ -2685,9 +2685,9 @@ function cartForm(sfx){
   return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}" autocomplete="name"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}" autocomplete="tel"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}" autocomplete="street-address"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="postal-code" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div>
   <div style="margin:10px 0;padding:10px 12px;background:var(--plum-l,#EDE6F5);border-radius:10px;">
     <div style="font-size:0.73rem;font-weight:600;color:var(--plum);margin-bottom:7px;">🎫 ${lang==='zh'?'優惠碼':'Promo Code'}</div>
-    <div style="display:flex;gap:6px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
       <input type="text" id="cf-promo${sfx}" placeholder="${lang==='zh'?'輸入優惠碼...':'Enter promo code...'}"
-        style="flex:1;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:var(--font);letter-spacing:1px;"
+        style="flex:1 1 140px;min-width:0;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:var(--font);letter-spacing:1px;"
         oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
         onkeydown="if(event.key==='Enter'){applyPromo(this.value,'${sfx}');event.preventDefault();}">
       <button onclick="applyPromo(document.getElementById('cf-promo${sfx}').value,'${sfx}')"
