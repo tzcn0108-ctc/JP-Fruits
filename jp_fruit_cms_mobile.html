@@ -591,20 +591,54 @@ function switchPage(page) {
 // ══ REPORTS BY CATEGORY (週六 – 下週五) ═══════════════════════════
 let weekOffset = 0; // 0 = the Sat–Fri week containing today
 
-// Returns {start, end} Date objects for the Sat–Fri week at `offset` weeks
-// from the week containing today. Sat 00:00:00 to the following Fri 23:59:59.
+// ── UK TIME HELPERS ─────────────────────────────────────────────────
+// The weekly report window (Sat–Fri) is always meant in UK LOCAL time,
+// but if this page is opened on a phone set to a different timezone
+// (travelling, misconfigured), plain new Date() would compute the wrong
+// week boundary. These helpers force the calculation to use real UK time
+// (Europe/London), which also automatically handles the BST/GMT switch.
+function getLondonOffsetMinutes(date) {
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/London', timeZoneName: 'shortOffset' });
+  const part = fmt.formatToParts(date).find(p => p.type === 'timeZoneName')?.value || 'GMT';
+  const m = part.match(/GMT([+-]\d+)?/);
+  return (m && m[1] ? parseInt(m[1], 10) : 0) * 60;
+}
+
+function getUKNow() {
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London', weekday: 'short', year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+  });
+  const map = {};
+  fmt.formatToParts(new Date()).forEach(p => { map[p.type] = p.value; });
+  const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return {
+    year: parseInt(map.year, 10), month: parseInt(map.month, 10), date: parseInt(map.day, 10),
+    day: weekdayMap[map.weekday],
+    hour: map.hour === '24' ? 0 : parseInt(map.hour, 10),
+    minute: parseInt(map.minute, 10),
+  };
+}
+
+function ukLocalToInstant(year, month, date, hour, minute, second) {
+  const guess = new Date(Date.UTC(year, month - 1, date, hour, minute, second||0));
+  const offsetMin = getLondonOffsetMinutes(guess);
+  return new Date(guess.getTime() - offsetMin * 60000);
+}
+
+// Returns {start, end} for the Sat–Fri UK week at `offset` weeks from the
+// week containing today (in UK time). Sat 00:00:00 to the following Fri
+// 23:59:59, both instants correctly anchored to UK local time.
 function getWeekRange(offset) {
-  const now = new Date();
-  const day = now.getDay(); // 0=Sun..6=Sat
-  const daysSinceSat = (day - 6 + 7) % 7; // how many days ago was the most recent Saturday
-  const thisSat = new Date(now);
-  thisSat.setDate(now.getDate() - daysSinceSat);
-  thisSat.setHours(0,0,0,0);
-  const start = new Date(thisSat);
-  start.setDate(thisSat.getDate() + offset*7);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23,59,59,999);
+  const ukNow = getUKNow();
+  const daysSinceSat = (ukNow.day - 6 + 7) % 7; // how many days ago was the most recent UK Saturday
+  const satDay = new Date(Date.UTC(ukNow.year, ukNow.month - 1, ukNow.date));
+  satDay.setUTCDate(satDay.getUTCDate() - daysSinceSat + offset * 7);
+  const y = satDay.getUTCFullYear(), mo = satDay.getUTCMonth() + 1, da = satDay.getUTCDate();
+  const start = ukLocalToInstant(y, mo, da, 0, 0, 0);
+  const endDay = new Date(Date.UTC(y, mo - 1, da));
+  endDay.setUTCDate(endDay.getUTCDate() + 6);
+  const end = ukLocalToInstant(endDay.getUTCFullYear(), endDay.getUTCMonth() + 1, endDay.getUTCDate(), 23, 59, 59);
   return { start, end };
 }
 
