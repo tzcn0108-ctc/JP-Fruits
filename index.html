@@ -2813,63 +2813,119 @@ Press OK if correct and we'll be in touch.`;
   // ── Step 2.5: Final live stock check — re-fetch fresh stock from Firebase
   // right before committing, since the customer's own view may be stale
   // (someone else may have bought the last units moments ago). If anything
-  // is short, tell them exactly which items and by how much, auto-adjust
-  // their cart down to what's actually available, and let them re-submit —
-  // rather than silently blocking or silently overselling.
+  // is short, tell them exactly which items and by how much, and let them
+  // re-submit — rather than silently blocking or silently overselling.
+  //
+  // Set selections draw from the SAME shared product stock as standalone
+  // items, so a product needed by both a direct cart line AND inside a
+  // bundle must be checked against its COMBINED total requirement, not
+  // checked twice in isolation (which could miss a shortfall that only
+  // shows up once the two sources are added together).
+  let shortfallData = null; // set below if a genuine shortfall is found
   if (window._firebaseReady && window._fbDb) {
     try {
       const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue/products'));
       if (snap.exists()) {
         const liveProds = snap.val();
         const liveList = Array.isArray(liveProds) ? liveProds : Object.values(liveProds||{});
-        const shortfalls = [];
-        Object.entries(cart).forEach(([id, val]) => {
-          if (val && val.isSet) return; // set meals aren't stock-tracked here
+
+        // Combine required quantity per underlying product across direct
+        // cart lines AND every set's selections.
+        const neededByProduct = {}; // productId -> total qty needed
+        Object.entries(cart).forEach(([cartKey, val]) => {
+          if (val && val.isSet) {
+            (val.selections||[]).forEach(sel => {
+              if (!sel.id) return;
+              neededByProduct[sel.id] = (neededByProduct[sel.id]||0) + (sel.qty||1);
+            });
+          } else {
+            neededByProduct[cartKey] = (neededByProduct[cartKey]||0) + val;
+          }
+        });
+
+        const shortfalls = []; // { id, name, requested, available }
+        Object.entries(neededByProduct).forEach(([id, needed]) => {
           const liveP = liveList.find(p => p && p.id === id);
           if (!liveP || liveP.stock === -1) return; // unlimited stock or unknown product — skip
-          if (liveP.stock < val) {
+          if (liveP.stock < needed) {
             const localP = products.find(p => p.id === id);
             const dispName = localP
               ? (lang==='zh' ? (localP.nameZh||localP.zh||localP.name) : (localP.nameEn||localP.name))
               : id;
-            shortfalls.push({ id, name: dispName, requested: val, available: liveP.stock });
+            shortfalls.push({ id, name: dispName, requested: needed, available: liveP.stock });
             if (localP) localP.stock = liveP.stock; // sync local view to reality
-            if (liveP.stock > 0) cart[id] = liveP.stock; // clamp cart down to what's left
-            else delete cart[id]; // fully sold out — remove from cart entirely
           }
         });
-        if (shortfalls.length > 0) {
-          if (waBtn) {
-            waBtn.disabled = false;
-            waBtn.dataset.submitting = 'false';
-            waBtn.textContent = origText;
-          }
-          const isZh = lang==='zh';
-          const lines = shortfalls.map(it =>
-            isZh
-              ? (it.available > 0
-                  ? `• ${it.name}：淨返 ${it.available} 件（你揀咗 ${it.requested} 件，已幫你調整）`
-                  : `• ${it.name}：啱啱賣晒，已從購物車移除`)
-              : (it.available > 0
-                  ? `• ${it.name}: only ${it.available} left (you had ${it.requested} — adjusted for you)`
-                  : `• ${it.name}: just sold out — removed from your cart`)
-          ).join('\n');
-          const summary = isZh
-            ? `⚠️ 有產品啱啱俾人買咗，庫存唔夠晒：\n\n${lines}\n\n購物車已經幫你調整好，麻煩檢查一下再撳一次落單。`
-            : `⚠️ Some items just sold out or ran low:\n\n${lines}\n\nYour cart has been adjusted — please review and tap order again.`;
-          alert(summary);
-          renderProducts();
-          updateCart();
-          if(window._waWindow && !window._waWindow.closed) { window._waWindow.close(); window._waWindow=null; }
-          return;
-        }
+
+        if (shortfalls.length > 0) shortfallData = { shortfalls };
       }
     } catch(e) {
       console.warn('Stock re-check failed, proceeding without it:', e);
-      // Fail open: a network hiccup on this check alone shouldn't block a
-      // genuine order — same offline-friendly spirit as the rest of checkout.
+      // Fail open: a network hiccup on the FETCH itself shouldn't block a
+      // genuine order — same offline-friendly spirit as the rest of
+      // checkout. Note this only wraps the fetch/compute step — once a
+      // real shortfall is found, handling it (below) runs OUTSIDE this
+      // try/catch, so a bug there surfaces as a real error instead of
+      // being silently swallowed and letting a known-short order through.
     }
   }
+
+  if (shortfallData) {
+    const { shortfalls } = shortfallData;
+    const shortIds = new Set(shortfalls.map(s => s.id));
+    // Direct product lines: clamp down to what's left (existing,
+    // well-understood behaviour).
+    Object.entries(cart).forEach(([cartKey, val]) => {
+      if (val && val.isSet) return;
+      if (!shortIds.has(cartKey)) return;
+      const sf = shortfalls.find(s => s.id === cartKey);
+      if (sf.available > 0) cart[cartKey] = Math.min(val, sf.available);
+      else delete cart[cartKey];
+    });
+    // Set lines: a bundle's item mix can't be partially patched without
+    // risking an invalid selection (wrong count for its group's min/max),
+    // so if ANY of a set's chosen items is short, remove that whole set
+    // line and ask the customer to rebuild it.
+    const affectedSetNames = [];
+    Object.entries(cart).forEach(([cartKey, val]) => {
+      if (!(val && val.isSet)) return;
+      const touchesShort = (val.selections||[]).some(sel => sel.id && shortIds.has(sel.id));
+      if (touchesShort) {
+        affectedSetNames.push(lang==='zh' ? (val.nameZh||val.name) : (val.nameEn||val.name));
+        delete cart[cartKey];
+      }
+    });
+
+    if (waBtn) {
+      waBtn.disabled = false;
+      waBtn.dataset.submitting = 'false';
+      waBtn.textContent = origText;
+    }
+    const isZh = lang==='zh';
+    const lines = shortfalls.map(it =>
+      isZh
+        ? (it.available > 0
+            ? `• ${it.name}：淨返 ${it.available} 件（總共需要 ${it.requested} 件，已幫你調整）`
+            : `• ${it.name}：啱啱賣晒，已從購物車移除`)
+        : (it.available > 0
+            ? `• ${it.name}: only ${it.available} left (total needed ${it.requested} — adjusted for you)`
+            : `• ${it.name}: just sold out — removed from your cart`)
+    ).join('\n');
+    const setLines = affectedSetNames.length
+      ? (isZh
+          ? `\n\n以下套餐入面有揀咗嘅產品啱啱唔夠貨，已從購物車移除，麻煩重新配置：\n${affectedSetNames.map(n=>'• '+n).join('\n')}`
+          : `\n\nThe following bundle(s) included an item that just ran short and were removed — please rebuild your selection:\n${affectedSetNames.map(n=>'• '+n).join('\n')}`)
+      : '';
+    const summary = (isZh
+      ? `⚠️ 有產品啱啱俾人買咗，庫存唔夠晒：\n\n${lines}${setLines}\n\n購物車已經幫你調整好，麻煩檢查一下再撳一次落單。`
+      : `⚠️ Some items just sold out or ran low:\n\n${lines}${setLines}\n\nYour cart has been adjusted — please review and tap order again.`);
+    alert(summary);
+    renderProducts();
+    updateCart();
+    if(window._waWindow && !window._waWindow.closed) { window._waWindow.close(); window._waWindow=null; }
+    return;
+  }
+
 
   // ── Step 3: Build order data ──
   const _wItems=[], _nItems=[];
@@ -2947,16 +3003,29 @@ Press OK if correct and we'll be in touch.`;
       window._fbSet(newRef, {...orderData, firebaseId: newRef.key})
         .then(async ()=>{
           console.log('Order saved to Firebase');
-          // Deduct stock for tracked products (stock > 0, not -1)
+          // Deduct stock for tracked products (stock > 0, not -1).
+          // Set items pick from real products too (each selection carries
+          // the underlying product's id in item.selections[]) — those need
+          // deducting from the SAME shared stock pool, or a product sold
+          // both standalone and inside a set would show a stock count
+          // that never reflects the set-side sales at all.
           // Writes back to Firebase catalogue so other sessions see updated stock
           const stockUpdates = {};
-          orderData.items.forEach(item => {
-            if (item.type==='set' || !item.productId) return;
-            const p = products.find(x=>x.id===item.productId);
+          const deduct = (productId, qty) => {
+            const p = products.find(x=>x.id===productId);
             if (!p || p.stock===-1) return;
-            const newStock = Math.max(0, p.stock - (item.qty||1));
+            const current = stockUpdates.hasOwnProperty(productId) ? stockUpdates[productId] : p.stock;
+            const newStock = Math.max(0, current - (qty||1));
             p.stock = newStock;  // update local state so the page reflects it
-            stockUpdates[item.productId] = newStock;
+            stockUpdates[productId] = newStock;
+          };
+          orderData.items.forEach(item => {
+            if (item.type==='set') {
+              (item.selections||[]).forEach(sel => { if (sel.id) deduct(sel.id, sel.qty); });
+              return;
+            }
+            if (!item.productId) return;
+            deduct(item.productId, item.qty);
           });
           if (Object.keys(stockUpdates).length) {
             // Fetch current products from Firebase, apply deductions, write back

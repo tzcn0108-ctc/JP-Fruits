@@ -2815,15 +2815,27 @@ ${statusMsg}
 // ── STOCK MANAGEMENT ────────────────────────────────────
 // Restores/deducts stock when an order is cancelled/deleted.
 // Products with stock===-1 are unlimited and are never touched.
+// Set items pick from real products too (item.selections[] carries the
+// underlying product id + qty for each choice) — those draw from the SAME
+// shared stock pool as standalone items, so cancelling/deleting an order
+// with a set in it must restore those products' stock too, symmetric with
+// how the Order Form now deducts them on submission.
 function applyStockDelta(order, delta) {
   if (!order || !Array.isArray(order.items)) return;
   let changed = false;
-  order.items.forEach(item => {
-    if (item.type === 'set' || !item.productId) return;
-    const p = state.products.find(x => x.id === item.productId);
+  const apply = (productId, qty) => {
+    const p = state.products.find(x => x.id === productId);
     if (!p || p.stock === -1) return;
-    p.stock = Math.max(0, p.stock + delta * (item.qty || 1));
+    p.stock = Math.max(0, p.stock + delta * (qty || 1));
     changed = true;
+  };
+  order.items.forEach(item => {
+    if (item.type === 'set') {
+      (item.selections||[]).forEach(sel => { if (sel.id) apply(sel.id, sel.qty); });
+      return;
+    }
+    if (!item.productId) return;
+    apply(item.productId, item.qty);
   });
   if (changed) saveData();
 }
