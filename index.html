@@ -1291,7 +1291,7 @@ window.addEventListener('scroll', () => {
 <div class="countdown-bar">
   <span id="countdown-label-text">截單倒數：</span>
   <span class="cd-num" id="countdown2">--</span>
-  &nbsp;·&nbsp; 週五送貨 Friday Delivery &nbsp;·&nbsp; 貨到付款
+  &nbsp;·&nbsp; <span id="countdown-delivery-text">週五送貨</span> &nbsp;·&nbsp; <span id="countdown-cod-text">貨到付款</span>
 </div>
 
 <!-- MAIN LAYOUT -->
@@ -1808,7 +1808,10 @@ const TX = {
     heroTag:'港式點心 · 刺身 · 精選凍肉 · 亞洲美食',
     heroH1:'南倫敦嘅<br><em>亞洲廚房</em>',
     heroSub:'港式點心、家鄉菜、刺身、精選凍肉、亞洲零食，南倫敦各區送貨上門',
-    chip1:'HK Dim Sum', chip2:'Fresh Sashimi', chip3:'Pay on Delivery',
+    chip1:'港式點心', chip2:'新鮮刺身', chip3:'貨到付款',
+    cdLabel:'截單倒數：', cdDelivery:'週五送貨', cdCod:'貨到付款',
+    mscCount:'款產品', mscViewCart:'查看購物車', swipeHint:'← 左右滑動 →',
+    unitItems:'款', unitSets:'套',
     searchPh:'搜尋產品...', catAll:'全部', catBest:'本店熱賣', loading:'載入產品中...',
     cartTitle:'購物車', cartEmpty:'購物車係空嘅\n按 + 加入產品', items:' 項',
     subtotal:'小計', delivery:'送貨費', deliveryVal:'貨到付款', total:'合計',
@@ -1831,7 +1834,10 @@ const TX = {
     heroTag:'HK Dim Sum · Sashimi · Premium Meats · Asian Groceries',
     heroH1:'South London\'s<br><em>Asian Kitchen</em>',
     heroSub:'Authentic HK dim sum, home-cooked dishes, sashimi, premium meats & Asian groceries — delivered across South London',
-    chip1:'港式點心', chip2:'新鮮刺身', chip3:'貨到付款',
+    chip1:'HK Dim Sum', chip2:'Fresh Sashimi', chip3:'Pay on Delivery',
+    cdLabel:'Order Cutoff:', cdDelivery:'Friday Delivery', cdCod:'Pay on Delivery',
+    mscCount:'items', mscViewCart:'View Cart', swipeHint:'← Swipe to see more →',
+    unitItems:'items', unitSets:'sets',
     searchPh:'Search products...', catAll:'All', catBest:'Top Sellers', loading:'Loading products...',
     cartTitle:'Cart', cartEmpty:'Your cart is empty\nTap + to add products', items:' items',
     subtotal:'Subtotal', delivery:'Delivery', deliveryVal:'Pay on delivery', total:'Total',
@@ -1882,6 +1888,11 @@ function applyTX(){
   document.getElementById('chip1').textContent=t.chip1;
   document.getElementById('chip2').textContent=t.chip2;
   document.getElementById('chip3').textContent=t.chip3;
+  const cdLabelEl=document.getElementById('countdown-label-text');if(cdLabelEl)cdLabelEl.textContent=t.cdLabel;
+  const cdDelEl=document.getElementById('countdown-delivery-text');if(cdDelEl)cdDelEl.textContent=t.cdDelivery;
+  const cdCodEl=document.getElementById('countdown-cod-text');if(cdCodEl)cdCodEl.textContent=t.cdCod;
+  const mscCountEl=document.getElementById('msc-count-label');if(mscCountEl)mscCountEl.textContent=t.mscCount;
+  const mscBtnEl=document.getElementById('msc-btn-text');if(mscBtnEl)mscBtnEl.textContent=t.mscViewCart;
   document.getElementById('search-input').placeholder=t.searchPh;
   const ctEl=document.getElementById('cart-title-text');if(ctEl)ctEl.textContent=t.cartTitle;else{const el=document.getElementById('cart-title');if(el)el.textContent=t.cartTitle;}
   const mctEl=document.getElementById('mobile-cart-title-text');if(mctEl)mctEl.textContent=t.cartTitle;else{const el=document.getElementById('mobile-cart-title');if(el)el.textContent=t.cartTitle;}
@@ -1950,8 +1961,8 @@ function renderProducts(){
       <div class="section-head">
         <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a1 1 0 0 1-1-1h-2"/><path d="M8 4h8v7a4 4 0 0 1-8 0Z"/><path d="M12 15v3"/><path d="M8 21h8"/></svg></div>
         <div class="section-title">${tx('catBest')}</div>
-        <span class="section-count">${best.length} 款</span>
-        ${isMobile ? '<span class="scroll-hint">← 左右滑動 →</span>' : ''}
+        <span class="section-count">${best.length} ${tx('unitItems')}</span>
+        ${isMobile ? `<span class="scroll-hint">${tx('swipeHint')}</span>` : ''}
       </div>
       ${isMobile
         ? `<div class="best-scroll-wrap"><div class="best-scroll">${best.map(p=>pCard(p)).join('')}</div></div>`
@@ -2012,7 +2023,7 @@ function renderProducts(){
         <div class="section-icon">${emoji}</div>
         <div class="section-title">${main}</div>
         ${sub?`<div class="section-subtitle">${sub}</div>`:''}
-        <span class="section-count">${cprods.length+(catSets.length?` +${catSets.length}套`:'')} 款</span>
+        <span class="section-count">${cprods.length+(catSets.length?` +${catSets.length}${tx('unitSets')}`:'')} ${tx('unitItems')}</span>
       </div>
       ${catSets.map(s=>renderSetCard(s)).join('')}
       <div class="product-grid">${cprods.map(p=>pCard(p)).join('')}</div>
@@ -2613,6 +2624,35 @@ function restoreCartFromStorage() {
 // Returns null to disable the feature (no upsell item shown).
 function getBumpItem() { return null; }
 
+// Refreshes just the translatable text of an already-rendered checkout
+// form (labels, placeholders, the promo Apply button) without touching
+// any <input> elements — used when the form already exists and a
+// language switch needs to update its wording without wiping out
+// whatever the customer has already typed.
+function updateCartFormLabels(sfx){
+  const map = [
+    ['cf-name','cfName','cfNamePh'], ['cf-phone','cfPhone','cfPhonePh'],
+    ['cf-addr','cfAddr','cfAddrPh'], ['cf-post','cfPost','cfPostPh'],
+    ['cf-notes','cfNotes','cfNotesPh'],
+  ];
+  map.forEach(([id, labelKey, phKey]) => {
+    const input = document.getElementById(id+sfx);
+    if (!input) return;
+    const label = input.closest('.cf-group')?.querySelector('.cf-label');
+    if (label) label.textContent = tx(labelKey);
+    input.placeholder = tx(phKey);
+  });
+  const promoInput = document.getElementById('cf-promo'+sfx);
+  if (promoInput) promoInput.placeholder = lang==='zh' ? '輸入優惠碼...' : 'Enter promo code...';
+  const promoHeading = document.getElementById('cf-promo-heading'+sfx);
+  if (promoHeading) promoHeading.textContent = '🎫 ' + (lang==='zh' ? '優惠碼' : 'Promo Code');
+  const promoLabel = promoInput?.closest('div')?.parentElement?.querySelector('div');
+  const applyBtn = document.querySelector(`#cart-${sfx?'mobile':'section'} button[onclick*="applyPromo"]`);
+  if (applyBtn) applyBtn.textContent = lang==='zh' ? '使用' : 'Apply';
+  const waBtn = document.querySelector(`#cart-${sfx?'mobile':'section'} .whatsapp-btn`);
+  if (waBtn && waBtn.dataset.submitting !== 'true') waBtn.textContent = tx('waBtn');
+}
+
 function renderCart(cid,sfx){
   const el=document.getElementById(cid);if(!el)return;
   const items=Object.entries(cart).map(([id,val])=>({id,val,p:val&&val.isSet?{name:val.name}:products.find(x=>x.id===id)})).filter(x=>x.p);
@@ -2658,7 +2698,15 @@ function renderCart(cid,sfx){
   <div class="summary-row summary-total"><span>${tx('total')}</span><span data-summary="total">£${finalTotal.toFixed(2)}</span></div>`;
 
   if(formExists){
-    // Surgical update: only replace items and summary, preserve form inputs
+    // Surgical update: only replace items and summary, preserve form inputs.
+    // The form itself is intentionally NOT rebuilt here, so a customer's
+    // half-typed name/address survives every cart change — but that means
+    // its static labels (姓名/Name, 地址/Address, etc.) and the promo
+    // "Apply" button previously never got refreshed after a language
+    // switch, if the form had already been rendered once. Fix: retarget
+    // just the translatable label/placeholder/button text in place,
+    // without touching the <input> elements' values.
+    updateCartFormLabels(sfx);
     // First: remove any empty-state message
     const emptyMsg = el.querySelector('.cart-empty-msg');
     if(emptyMsg) emptyMsg.remove();
@@ -2673,7 +2721,7 @@ function renderCart(cid,sfx){
     let bumpEl = el.querySelector('.order-bump');
     if(bumpItem && !bumpEl){
       const btn = el.querySelector('.whatsapp-btn');
-      if(btn) btn.insertAdjacentHTML('beforebegin',`<div class="order-bump" onclick="addCart('${bumpItem.id}');this.style.display='none'"><div class="ob-label">加購優惠</div><div class="ob-content"><div class="ob-name">${lang==='zh'?(bumpItem.nameZh||bumpItem.name):bumpItem.nameEn||bumpItem.name}</div><div class="ob-price">+£${(bumpItem.salePrice||bumpItem.price).toFixed(2)}</div></div><div class="ob-cta">加入</div></div>`);
+      if(btn) btn.insertAdjacentHTML('beforebegin',`<div class="order-bump" onclick="addCart('${bumpItem.id}');this.style.display='none'"><div class="ob-label">${lang==='zh'?'加購優惠':'Add-on Deal'}</div><div class="ob-content"><div class="ob-name">${lang==='zh'?(bumpItem.nameZh||bumpItem.name):bumpItem.nameEn||bumpItem.name}</div><div class="ob-price">+£${(bumpItem.salePrice||bumpItem.price).toFixed(2)}</div></div><div class="ob-cta">${lang==='zh'?'加入':'Add'}</div></div>`);
     }
   } else {
     // First render: build everything including form
@@ -2684,7 +2732,7 @@ function cartForm(sfx){
   const has=getCount()>0;
   return`<div class="checkout-form"><div class="cf-row"><div class="cf-group"><label class="cf-label">${tx('cfName')}</label><input class="cf-input" id="cf-name${sfx}" type="text" placeholder="${tx('cfNamePh')}" autocomplete="name"></div><div class="cf-group"><label class="cf-label">${tx('cfPhone')}</label><input class="cf-input" id="cf-phone${sfx}" type="tel" placeholder="${tx('cfPhonePh')}" autocomplete="tel"></div></div><div class="cf-group"><label class="cf-label">${tx('cfAddr')}</label><input class="cf-input" id="cf-addr${sfx}" type="text" placeholder="${tx('cfAddrPh')}" autocomplete="street-address"></div><div class="cf-group"><label class="cf-label">${tx('cfPost')}</label><input class="cf-input" id="cf-post${sfx}" type="text" placeholder="${tx('cfPostPh')}" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="postal-code" oninput="updateMinWarning(this.value,'${sfx}')"></div><div class="cf-group"><label class="cf-label">${tx('cfNotes')}</label><input class="cf-input" id="cf-notes${sfx}" type="text" placeholder="${tx('cfNotesPh')}"></div>
   <div style="margin:10px 0;padding:10px 12px;background:var(--plum-l,#EDE6F5);border-radius:10px;">
-    <div style="font-size:0.73rem;font-weight:600;color:var(--plum);margin-bottom:7px;">🎫 ${lang==='zh'?'優惠碼':'Promo Code'}</div>
+    <div id="cf-promo-heading${sfx}" style="font-size:0.73rem;font-weight:600;color:var(--plum);margin-bottom:7px;">🎫 ${lang==='zh'?'優惠碼':'Promo Code'}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       <input type="text" id="cf-promo${sfx}" placeholder="${lang==='zh'?'輸入優惠碼...':'Enter promo code...'}"
         style="flex:1 1 140px;min-width:0;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;font-family:var(--font);letter-spacing:1px;"
@@ -3420,11 +3468,11 @@ setTimeout(_doLoadProducts, 3000);
 <!-- MOBILE STICKY BOTTOM CART -->
 <div class="mobile-sticky-cart" id="mobile-sticky-cart" style="display:none;">
   <div class="msc-left">
-    <span id="msc-count">0</span> 款產品
+    <span id="msc-count">0</span> <span id="msc-count-label">款產品</span>
     <span style="color:var(--muted);margin:0 6px;">·</span>
     <strong id="msc-total">£0.00</strong>
   </div>
-  <button class="msc-btn" onclick="scrollToCart()">查看購物車</button>
+  <button class="msc-btn" onclick="scrollToCart()" id="msc-btn-text">查看購物車</button>
 </div>
 
 <!-- Product detail modal -->
