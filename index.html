@@ -191,6 +191,7 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .set-card-desc{font-size:0.72rem;color:rgba(255,255,255,0.7);margin-top:2px;}
 .set-card-price{font-size:1.15rem;font-weight:700;color:var(--peach);white-space:nowrap;}
 .set-rule-bar{background:var(--plum-l);padding:7px 18px;font-size:0.72rem;color:var(--plum);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.set-fixed-includes{padding:14px 18px;font-size:0.85rem;color:var(--ink,#2D2438);line-height:1.6;}
 .set-rule-chip{background:var(--plum);color:white;padding:2px 10px;border-radius:10px;font-size:0.67rem;font-weight:700;}
 .set-body{padding:14px 18px;}
 .set-group-title{font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;margin-top:12px;display:flex;align-items:center;gap:8px;}
@@ -2093,12 +2094,49 @@ function pCard(p){
   </div>`;
 }
 
+// A set counts as "fixed" — no real choice to make — when every one of
+// its groups requires picking EVERY item in its list exactly once
+// (min === max === the group's item count, repeats not allowed). E.g. "3
+// noodles, one of each type" with exactly 3 items listed: there is only
+// one possible valid selection, so making the customer click through the
+// picker UI is friction with nothing to actually decide.
+function isFixedSet(s) {
+  const groups = s.groups || [];
+  if (!groups.length) return false;
+  return groups.every(g => !g.allowRepeat && g.min === g.max && g.max === (g.items||[]).length && g.max > 0);
+}
+
+// Auto-fills setSelections for a fixed set (one of each item, in every
+// group) and adds it straight to the cart — skipping the interactive
+// picker, since there is only one valid combination anyway.
+function addFixedSetToCart(sid) {
+  const s = sets.find(x => x.id === sid);
+  if (!s || !isFixedSet(s)) return;
+  if (!setSelections[sid]) setSelections[sid] = {};
+  (s.groups||[]).forEach((g, gi) => {
+    const sel = {};
+    (g.items||[]).forEach(i => { sel[i.id] = 1; });
+    setSelections[sid][gi] = sel;
+  });
+  addSetToCart(sid);
+}
+
 function renderSetCard(s){
   const sid=s.id;
   if(!setSelections[sid]) setSelections[sid]={};
   const groups=s.groups||[], isZh=lang==='zh';
   const setName=isZh?(s.nameZh||s.name):(s.nameEn||s.name||s.nameZh);
   const setDesc=isZh?(s.descZh||s.desc||''):(s.descEn||s.descZh||s.desc||'');
+
+  if (isFixedSet(s)) {
+    // Fully determined combination: list what's included, one-click add —
+    // no picker, since every group's only valid choice is "everything".
+    const includedNames = groups.flatMap(g => (g.items||[]).map(i =>
+      isZh ? (i.zh||i.name) : (i.en||i.name||i.zh)
+    ));
+    return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||''} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-body"><div class="set-fixed-includes">${isZh?'套餐內容：':'Includes: '}${includedNames.join(isZh?'、':', ')}</div></div><div class="set-footer"><button class="set-add-btn s-ready" onclick="addFixedSetToCart('${sid}')">${isZh?'加入購物車':'Add to Cart'}</button></div></div>`;
+  }
+
   const chips=groups.map(g=>`<span class="set-rule-chip">${isZh?g.nameZh:g.nameEn} x${g.min}${g.max>g.min?'-'+g.max:''}</span>`).join('');
   return `<div class="set-card" id="setcard-${sid}"><div class="set-card-header"><div><div class="set-card-name">${s.emoji||''} ${setName}</div><div class="set-card-desc">${setDesc}</div></div><div class="set-card-price">£${parseFloat(s.price||0).toFixed(2)}</div></div><div class="set-rule-bar">${chips}</div><div class="set-body">${groups.map((g,gi)=>renderSetGroup(sid,g,gi)).join('')}${renderSetProgress(sid,s)}</div><div class="set-footer"><button class="set-add-btn${isSetReady(sid,s)?' s-ready':''}" ${isSetReady(sid,s)?'':'disabled'} onclick="addSetToCart('${sid}')">${isSetReady(sid,s)?(isZh?'加入購物車':'Add to Cart'):(isZh?'請先揀齊所有選項':'Please complete all selections')}</button><div class="set-preview${isSetReady(sid,s)?' show':''}">${buildSetPreview(sid,s)}</div></div></div>`;
 }
