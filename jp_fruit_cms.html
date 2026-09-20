@@ -3578,7 +3578,18 @@ function escapeHTML(str) {
 function renderCategories() {
   const tbody = document.getElementById('categories-table');
   tbody.innerHTML = state.categories.map(c=>{
-    const count = state.products.filter(p=>p.cat===c.id).length;
+    const prods = state.products.filter(p=>p.cat===c.id);
+    const count = prods.length;
+    const activeCount = prods.filter(p=>p.active!==false).length;
+    const offCount = count - activeCount;
+    // Whole category counts as "off shelf" only once every product in it
+    // is off — otherwise show the mixed count so it's clear a bulk toggle
+    // would still change something.
+    const allOff = count > 0 && offCount === count;
+    const statusBadge = count === 0 ? ''
+      : allOff ? `<span class="badge badge-red" style="margin-left:6px;">全部落架</span>`
+      : offCount > 0 ? `<span class="badge badge-gold" style="margin-left:6px;">${offCount} 款落架</span>`
+      : '';
     return `<tr draggable="true"
       ondragstart="catDragStart(event,'${c.id}')"
       ondragover="catDragOver(event)"
@@ -3587,13 +3598,34 @@ function renderCategories() {
       style="cursor:grab;">
       <td style="color:var(--muted);font-size:1rem;padding-right:0;width:24px;">⠿</td>
       <td style="font-weight:500">${c.name}</td><td>${c.zh}</td>
-      <td><span class="badge badge-blue">${count} 款</span></td>
+      <td><span class="badge badge-blue">${count} 款</span>${statusBadge}</td>
       <td><div class="row-actions">
         <button class="btn btn-ghost btn-sm" onclick="editCategory('${c.id}')">✏️ 編輯</button>
+        ${count > 0 ? (allOff
+          ? `<button class="btn btn-sm" style="background:var(--green-l,#E8F5E9);color:var(--green,#2E7D32);" onclick="bulkToggleCategory('${c.id}',true)">🔼 全部上架</button>`
+          : `<button class="btn btn-sm" style="background:var(--red-l,#FDEDEC);color:var(--red,#C0392B);" onclick="bulkToggleCategory('${c.id}',false)">📴 全部下架</button>`
+        ) : ''}
         <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">刪除</button>
       </div></td>
     </tr>`;
   }).join('');
+}
+
+// Sets active=true/false for every product in a category in one go, so
+// taking a whole category off (or back on) shelf doesn't require opening
+// each product individually.
+function bulkToggleCategory(catId, makeActive) {
+  const cat = state.categories.find(c => c.id === catId);
+  const prods = state.products.filter(p => p.cat === catId);
+  if (!prods.length) return;
+  const label = cat ? (cat.zh || cat.name) : catId;
+  const verb = makeActive ? '上架' : '下架';
+  if (!confirm(`確定要將「${label}」呢個分類入面全部 ${prods.length} 款產品${verb}？`)) return;
+  prods.forEach(p => { p.active = makeActive; });
+  saveData();
+  renderCategories();
+  renderProducts();
+  showToast(`✓ 「${label}」已全部${verb}`);
 }
 function openCategoryModal() {
   state.editingCategoryId = null;
@@ -3926,18 +3958,32 @@ function initReports() {
   runReports();
 }
 
+// Week runs Saturday → Friday (matching the mobile CMS's weekly report and
+// the business's own operating week), evaluated in fixed UK time so it
+// doesn't shift depending on the admin's own device timezone.
+function getSatFriWeek(offsetWeeks) {
+  const ukNow = getUKNow();
+  const daysSinceSat = (ukNow.day - 6 + 7) % 7;
+  const satDay = new Date(Date.UTC(ukNow.year, ukNow.month - 1, ukNow.date));
+  satDay.setUTCDate(satDay.getUTCDate() - daysSinceSat + offsetWeeks * 7);
+  const y = satDay.getUTCFullYear(), mo = satDay.getUTCMonth() + 1, da = satDay.getUTCDate();
+  const fri = new Date(Date.UTC(y, mo - 1, da));
+  fri.setUTCDate(fri.getUTCDate() + 6);
+  const pad = n => String(n).padStart(2,'0');
+  return {
+    from: `${y}-${pad(mo)}-${pad(da)}`,
+    to: `${fri.getUTCFullYear()}-${pad(fri.getUTCMonth()+1)}-${pad(fri.getUTCDate())}`,
+  };
+}
+
 function setQuickDate(range) {
   const now = new Date();
   const fmt = d => d.toISOString().slice(0,10);
   let from, to = fmt(now);
   if (range==='thisweek') {
-    const day = now.getDay()||7;
-    from = fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate()-day+1));
+    ({from, to} = getSatFriWeek(0));
   } else if (range==='lastweek') {
-    const day = now.getDay()||7;
-    const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate()-day-6);
-    from = fmt(mon);
-    to = fmt(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()+6));
+    ({from, to} = getSatFriWeek(-1));
   } else if (range==='thismonth') {
     from = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
   } else if (range==='last30') {
