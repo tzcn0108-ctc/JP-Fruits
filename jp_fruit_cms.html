@@ -3604,7 +3604,7 @@ function renderCategories() {
         ${count > 0 ? (allOff
           ? `<button class="btn btn-sm" style="background:var(--green-l,#E8F5E9);color:var(--green,#2E7D32);" onclick="bulkToggleCategory('${c.id}',true)">🔼 全部上架</button>`
           : `<button class="btn btn-sm" style="background:var(--red-l,#FDEDEC);color:var(--red,#C0392B);" onclick="bulkToggleCategory('${c.id}',false)">📴 全部下架</button>`
-        ) : ''}
+        ) : `<span style="font-size:0.75rem;color:var(--muted);font-style:italic;">未有產品，暫無法下架</span>`}
         <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}')">刪除</button>
       </div></td>
     </tr>`;
@@ -4636,9 +4636,9 @@ function exportWeeklyCSV() {
   // ── SUMMARY ROWS ──
   const grandTotal = sorted.reduce((s, o) => s + parseFloat(o.total || 0), 0);
 
-  rows.push(['訂單總數 Order Total',
-    '£' + grandTotal.toFixed(2),
-    ...sorted.map(o => '£' + parseFloat(o.total || 0).toFixed(2))
+  rows.push(['訂單總數 Order Total (£)',
+    grandTotal.toFixed(2),
+    ...sorted.map(o => parseFloat(o.total || 0).toFixed(2))
   ]);
 
   rows.push(['訂單數量 Order Quantity',
@@ -4651,13 +4651,13 @@ function exportWeeklyCSV() {
   const cashTotal = cashOrders.reduce((s, o) => s + parseFloat(o.total||0), 0);
   const transferTotal = grandTotal - cashTotal;
 
-  rows.push(['現金 Cash',
-    cashTotal > 0 ? '£' + cashTotal.toFixed(2) : '',
-    ...sorted.map(o => o.payment === 'cash' ? '£' + parseFloat(o.total||0).toFixed(2) : '')
+  rows.push(['現金 Cash (£)',
+    cashTotal > 0 ? cashTotal.toFixed(2) : '',
+    ...sorted.map(o => o.payment === 'cash' ? parseFloat(o.total||0).toFixed(2) : '')
   ]);
-  rows.push(['過數 Transfer',
-    transferTotal > 0 ? '£' + transferTotal.toFixed(2) : '',
-    ...sorted.map(o => o.payment !== 'cash' ? '£' + parseFloat(o.total||0).toFixed(2) : '')
+  rows.push(['過數 Transfer (£)',
+    transferTotal > 0 ? transferTotal.toFixed(2) : '',
+    ...sorted.map(o => o.payment !== 'cash' ? parseFloat(o.total||0).toFixed(2) : '')
   ]);
 
   rows.push(['Deliver by',   '', ...sorted.map(o => o.driver || '')]);
