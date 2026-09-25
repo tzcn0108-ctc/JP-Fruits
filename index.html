@@ -3095,32 +3095,50 @@ Press OK if correct and we'll be in touch.`;
           // deducting from the SAME shared stock pool, or a product sold
           // both standalone and inside a set would show a stock count
           // that never reflects the set-side sales at all.
-          // Writes back to Firebase catalogue so other sessions see updated stock
-          const stockUpdates = {};
-          const deduct = (productId, qty) => {
-            const p = products.find(x=>x.id===productId);
-            if (!p || p.stock===-1) return;
-            const current = stockUpdates.hasOwnProperty(productId) ? stockUpdates[productId] : p.stock;
-            const newStock = Math.max(0, current - (qty||1));
-            p.stock = newStock;  // update local state so the page reflects it
-            stockUpdates[productId] = newStock;
+          //
+          // CRITICAL: the deduction amount per product must be computed
+          // from FRESH Firebase data at write time, never from this
+          // browser's own (possibly stale) local `products` snapshot.
+          // Basing "new stock" on a local snapshot and then overwriting
+          // Firebase with that absolute number is a classic lost-update
+          // race: if another order was placed anywhere in between this
+          // customer loading the page and submitting, that other order's
+          // deduction gets silently wiped out the moment this one writes —
+          // stock can end up UNDER-deducted (looks like more is left than
+          // was really sold) or even allow overselling, since each
+          // customer's "how much is left" check was against stale data.
+          //
+          // Fix: first tally how much THIS order needs per product (pure
+          // arithmetic on the order itself, independent of any stock
+          // number), THEN fetch Firebase's current stock and subtract from
+          // THAT — so concurrent orders' deductions correctly accumulate
+          // instead of clobbering each other.
+          const qtyNeeded = {}; // productId -> qty this order consumes
+          const need = (productId, qty) => {
+            if (!productId) return;
+            qtyNeeded[productId] = (qtyNeeded[productId]||0) + (qty||1);
           };
           orderData.items.forEach(item => {
             if (item.type==='set') {
-              (item.selections||[]).forEach(sel => { if (sel.id) deduct(sel.id, sel.qty); });
+              (item.selections||[]).forEach(sel => need(sel.id, sel.qty));
               return;
             }
-            if (!item.productId) return;
-            deduct(item.productId, item.qty);
+            need(item.productId, item.qty);
           });
-          if (Object.keys(stockUpdates).length) {
-            // Fetch current products from Firebase, apply deductions, write back
+          if (Object.keys(qtyNeeded).length) {
             const snap = await window._fbGet(window._fbRef(window._fbDb,'catalogue/products'));
             if (snap.exists()) {
               const fbProds = snap.val();
-              Object.entries(stockUpdates).forEach(([pid, newQty]) => {
-                const idx = (Array.isArray(fbProds)?fbProds:[]).findIndex(p=>p&&p.id===pid);
-                if (idx>=0) fbProds[idx].stock = newQty;
+              const fbList = Array.isArray(fbProds) ? fbProds : Object.values(fbProds||{});
+              Object.entries(qtyNeeded).forEach(([pid, qty]) => {
+                const idx = fbList.findIndex(p=>p&&p.id===pid);
+                if (idx<0) return;
+                const fp = fbList[idx];
+                if (fp.stock === -1) return; // unlimited — never touched
+                const newStock = Math.max(0, fp.stock - qty); // based on FRESH server value
+                fbList[idx].stock = newStock;
+                const localP = products.find(x=>x.id===pid);
+                if (localP) localP.stock = newStock; // keep this page's own view in sync
               });
               await window._fbSet(window._fbRef(window._fbDb,'catalogue/products'), fbProds);
             }
