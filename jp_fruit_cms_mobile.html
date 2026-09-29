@@ -41,6 +41,9 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
 
 /* ── Bottom nav (was bottom-fixed; now used as a top tab bar instead) ── */
 .top-nav-wrap{position:sticky;top:0;z-index:55;}
+.store-status-bar{padding:9px 16px;text-align:center;font-size:0.8rem;font-weight:700;cursor:pointer;transition:background 0.2s;}
+.store-status-bar.open{background:var(--green,#2E7D32);color:#fff;}
+.store-status-bar.paused{background:var(--red,#C0392B);color:#fff;}
 .top-nav{background:#fff;border-bottom:1px solid var(--border);display:flex;}
 .nav-btn{flex:1;padding:12px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:var(--font);}
 .nav-btn.active{color:var(--plum);border-bottom:2.5px solid var(--plum);}
@@ -194,6 +197,9 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
     <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">連接中...</span></div>
   </div>
 </header>
+<div class="store-status-bar" id="store-status-bar" onclick="toggleStorePause()">
+  <span id="store-status-text">營業中，接受新訂單</span>
+</div>
 <div class="top-nav">
   <button class="nav-btn active" id="nav-btn-orders" onclick="switchPage('orders')">
     <span class="nav-icon">📦</span><span class="nav-label">訂單</span>
@@ -296,6 +302,14 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
   get(ref(db, 'catalogue/categories')).then(snap => {
     window._allCategories = snap.exists() ? (Array.isArray(snap.val()) ? snap.val() : Object.values(snap.val())) : [];
   }).catch(() => { window._allCategories = []; });
+
+  // Live-listen to settings (specifically storePaused) so this page reflects
+  // the current pause state immediately — including changes made from the
+  // desktop CMS or another phone, without needing a manual refresh.
+  onValue(ref(db, 'catalogue/settings'), (snap) => {
+    window._storeSettings = snap.exists() ? snap.val() : {};
+    if (typeof updateStoreStatusBar === 'function') updateStoreStatusBar();
+  }, () => {});
 
   function setSyncStatus(ok) {
     const dot = document.getElementById('sync-dot');
@@ -589,6 +603,42 @@ function selectFontSize(key, px) {
 }
 
 // ══ BOTTOM NAV / PAGE SWITCHING ═══════════════════════════════════
+// ══ STORE PAUSE / RESUME ═══════════════════════════════════════════
+// Mirrors the desktop CMS's "暫停接單" toggle — updates the SAME
+// catalogue/settings.storePaused field, so pausing from either the phone
+// or the desktop CMS is reflected everywhere (customer order form
+// included) immediately via the live onValue listener above.
+function updateStoreStatusBar() {
+  const bar = document.getElementById('store-status-bar');
+  const text = document.getElementById('store-status-text');
+  if (!bar || !text) return;
+  const paused = !!(window._storeSettings && window._storeSettings.storePaused);
+  bar.classList.toggle('paused', paused);
+  bar.classList.toggle('open', !paused);
+  text.textContent = paused ? '⏸️ 已暫停接單，撳此恢復' : '🟢 營業中，接受新訂單';
+}
+
+async function toggleStorePause() {
+  const paused = !!(window._storeSettings && window._storeSettings.storePaused);
+  const goingToPause = !paused;
+  const msg = goingToPause
+    ? '確定要暫停接單？客人網站將會停止接受新訂單，直到你返嚟呢度恢復。'
+    : '確定要恢復接單？客人網站將會即時重新接受新訂單。';
+  if (!confirm(msg)) return;
+  try {
+    await window._fbUpdate(window._fbRef(window._fbDb, 'catalogue/settings'), { storePaused: goingToPause });
+    showToast(goingToPause ? '✓ 已暫停接單' : '✓ 已恢復接單');
+    // window._storeSettings updates via the live onValue listener; no
+    // need to set it manually here — but do it anyway so the bar flips
+    // instantly rather than waiting on the round-trip.
+    window._storeSettings = { ...(window._storeSettings||{}), storePaused: goingToPause };
+    updateStoreStatusBar();
+  } catch (e) {
+    showToast('❌ 更新失敗，請檢查網絡');
+    console.error(e);
+  }
+}
+
 function switchPage(page) {
   document.getElementById('page-orders-mobile').style.display = page==='orders' ? '' : 'none';
   document.getElementById('page-reports-mobile').style.display = page==='reports' ? '' : 'none';
