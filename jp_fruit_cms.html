@@ -35,7 +35,26 @@ body.light-mode, html.light-mode-pending body{
 body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
 .app{display:flex;min-height:100vh;}
 .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;}
-.main{flex:1;overflow-y:auto;overflow-x:hidden;}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;padding-top:44px;}
+/* View-only / edit mode bar (fixed so it stays visible while scrolling) */
+.mode-bar{position:fixed;top:0;left:220px;right:0;height:44px;z-index:150;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 24px;font-size:0.82rem;font-weight:600;border-bottom:1px solid var(--border);box-sizing:border-box;}
+.mode-bar.view{background:var(--surface2);color:var(--muted);}
+.mode-bar.edit{background:var(--gold);color:#1a1400;border-bottom-color:rgba(0,0,0,0.15);}
+.mode-bar.flash{animation:modeflash .7s ease;}
+@keyframes modeflash{0%,100%{box-shadow:inset 0 0 0 0 var(--red);}50%{box-shadow:inset 0 0 0 4px var(--red);}}
+.mode-bar .mode-btn{border:none;border-radius:8px;padding:6px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.mode-bar.view .mode-btn{background:var(--green);color:#00251c;}
+.mode-bar.edit .mode-btn{background:rgba(0,0,0,0.18);color:#1a1400;}
+.mode-bar .mode-btn:disabled{opacity:.6;cursor:wait;}
+/* Orders board: each column scrolls by itself so old orders never make the page long */
+#orders-kanban{align-items:start;}
+#orders-kanban .kanban-col{max-height:calc(100vh - 215px);overflow-y:auto;overflow-x:hidden;}
+#orders-kanban .kanban-col-header{position:sticky;top:0;z-index:3;background:var(--surface);display:flex;align-items:center;gap:8px;padding:10px 12px;font-weight:700;font-size:0.9rem;}
+body.light-mode #orders-kanban .kanban-col-header{background:var(--surface2);}
+.col-tools{white-space:nowrap;padding:6px 10px;font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);}
+.col-tools select{background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);font-family:inherit;font-size:0.72rem;}
+.col-note{padding:10px;text-align:center;font-size:0.74rem;color:var(--muted);}
+.col-note a,.col-note button{color:var(--green);cursor:pointer;background:none;border:none;font-size:0.74rem;font-family:inherit;text-decoration:underline;padding:0;}
 .logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
 .logo-title{font-size:1.1rem;font-weight:600;color:var(--green);}
 .logo-sub{font-size:0.7rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
@@ -312,7 +331,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, set, get, onValue, remove, update, serverTimestamp }
+  import { getDatabase, ref, push, set, get, onValue, remove, update, serverTimestamp, runTransaction }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -341,6 +360,21 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
   window._fbRemove = remove;
   window._fbGet = get;
   window._fbOnValue = onValue;
+  // Atomic read-modify-write on the SERVER's latest value. All stock changes go
+  // through this so two people (or a customer order + this CMS) can never
+  // overwrite each other's numbers.
+  window._fbTransaction = runTransaction;
+
+  // ── Live stock listener ──
+  // Customers' orders change catalogue/products stock on the server while this
+  // CMS stays open. Merge ONLY the stock numbers into local state (nothing else,
+  // so unsaved edits stay untouched) and refresh whatever stock view is showing.
+  onValue(ref(db, 'catalogue/products'), (snapshot) => {
+    const raw = snapshot.val();
+    if (!raw || !window._cmsState) return;
+    const list = Array.isArray(raw) ? raw : Object.values(raw);
+    if (typeof window.mergeServerStock === 'function') window.mergeServerStock(list);
+  }, () => {});
 
   // Firebase Storage
   const storage = getStorage(app);
@@ -421,7 +455,7 @@ body.light-mode .sidebar{border-right:1px solid var(--border);}
   document.dispatchEvent(new Event('firebaseReady'));
 </script>
 <script>
-/* CMS_VERSION: 2026-09-01-WEIGHTPRICE */
+/* CMS_VERSION: 2026-11-07-STOCKSYNC */
 
 // ── CMS PASSWORD PROTECTION ──────────────────────────────
 // Change this password to whatever you want:
@@ -525,6 +559,10 @@ function cmsUnlock() {
   </div>
 
   <div class="main">
+    <div class="mode-bar view" id="mode-bar">
+      <span id="mode-text">👁 只讀模式：可以睇資料，唔可以改</span>
+      <button class="mode-btn" id="mode-btn" onclick="toggleEditMode()">✏️ 開始編輯</button>
+    </div>
     <!-- DASHBOARD -->
     <div id="page-dashboard">
       <div class="header">
@@ -717,6 +755,9 @@ function cmsUnlock() {
               style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:var(--font);font-size:0.78rem;"
               onchange="filterOrders()">
             <button class="btn btn-ghost btn-sm" onclick="clearOrderFilters()">清除</button>
+            <label style="font-size:0.75rem;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;">
+              <input type="checkbox" id="order-show-cancelled" onchange="toggleShowCancelled(this.checked)"> 顯示已取消
+            </label>
             <span id="order-filter-count" style="font-size:0.75rem;color:var(--muted);margin-left:auto;"></span>
           </div>
         </div>
@@ -1794,7 +1835,7 @@ async function loadData() {
       state.categories = SEED_CATEGORIES;
       state.products   = SEED_PRODUCTS.map(p=>({...p}));
       state.sets=[]; state.orders=[]; state.settings={};
-      await saveData();
+      await saveData({ system: true });
     }
   } catch(e) {
     console.error('loadData:',e);
@@ -1880,13 +1921,138 @@ function checkAutoLockAfterCutoff() {
   if (lastLocked && lastLocked >= lastCutoff) return; // already locked for this cycle
   state.settings.storePaused = true;
   state.settings.lastCutoffLockedAt = lastCutoff.toISOString();
-  saveData();
+  saveData({ system: true });
   const pauseEl = document.getElementById('st-store-paused');
   if (pauseEl) pauseEl.checked = true;
   showToast('⏰ 已過截單時間，已自動暫停接單。想重新開放，去「網站設定」untick「暫停接單」。', 7000);
 }
 
-async function saveData() {
+// ── STOCK SYNC (server is the single source of truth for stock) ──────────
+// Why this exists: customers' orders deduct stock directly on the server, but
+// this CMS loads the catalogue once and then keeps its own copy. If saveData()
+// wrote that copy back as-is, every deduction made since the CMS was opened
+// was silently erased (stock jumped back UP). So:
+//   * stock numbers are always taken from the SERVER at save time, unless this
+//     admin deliberately typed a new number (tracked in stockDirty);
+//   * relative changes (+1/-1, cancel restore, order edits) are applied on the
+//     server's own latest value through a transaction;
+//   * a live listener keeps the numbers on screen current.
+const stockDirty = new Set();       // product ids whose stock THIS admin set on purpose
+// The CMS opens READ-ONLY. Nothing can be saved until the admin presses
+// "開始編輯" (which first re-loads the latest data from the server).
+window.cmsEditMode = false;
+let _modalStockAtOpen = null;       // stock shown in the product modal when it opened
+
+function stockListToMap(list) {
+  const m = new Map();
+  (Array.isArray(list) ? list : Object.values(list || {})).forEach(p => {
+    if (p && p.id != null) m.set(p.id, p.stock);
+  });
+  return m;
+}
+
+// Copy server stock numbers into local state (skips deliberate unsaved edits).
+function mergeServerStock(serverList) {
+  const fresh = stockListToMap(serverList);
+  let changed = false;
+  state.products.forEach(p => {
+    if (stockDirty.has(p.id)) return;
+    const s = fresh.get(p.id);
+    if (typeof s === 'number' && s !== p.stock) { p.stock = s; changed = true; }
+  });
+  if (changed) refreshStockViews();
+  return changed;
+}
+
+function refreshStockViews() {
+  const shown = id => { const el = document.getElementById(id); return el && el.style.display !== 'none'; };
+  try {
+    // Don't rebuild the inventory table under someone who is typing in it.
+    const typing = document.activeElement && document.activeElement.closest &&
+                   document.activeElement.closest('#inventory-table');
+    if (shown('page-inventory') && !typing) renderInventory();
+    if (shown('page-products')) renderProducts();
+    if (shown('page-dashboard')) renderDashboard();
+  } catch (e) { console.warn('refreshStockViews:', e); }
+}
+
+// Products array to write on save: local edits, but stock from the server.
+function buildProductsForSave(serverCur) {
+  const fresh = stockListToMap(serverCur);
+  return JSON.parse(JSON.stringify(state.products)).map(p => {
+    const s = fresh.get(p.id);
+    if (!stockDirty.has(p.id) && typeof s === 'number') p.stock = s;
+    return p;
+  });
+}
+
+// Apply RELATIVE stock changes ({productId: +/-n}) on the server's latest
+// numbers. Unlimited (-1) products are never touched; stock never goes below 0.
+// Returns true on success.
+async function serverStockChange(deltas) {
+  const ids = Object.keys(deltas).filter(id => deltas[id]);
+  if (!ids.length) return true;
+  if (!window.cmsEditMode) { if (typeof notifyViewOnly === 'function') notifyViewOnly(); return false; }
+  if (!(window._firebaseReady && window._fbDb && window._fbTransaction)) {
+    ids.forEach(id => {
+      const p = state.products.find(x => x.id === id);
+      if (p && p.stock !== -1) { p.stock = Math.max(0, (p.stock||0) + deltas[id]); stockDirty.add(id); }
+    });
+    showToast('⚠️ 未連上雲端，庫存只改咗本機，客戶網站未更新。', 5000);
+    return false;
+  }
+  try {
+    const r = await window._fbTransaction(
+      window._fbRef(window._fbDb, 'catalogue/products'),
+      (cur) => {
+        if (cur == null) return cur;
+        const keys = Array.isArray(cur) ? cur.map((_, i) => i) : Object.keys(cur);
+        keys.forEach(k => {
+          const p = cur[k];
+          if (!p || deltas[p.id] === undefined) return;
+          if (p.stock === -1 || typeof p.stock !== 'number') return;
+          p.stock = Math.max(0, p.stock + deltas[p.id]);
+        });
+        return cur;
+      }
+    );
+    if (!r.committed) throw new Error('stock transaction was not committed');
+    const v = r.snapshot.val();
+    if (v) mergeServerStock(Array.isArray(v) ? v : Object.values(v));
+    return true;
+  } catch (e) {
+    console.error('serverStockChange failed:', e);
+    showToast('❌ 庫存更新失敗，請檢查網絡後再試一次。', 5000);
+    return false;
+  }
+}
+
+// Atomically "claim" the one-time stock restore for an order, so the same order
+// can never give its stock back twice (e.g. cancelled on phone AND desktop).
+// Returns 'won' (this caller should restore), 'taken' (already restored by
+// someone else) or 'error' (could not tell: do nothing and report failure).
+async function claimStockRestore(o) {
+  if (!(window._fbDb && window._fbTransaction && o && o.firebaseId)) return o.stockRestored ? 'taken' : 'won';
+  try {
+    const r = await window._fbTransaction(
+      window._fbRef(window._fbDb, 'orders/' + o.firebaseId + '/stockRestored'),
+      (cur) => cur ? undefined : true
+    );
+    return r.committed ? 'won' : 'taken';
+  } catch (e) { console.error('claimStockRestore failed:', e); return 'error'; }
+}
+async function releaseStockRestore(o) {
+  o.stockRestored = false;
+  if (window._fbDb && window._fbUpdate && o.firebaseId) {
+    try { await window._fbUpdate(window._fbRef(window._fbDb, 'orders/' + o.firebaseId), { stockRestored: false }); }
+    catch (e) { console.error('releaseStockRestore failed:', e); }
+  }
+}
+
+async function saveData(opts) {
+  // Read-only mode: refuse to write (system saves such as the first-run seed or
+  // the automatic post-cutoff order lock pass {system:true}).
+  if (!window.cmsEditMode && !(opts && opts.system)) { if (typeof notifyViewOnly === 'function') notifyViewOnly(); return false; }
   setSyncing(true);
   const payload = {
     products: state.products, orders: state.orders,
@@ -1907,8 +2073,23 @@ async function saveData() {
   //    failure must be surfaced — never report success on a failed push.
   if (window._firebaseReady && window._fbDb) {
     try {
-      await window._fbSet(window._fbRef(window._fbDb, 'catalogue'), {
-        products:   state.products,
+      // Products first, through a transaction: every product's stock is taken
+      // from the SERVER's current value (see STOCK SYNC above), so saving an
+      // unrelated change can no longer wipe out customers' stock deductions.
+      const dirtyAtStart = new Set(stockDirty);
+      if (window._fbTransaction) {
+        const txn = await window._fbTransaction(
+          window._fbRef(window._fbDb, 'catalogue/products'),
+          (cur) => buildProductsForSave(cur)
+        );
+        if (!txn.committed) throw new Error('products transaction was not committed');
+        const v = txn.snapshot.val();
+        if (v) mergeServerStock(Array.isArray(v) ? v : Object.values(v));
+      } else {
+        await window._fbSet(window._fbRef(window._fbDb, 'catalogue/products'), state.products);
+      }
+      // Everything else (categories, sets, banner, settings...) as before.
+      await window._fbUpdate(window._fbRef(window._fbDb, 'catalogue'), {
         categories: state.categories,
         sets:       state.sets,
         banner:     state.banner,
@@ -1917,6 +2098,7 @@ async function saveData() {
         vips:       state.vips || {},
         updatedAt:  new Date().toISOString(),
       });
+      dirtyAtStart.forEach(id => stockDirty.delete(id));   // server now holds these deliberate numbers
     } catch(e) {
       console.error('Firebase catalogue sync failed:', e);
       setSyncing(false, e.message || String(e));
@@ -2212,15 +2394,18 @@ function renderInventory() {
   if (state.showLowOnly) prods = prods.filter(p=>p.stock===0);
   if (state.inventorySearchQuery) {
     const q = state.inventorySearchQuery.toLowerCase();
-    prods = prods.filter(p=>p.name.toLowerCase().includes(q));
+    prods = prods.filter(p => ((p.nameZh||'') + ' ' + (p.nameEn||'') + ' ' + (p.name||'') + ' ' + (p.id||'')).toLowerCase().includes(q));
   }
   const tbody = document.getElementById('inventory-table');
-  tbody.innerHTML = prods.map(p=>{
+  tbody.innerHTML = prods.map(inventoryRowHTML).join('');
+}
+
+function inventoryRowHTML(p) {
     const cat = state.categories.find(c=>c.id===p.cat);
     const color = p.stock===-1?'var(--green)':p.stock===0?'var(--red)':p.stock<=3?'var(--gold)':'var(--green)';
     const label = p.stock===-1?'無限':p.stock===0?'售罄':p.stock<=3?'庫存不足':'充足';
     const pct = p.stock===-1?100:p.stock===0?0:Math.min(100,p.stock/20*100);
-    return `<tr>
+    return `<tr data-pid="${p.id}">
       <td>
         <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:2px;">
           <span style="font-family:var(--mono);font-size:0.68rem;color:var(--plum);background:var(--plum-l);padding:1px 5px;border-radius:4px;flex-shrink:0;">${p.id}</span>
@@ -2242,7 +2427,16 @@ function renderInventory() {
         </div>
       </td>
     </tr>`;
-  }).join('');
+}
+
+// Re-draw just one inventory row (keeps keyboard focus when typing down the list).
+function refreshInventoryRow(id) {
+  const p = state.products.find(x => x.id === id);
+  const tr = document.querySelector(`#inventory-table tr[data-pid="${id}"]`);
+  if (!p || !tr) return;
+  const tmp = document.createElement('tbody');
+  tmp.innerHTML = inventoryRowHTML(p);
+  tr.replaceWith(tmp.firstElementChild);
 }
 
 function filterInventory(q) { state.inventorySearchQuery=q; renderInventory(); }
@@ -2251,17 +2445,29 @@ function toggleLowOnly() {
   document.getElementById('low-btn').textContent = state.showLowOnly?'顯示全部':'⚠️ 只顯示售罄';
   renderInventory();
 }
-function adjustStock(id, delta) {
+// +1 / -1 : applied to the SERVER's current number (not this screen's copy).
+async function adjustStock(id, delta) {
   const p = state.products.find(x=>x.id===id);
   if (!p||p.stock===-1) return;
-  p.stock = Math.max(0, p.stock+delta);
-  saveData(); renderInventory(); renderDashboard();
+  const ok = await serverStockChange({ [id]: delta });
+  refreshInventoryRow(id);
+  if (ok) renderDashboard();
 }
-function setStock(id, val) {
+// Typing an exact number is a deliberate override: it wins over the server's value.
+async function setStock(id, val) {
   const p = state.products.find(x=>x.id===id);
   if (!p) return;
-  p.stock = parseInt(val);
-  saveData(); renderDashboard();
+  const n = parseInt(val, 10);
+  if (isNaN(n) || n < -1) {
+    showToast('⚠️ 庫存請輸入 0 或以上嘅數字（-1 = 無限）');
+    refreshInventoryRow(id);
+    return;
+  }
+  p.stock = n;
+  stockDirty.add(id);
+  const ok = await saveData();
+  refreshInventoryRow(id);
+  if (ok) { renderDashboard(); showToast('✓ 庫存已更新'); }
 }
 
 // ── PRODUCT CRUD ─────────────────────────────────────────────
@@ -2282,6 +2488,7 @@ function openProductModal(id=null) {
     document.getElementById('p-sale-price').value = p.salePrice||'';
     document.getElementById('p-sale-until').value = p.saleUntil||'';
     document.getElementById('p-stock').value = p.stock!=null?p.stock:-1;
+    _modalStockAtOpen = p.stock!=null?p.stock:-1;   // so saving can tell if stock was really edited
     document.getElementById('p-desc-zh').value = p.descZh||p.desc||'';
     document.getElementById('p-desc-en').value = p.descEn||'';
     // Multi-image: build editingImages from p.images[] + p.image fallback
@@ -2310,6 +2517,7 @@ function openProductModal(id=null) {
   } else {
     ['p-name-zh','p-name-en','p-unit','p-price','p-sale-price','p-sale-until','p-desc-zh','p-desc-en'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('p-stock').value=-1;
+    _modalStockAtOpen = null;
     document.getElementById('p-active').checked=true;
     document.getElementById('p-featured').checked=false;
     editingTiers = []; renderTierSlots();
@@ -2350,6 +2558,15 @@ async function saveProduct() {
     if (!confirm(`特價 £${_salePriceParsed} 同原價 £${_price} 相同或更高，確認繼續？`)) return;
   }
 
+  // ── Stock validation ──
+  const _stockRaw = document.getElementById('p-stock').value.trim();
+  let _stock = parseInt(_stockRaw, 10);
+  if (_stockRaw === '' || isNaN(_stock) || _stock < -1) {
+    alert('庫存請填 0 或以上嘅數字，或 -1（無限）！');
+    document.getElementById('p-stock').focus();
+    return;
+  }
+
   const salePrice = _salePriceParsed;
   const product = {
     id: state.editingProductId || uid(),
@@ -2362,7 +2579,7 @@ async function saveProduct() {
     price: _price,
     salePrice,
     saleUntil: document.getElementById('p-sale-until').value||null,
-    stock: parseInt(document.getElementById('p-stock').value),
+    stock: _stock,
     descZh: document.getElementById('p-desc-zh').value.trim(),
     descEn: document.getElementById('p-desc-en').value.trim(),
     desc: document.getElementById('p-desc-zh').value.trim(), // fallback
@@ -2388,6 +2605,9 @@ async function saveProduct() {
     historicSold: state.editingProductId ? (state.products.find(p=>p.id===state.editingProductId)?.historicSold||0) : 0,
     needsVerify: false,
   };
+  // Only treat stock as a deliberate edit if the admin actually changed the box;
+  // otherwise the number in the modal may be stale and the server's value wins.
+  if (!state.editingProductId || _modalStockAtOpen === null || _stock !== _modalStockAtOpen) stockDirty.add(product.id);
   if (state.editingProductId) state.products = state.products.map(p=>p.id===state.editingProductId?product:p);
   else state.products.push(product);
   closeModal('product-modal');
@@ -2448,8 +2668,9 @@ function _renderOrdersKanban() {
 }
 
 function nextStatusBtn(o) {
-  const next  = {new:'pending', pending:'confirmed', confirmed:'delivering', delivering:'delivered'};
-  const label = {new:'接單確認', pending:'✓ 確認', confirmed:'出發送貨', delivering:'完成送達'};
+  // 3-step flow: 新訂單 → 已確認 → 已完成 (older "待確認" / "送緊貨" orders follow the same path)
+  const next  = {new:'confirmed', pending:'delivered', confirmed:'delivered', delivering:'delivered'};
+  const label = {new:'✓ 確認訂單', pending:'✓ 完成送達', confirmed:'✓ 完成送達', delivering:'✓ 完成送達'};
   const n = next[o.status];
   if (!n) return '';
   return `<button class="btn btn-primary btn-sm" onclick="advanceOrder('${o.id}','${n}')">${label[o.status]}</button>`;
@@ -2473,7 +2694,7 @@ function viewOrder(id) {
   const o = state.orders.find(x => x.id === id);
   if (!o) return;
 
-  const statusLabel = {new:'新訂單', pending:'待確認', confirmed:'已確認', delivering:'送緊貨', delivered:'已完成', cancelled:'已取消'}[o.status] || o.status;
+  const statusLabel = {new:'新訂單', pending:'已確認', confirmed:'已確認', delivering:'已確認', delivered:'已完成', cancelled:'已取消'}[o.status] || o.status;
   const statusColor = {new:'var(--berry)', pending:'var(--gold)', confirmed:'#2563EB', delivering:'var(--leaf)', delivered:'var(--muted)', cancelled:'var(--muted)'}[o.status] || 'var(--muted)';
 
   // Build items list
@@ -2653,28 +2874,73 @@ function clearOrderFilters() {
   renderOrders();
 }
 
+// ── ORDER BOARD: three columns ──────────────────────────────────────
+//   新訂單 = new      已確認 = pending + confirmed + delivering      已完成 = delivered
+// (the older "待確認" / "送緊貨" statuses still exist in the data, they are
+// simply shown inside the nearest of the three columns.) Cancelled orders are
+// hidden unless "顯示已取消" is ticked.
+const ORDER_COLS = [
+  {key:'new',       label:'新訂單', color:'var(--berry)', statuses:['new']},
+  {key:'confirmed', label:'已確認', color:'#2563EB',      statuses:['pending','confirmed','delivering']},
+  {key:'delivered', label:'已完成', color:'var(--muted)', statuses:['delivered']},
+];
+const ORDER_COL_CANCELLED = {key:'cancelled', label:'已取消', color:'#999', statuses:['cancelled']};
+let ordersDoneRangeDays = 14;   // finished/cancelled columns only show the last N days (0 = all)
+let ordersDoneLimit = 60;       // ...and at most this many cards until "顯示更多"
+let ordersShowCancelled = false;
+
+function orderColKey(status) {
+  const all = [...ORDER_COLS, ORDER_COL_CANCELLED];
+  const c = all.find(c => c.statuses.includes(status));
+  return c ? c.key : status;
+}
+function ordersFilterActive() {
+  return ['order-search-name','order-search-phone','order-search-postcode','order-filter-payment','order-filter-from','order-filter-to']
+    .some(id => (document.getElementById(id)?.value || '') !== '');
+}
+function toggleShowCancelled(v) { ordersShowCancelled = !!v; filterOrders(); }
+function setOrdersDoneRange(v) { ordersDoneRangeDays = parseInt(v, 10) || 0; ordersDoneLimit = 60; filterOrders(); }
+function showMoreOrders() { ordersDoneLimit += 60; filterOrders(); }
+
 function renderFilteredOrders(filteredOrders) {
-  const cols = [
-    {status:'new',       label:'新訂單',  color:'var(--berry)'},
-    {status:'pending',   label:'待確認',  color:'var(--gold)'},
-    {status:'confirmed', label:'已確認',  color:'#2563EB'},
-    {status:'delivering',label:'送緊貨',  color:'var(--leaf)'},
-    {status:'delivered', label:'已完成',  color:'var(--muted)'},
-    {status:'cancelled', label:'已取消',  color:'#999'},
-  ];
   const kanban = document.getElementById('orders-kanban');
   if (!kanban) return;
+  const cols = ordersShowCancelled ? [...ORDER_COLS, ORDER_COL_CANCELLED] : ORDER_COLS;
+  kanban.style.gridTemplateColumns = `repeat(${cols.length}, minmax(0, 1fr))`;
+  const searching = ordersFilterActive();          // a search always looks through everything
+  const cutoff = ordersDoneRangeDays ? Date.now() - ordersDoneRangeDays * 86400000 : 0;
 
   kanban.innerHTML = cols.map(col => {
-    const orders = filteredOrders.filter(o=>o.status===col.status);
+    let orders = filteredOrders.filter(o => col.statuses.includes(o.status));
+    const total = orders.length;
+    const finished = col.key === 'delivered' || col.key === 'cancelled';
+    let hiddenOlder = 0, hiddenMore = 0;
+    if (finished && !searching && cutoff) {
+      const recent = orders.filter(o => !o.createdAt || new Date(o.createdAt).getTime() >= cutoff);
+      hiddenOlder = orders.length - recent.length;
+      orders = recent;
+    }
+    if (finished && orders.length > ordersDoneLimit) {
+      hiddenMore = orders.length - ordersDoneLimit;
+      orders = orders.slice(0, ordersDoneLimit);
+    }
+    const shown = orders.length;
+    const tools = col.key === 'delivered' ? `
+      <div class="col-tools">顯示
+        <select onchange="setOrdersDoneRange(this.value)">
+          ${[[7,'近 7 日'],[14,'近 14 日'],[30,'近 30 日'],[0,'全部']].map(([v,l]) => `<option value="${v}" ${ordersDoneRangeDays===v?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>` : '';
     return `<div class="kanban-col"
       ondragover="onColDragOver(event)"
       ondragleave="onColDragLeave(event)"
-      ondrop="onColDrop(event,'${col.status}')">
+      ondrop="onColDrop(event,'${col.key}')">
       <div class="kanban-col-header" style="border-top:3px solid ${col.color};">
         <span>${col.label}</span>
-        <span class="kanban-count">${orders.length}</span>
+        <span class="kanban-count">${shown < total ? shown + '/' + total : total}</span>
       </div>
+      ${tools}
+      ${shown === 0 ? '<div class="col-note">沒有訂單</div>' : ''}
       ${orders.map(o=>`<div class="order-card" draggable="true" ondragstart="onCardDragStart(event,'${o.id}')" ondragend="onCardDragEnd(event)" onclick="viewOrder('${o.id}')" style="cursor:pointer;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div class="order-id">#${o.id.slice(-6).toUpperCase()}</div>
@@ -2688,21 +2954,22 @@ function renderFilteredOrders(filteredOrders) {
         <div class="order-area">${escapeHTML(o.postcode||'')} ${o.phone?'· '+escapeHTML(o.phone.slice(-4)):''}</div>
         ${o.adminNote?`<div style="font-size:0.7rem;color:var(--gold);margin-top:4px;border-top:1px solid var(--border);padding-top:4px;">📌 ${escapeHTML(o.adminNote.slice(0,40))}${o.adminNote.length>40?'...':''}</div>`:''}
         <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap;" onclick="event.stopPropagation()">
-          ${col.status!=='delivered'&&col.status!=='cancelled'?nextStatusBtn(o):''}
-          ${col.status!=='delivered'&&col.status!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>`:''}
+          ${col.key!=='delivered'&&col.key!=='cancelled'?nextStatusBtn(o):''}
+          ${col.key!=='delivered'&&col.key!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">取消</button>`:''}
           <select onchange="if(this.value)advanceOrder('${o.id}',this.value);this.value='';"
             style="font-size:0.68rem;padding:3px 4px;border-radius:5px;border:1px solid var(--border);
             background:var(--surface2);color:var(--muted);cursor:pointer;margin-top:3px;width:100%;"
             title="觸控裝置：直接揀狀態">
             <option value="">📱 改狀態...</option>
-            <option value="pending">待確認</option>
+            <option value="new">新訂單</option>
             <option value="confirmed">已確認</option>
-            <option value="delivering">送緊貨</option>
             <option value="delivered">已完成</option>
             <option value="cancelled">取消</option>
           </select>
         </div>
       </div>`).join('')}
+      ${hiddenOlder > 0 ? `<div class="col-note">另有 ${hiddenOlder} 張較早嘅訂單未顯示<br><a onclick="setOrdersDoneRange(0)">顯示全部</a></div>` : ''}
+      ${hiddenMore > 0 ? `<div class="col-note"><button onclick="showMoreOrders()">顯示更多（仲有 ${hiddenMore} 張）</button></div>` : ''}
     </div>`;
   }).join('');
 }
@@ -2710,12 +2977,25 @@ function renderFilteredOrders(filteredOrders) {
 
 
 
-function editOrderItemQty(orderId, itemIdx, delta) {
+async function editOrderItemQty(orderId, itemIdx, delta) {
   // Find in Firebase orders first, then state
   let allOrders = window._firebaseOrders || state.orders;
   const o = allOrders.find(x => x.id === orderId);
   if (!o || !Array.isArray(o.items)) return;
-  o.items[itemIdx].qty = Math.max(1, (o.items[itemIdx].qty||1) + delta);
+  const item = o.items[itemIdx];
+  if (!item || _orderBusy.has(orderId)) return;
+  const oldQty = item.qty || 1;
+  const newQty = Math.max(1, oldQty + delta);
+  if (newQty === oldQty) return;
+  _orderBusy.add(orderId);
+  try {
+    // The order form deducted stock when the order was placed, so keep stock in
+    // step with the edit (fewer = give back, more = take out).
+    if (stockHeld(o) && item.type !== 'set' && item.productId) {
+      if (!(await serverStockChange({ [item.productId]: -(newQty - oldQty) }))) return;
+    }
+  } finally { _orderBusy.delete(orderId); }
+  item.qty = newQty;
   o.total = parseFloat(o.items.reduce((s,i) => s + (i.price||0)*(i.qty||1), 0).toFixed(2));
   // Sync to state too
   const stateIdx = state.orders.findIndex(x => x.id === orderId);
@@ -2726,11 +3006,16 @@ function editOrderItemQty(orderId, itemIdx, delta) {
   viewOrder(orderId);
 }
 
-function removeOrderItem(orderId, itemIdx) {
+async function removeOrderItem(orderId, itemIdx) {
   let allOrders2 = window._firebaseOrders || state.orders;
   const o = allOrders2.find(x => x.id === orderId);
-  if (!o || !Array.isArray(o.items)) return;
+  if (!o || !Array.isArray(o.items) || !o.items[itemIdx]) return;
   if (!confirm(`確定移除「${o.items[itemIdx].name}」？`)) return;
+  // Removing an item means it won't be delivered: give its stock back.
+  if (stockHeld(o)) {
+    const ok = await serverStockChange(stockDeltasForOrder({ items: [o.items[itemIdx]] }, +1));
+    if (!ok) return;
+  }
   o.items.splice(itemIdx, 1);
   o.total = o.items.reduce((s,i) => s + (i.price||0)*(i.qty||1), 0);
   syncOrderToFirebase(o);
@@ -2820,39 +3105,78 @@ ${statusMsg}
 // shared stock pool as standalone items, so cancelling/deleting an order
 // with a set in it must restore those products' stock too, symmetric with
 // how the Order Form now deducts them on submission.
-function applyStockDelta(order, delta) {
-  if (!order || !Array.isArray(order.items)) return;
-  let changed = false;
-  const apply = (productId, qty) => {
-    const p = state.products.find(x => x.id === productId);
-    if (!p || p.stock === -1) return;
-    p.stock = Math.max(0, p.stock + delta * (qty || 1));
-    changed = true;
+//
+// All changes are applied RELATIVE to the server's current stock (transaction),
+// never computed from this screen's possibly-old copy. Returns true on success.
+function stockDeltasForOrder(order, delta) {
+  const deltas = {};
+  const add = (productId, qty) => {
+    if (!productId) return;
+    deltas[productId] = (deltas[productId] || 0) + delta * (qty || 1);
   };
-  order.items.forEach(item => {
-    if (item.type === 'set') {
-      (item.selections||[]).forEach(sel => { if (sel.id) apply(sel.id, sel.qty); });
-      return;
-    }
-    if (!item.productId) return;
-    apply(item.productId, item.qty);
+  (order.items || []).forEach(item => {
+    if (item.type === 'set') (item.selections || []).forEach(sel => add(sel.id, sel.qty));
+    else add(item.productId, item.qty);
   });
-  if (changed) saveData();
+  return deltas;
+}
+async function applyStockDelta(order, delta) {
+  if (!order || !Array.isArray(order.items)) return true;
+  return serverStockChange(stockDeltasForOrder(order, delta));
 }
 
-function advanceOrder(id, newStatus) {
+// Stock is "held" by an order from the moment it is placed until it is
+// cancelled (or deleted before fulfilment) and the stock is given back.
+const stockHeld = o => o.status !== 'cancelled' && !o.stockRestored;
+
+// Give an order's stock back exactly once. Returns true if stock is now restored
+// (or was already), false if it failed and nothing should proceed.
+async function restoreStockOnce(o) {
+  if (o.stockRestored) return true;
+  const claim = await claimStockRestore(o);
+  if (claim === 'error') return false;
+  if (claim === 'taken') { o.stockRestored = true; return true; }   // another device already did it
+  const ok = await applyStockDelta(o, +1);
+  if (!ok) { await releaseStockRestore(o); return false; }
+  o.stockRestored = true;
+  return true;
+}
+
+const _orderBusy = new Set();    // blocks double-clicks while a status change is in flight
+
+async function advanceOrder(id, newStatus) {
   const o = state.orders.find(x => x.id === id);
   if (!o) return;
-  const oldStatus = o.status;
+  if (_orderBusy.has(id)) return;
+  _orderBusy.add(id);
+  try { await _advanceOrder(o, newStatus); } finally { _orderBusy.delete(id); }
+}
 
-  // Stock: restore when cancelled (order form already deducted at submission time)
+async function _advanceOrder(o, newStatus) {
+  const oldStatus = o.status;
+  const updates = { status: newStatus, updatedAt: new Date().toISOString() };
+
+  // Stock: give back when cancelled (the order form deducted it at submission).
   if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
-    applyStockDelta(o, +1);
+    if (!(await restoreStockOnce(o))) {
+      showToast('❌ 庫存回復失敗，訂單未取消，請再試一次。', 5000);
+      renderOrders();
+      return;
+    }
+    updates.stockRestored = true;
+  }
+  // Un-cancelling: the goods are owed again, so take the stock back out.
+  else if (oldStatus === 'cancelled' && newStatus !== 'cancelled' && o.stockRestored) {
+    if (!(await applyStockDelta(o, -1))) {
+      showToast('❌ 庫存更新失敗，狀態未更改，請再試一次。', 5000);
+      renderOrders();
+      return;
+    }
+    o.stockRestored = false;
+    updates.stockRestored = false;
   }
 
   o.status = newStatus;
-
-  const updates = { status: newStatus, updatedAt: new Date().toISOString() };
 
   // When confirming order: update promo usedCount
   if (newStatus === 'confirmed' && o.promoCode && !o._promoCounted) {
@@ -2887,12 +3211,22 @@ function advanceOrder(id, newStatus) {
 
 
 // ── PERMANENT ORDER DELETE ──────────────────────────
-function deleteOrder(id) {
+async function deleteOrder(id) {
   const o = (window._firebaseOrders || state.orders).find(x => x.id === id);
   const label = o ? `#${id.slice(-6).toUpperCase()} (${o.name||'—'}, £${parseFloat(o.total||0).toFixed(2)})` : `#${id}`;
   if (!confirm(`永久刪除訂單 ${label}？
 
 此操作不可撤銷，訂單將從系統完全移除。`)) return;
+
+  // Give the stock back first if this order never reached the customer
+  // (new / pending / confirmed) and its stock wasn't already returned by a
+  // cancel. Delivered / out-for-delivery orders keep their stock deducted.
+  if (o && ['new', 'pending', 'confirmed'].includes(o.status) && !o.stockRestored) {
+    if (!(await restoreStockOnce(o))) {
+      showToast('❌ 庫存回復失敗，訂單未刪除，請再試一次。', 5000);
+      return;
+    }
+  }
 
   // Remove from Firebase using the already-exposed _fbRemove function
   if (window._firebaseReady && window._fbDb && o?.firebaseId) {
@@ -2900,9 +3234,6 @@ function deleteOrder(id) {
       .then(() => showToast('已從雲端永久刪除'))
       .catch(e => { console.warn('Firebase delete failed:', e); showToast('❌ 雲端刪除失敗，本機已移除'); });
   }
-
-  // Restore stock if deleting a confirmed order
-  if (o && o.status === 'confirmed') applyStockDelta(o, +1);
 
   // Remove from local state
   state.orders = state.orders.filter(x => x.id !== id);
@@ -2915,27 +3246,11 @@ function deleteOrder(id) {
   showToast(`訂單 ${label} 已刪除`);
 }
 
-function cancelOrder(id) {
+async function cancelOrder(id) {
   if (!confirm('確定取消此訂單？')) return;
-  const o = state.orders.find(x => x.id === id);
-  if (!o) return;
-  const oldStatus = o.status;
-  o.status = 'cancelled';
-
-  // Restore stock — this order's items are no longer being fulfilled.
-  // Only restore once: skip if it was already cancelled before.
-  if (oldStatus !== 'cancelled') applyStockDelta(o, +1);
-
-  // Update Firebase
-  if (window._firebaseReady && window._fbDb && o.firebaseId) {
-    window._fbUpdate(
-      window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
-      { status: 'cancelled', updatedAt: new Date().toISOString() }
-    ).catch(e => { showToast('❌ Firebase 更新失敗，請重試'); console.error(e); });
-  }
-
-  renderOrders();
-  renderDashboard();
+  // Same path as every other status change: gives the stock back exactly once
+  // (see restoreStockOnce) and refuses to cancel if that fails.
+  await advanceOrder(id, 'cancelled');
   renderProducts();
 }
 
@@ -3446,7 +3761,12 @@ async function handleImportProducts(input) {
     // Apply each column if present (covers both update and newly-created rows)
     if (gv('售價')         !== undefined && gv('售價') !== '') p.price = parseFloat(gv('售價'))||0;
     if (gv('特價')         !== undefined) p.salePrice = gv('特價') ? parseFloat(gv('特價')) : null;
-    if (gv('庫存(-1=無限)') !== undefined && gv('庫存(-1=無限)') !== '') p.stock = parseInt(gv('庫存(-1=無限)'))||0;
+    if (gv('庫存(-1=無限)') !== undefined && gv('庫存(-1=無限)') !== '') {
+      // A stock number typed in the CSV is a deliberate setting (it wins over the
+      // server's current value). Ignore anything that isn't a valid number.
+      const _csvStock = parseInt(gv('庫存(-1=無限)'), 10);
+      if (!isNaN(_csvStock) && _csvStock >= -1) { p.stock = _csvStock; stockDirty.add(p.id); }
+    }
     if (gv('上架')         !== undefined && gv('上架') !== '') p.active = gv('上架') !== '否';
     if (gv('推介')         !== undefined && gv('推介') !== '') p.featured = gv('推介') === '是';
     if (gv('以重量計價')    !== undefined && gv('以重量計價') !== '') p.priceByWeight = gv('以重量計價') === '是';
@@ -5401,8 +5721,8 @@ function onColDrop(e, newStatus) {
   e.currentTarget.classList.remove('drag-over');
   if (!dragOrderId || !newStatus) return;
   const o = (window._firebaseOrders || state.orders).find(x => x.id === dragOrderId);
-  if (!o || o.status === newStatus) { dragOrderId = null; return; }
-  const statusLabels = {new:'新訂單',pending:'待確認',confirmed:'已確認',delivering:'送緊貨',delivered:'已完成',cancelled:'已取消'};
+  if (!o || orderColKey(o.status) === newStatus) { dragOrderId = null; return; }
+  const statusLabels = {new:'新訂單',confirmed:'已確認',delivered:'已完成',cancelled:'已取消'};
   advanceOrder(dragOrderId, newStatus);
   showToast(`#${dragOrderId.slice(-4).toUpperCase()} → ${statusLabels[newStatus]||newStatus}`);
   dragOrderId = null;
@@ -5438,6 +5758,127 @@ let _loadCalled = false;
 function _doLoad() { if (!_loadCalled) { _loadCalled = true; loadData(); } }
 document.addEventListener('firebaseReady', _doLoad);
 setTimeout(_doLoad, 4000);   // offline fallback
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// READ-ONLY / EDIT MODE
+// The CMS always opens read-only. Pressing "開始編輯" first re-loads the
+// latest data from the server (so nothing stale can be saved), then unlocks
+// editing. It locks itself again after 15 minutes without activity, or when
+// "完成編輯" is pressed. This is what stops a long-open CMS tab from saving
+// old data over newer orders.
+// ══════════════════════════════════════════════════════════════
+const EDIT_IDLE_MS = 15 * 60 * 1000;
+let _lastActivity = Date.now();
+let _idleTimer = null;
+let _lastViewNudge = 0;
+
+function renderModeBar() {
+  const bar = document.getElementById('mode-bar');
+  const txt = document.getElementById('mode-text');
+  const btn = document.getElementById('mode-btn');
+  if (!bar || !txt || !btn) return;
+  if (window.cmsEditMode) {
+    bar.className = 'mode-bar edit';
+    txt.textContent = '✏️ 編輯模式：閒置 15 分鐘會自動返回只讀';
+    btn.textContent = '✓ 完成編輯';
+  } else {
+    bar.className = 'mode-bar view';
+    txt.textContent = '👁 只讀模式：可以睇資料，唔可以改';
+    btn.textContent = '✏️ 開始編輯';
+  }
+  btn.disabled = false;
+}
+
+// Called whenever something tries to save while read-only.
+function notifyViewOnly() {
+  // Put any switch / checkbox / dropdown the person just touched back to how the
+  // data really is (the action itself was blocked).
+  try {
+    const names = ['dashboard','products','inventory','orders','sets','reports','featured','banner','categories','settings','promos','vip'];
+    const cur = names.find(n => { const el = document.getElementById('page-' + n); return el && el.style.display !== 'none'; });
+    if (cur && typeof showPage === 'function') showPage(cur);
+  } catch (e) {}
+  const now = Date.now();
+  if (now - _lastViewNudge < 1500) return;
+  _lastViewNudge = now;
+  showToast('👁 而家係只讀模式，請先撳上面「開始編輯」', 3500);
+  const bar = document.getElementById('mode-bar');
+  if (bar) { bar.classList.remove('flash'); void bar.offsetWidth; bar.classList.add('flash'); }
+}
+
+async function startEditing() {
+  const btn = document.getElementById('mode-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '載入最新資料...'; }
+  try {
+    // Must be able to reach the server, otherwise we'd be "refreshing" from an
+    // old local copy and editing stale data.
+    if (!(window._firebaseReady && window._fbDb)) throw new Error('Firebase not ready');
+    await window._fbGet(window._fbRef(window._fbDb, 'catalogue/updatedAt'));
+    // Pull the newest catalogue first so edits never start from old data.
+    await loadData();
+  } catch (e) {
+    console.error('startEditing reload failed:', e);
+    showToast('❌ 載入最新資料失敗，請檢查網絡後再試', 4000);
+    renderModeBar();
+    return;
+  }
+  if (!(window._firebaseReady && window._fbDb)) {
+    showToast('⚠️ 未連上雲端，暫時唔可以編輯，請重新整理頁面', 4000);
+    renderModeBar();
+    return;
+  }
+  window.cmsEditMode = true;
+  _lastActivity = Date.now();
+  renderModeBar();
+  showToast('✏️ 已進入編輯模式（已載入最新資料）', 2500);
+}
+
+function stopEditing(reason) {
+  if (!window.cmsEditMode) return;
+  window.cmsEditMode = false;
+  renderModeBar();
+  // Close any open edit dialog so nothing half-edited is left on screen.
+  document.querySelectorAll('.modal-overlay.open').forEach(el => el.classList.remove('open'));
+  showToast(reason === 'idle' ? '⏱ 閒置太耐，已自動返回只讀模式' : '👁 已返回只讀模式', 3000);
+}
+
+function toggleEditMode() {
+  if (window.cmsEditMode) stopEditing('manual'); else startEditing();
+}
+
+// Idle auto-lock
+['pointerdown', 'keydown', 'input', 'wheel'].forEach(ev =>
+  document.addEventListener(ev, () => { _lastActivity = Date.now(); }, { passive: true, capture: true }));
+_idleTimer = setInterval(() => {
+  if (window.cmsEditMode && Date.now() - _lastActivity > (window.__EDIT_IDLE_MS || EDIT_IDLE_MS)) stopEditing('idle');
+}, 15000);
+
+// Guard every user action that changes data, so a blocked click does nothing at
+// all (no half-applied local change). saveData() and serverStockChange() also
+// refuse on their own as a second safety net.
+(function guardEditActions() {
+  const names = [
+    'prodDrop','adjustStock','setStock','saveProduct','deleteProduct','saveOrder',
+    'editOrderItemQty','removeOrderItem','updateOrderField','updatePaymentStatus','updateAdminNote',
+    'advanceOrder','cancelOrder','deleteOrder','saveVIP','deleteVIP',
+    'handleImportProducts','triggerImportProducts','bulkToggleCategory','catDrop',
+    'deleteCategoryFromModal','saveCategory','deleteCategory','saveBanner',
+    'toggleFeatured','toggleSetFeatured','clearAllFeatured','saveSet','deleteSet',
+    'savePromo','deletePromo','saveSettings','syncProductToFirebase','syncSettingsToFirebase',
+    'openProductModal','openOrderModal','openVIPModal','openCategoryModal','openSetModal','openPromoModal'
+  ];
+  names.forEach(name => {
+    const fn = window[name];
+    if (typeof fn !== 'function') { console.warn('edit guard: missing function', name); return; }
+    window[name] = function (...args) {
+      if (!window.cmsEditMode) { notifyViewOnly(); return; }
+      return fn.apply(this, args);
+    };
+  });
+})();
+renderModeBar();
 </script>
 </body>
 </html>

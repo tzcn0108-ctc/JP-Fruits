@@ -252,7 +252,7 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, get, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBw9aUAk0SzTGTZnA7S5M-ehFBnRO0dcuo",
@@ -270,6 +270,8 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
   window._fbRef = ref;
   window._fbGet = get;
   window._fbUpdate = update;
+  // Atomic read-modify-write on the SERVER's latest value (used for all stock changes)
+  window._fbTransaction = runTransaction;
   window._firebaseReady = true;
 
   // ── Real-time orders listener (same pattern as main CMS) ──
@@ -492,47 +494,115 @@ function closeOrderModal() {
   window._openOrderId = null;
 }
 
-// Restores stock for an order's items when it gets cancelled — mirrors
-// applyStockDelta() in the main CMS, kept read/write scoped to just this
-// order's items so the mobile page doesn't need the full product catalogue
-// management logic.
-async function restoreStockForOrder(order) {
-  if (!order || !Array.isArray(order.items) || !window._fbDb) return;
-  const trackedItems = order.items.filter(i => i.type !== 'set' && i.productId);
-  if (!trackedItems.length) return;
+// ── STOCK (mirrors the main CMS) ─────────────────────────────────────
+// Every change is applied RELATIVE to the server's latest stock through a
+// transaction, so it can never overwrite a customer's order (or another
+// admin's edit) that landed a moment earlier. Set meals give back the stock of
+// every product picked inside them (item.selections[]), same as the order
+// form deducts it. Unlimited (-1) products are never touched.
+function stockDeltasForOrder(order, delta) {
+  const deltas = {};
+  const add = (productId, qty) => {
+    if (!productId) return;
+    deltas[productId] = (deltas[productId] || 0) + delta * (qty || 1);
+  };
+  (order.items || []).forEach(item => {
+    if (item.type === 'set') (item.selections || []).forEach(sel => add(sel.id, sel.qty));
+    else add(item.productId, item.qty);
+  });
+  return deltas;
+}
+
+async function serverStockChange(deltas) {
+  const ids = Object.keys(deltas).filter(id => deltas[id]);
+  if (!ids.length) return true;
+  if (!(window._fbDb && window._fbTransaction)) return false;
   try {
-    const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue/products'));
-    if (!snap.exists()) return;
-    const prods = snap.val();
-    const prodList = Array.isArray(prods) ? prods : Object.values(prods);
-    let changed = false;
-    trackedItems.forEach(item => {
-      const p = prodList.find(x => x && x.id === item.productId);
-      if (!p || p.stock === -1) return;
-      p.stock = Math.max(0, p.stock + (item.qty||1));
-      changed = true;
-    });
-    if (changed) {
-      await window._fbUpdate(window._fbRef(window._fbDb, 'catalogue'), { products: prodList });
-    }
+    const r = await window._fbTransaction(
+      window._fbRef(window._fbDb, 'catalogue/products'),
+      (cur) => {
+        if (cur == null) return cur;
+        const keys = Array.isArray(cur) ? cur.map((_, i) => i) : Object.keys(cur);
+        keys.forEach(k => {
+          const p = cur[k];
+          if (!p || deltas[p.id] === undefined) return;
+          if (p.stock === -1 || typeof p.stock !== 'number') return;
+          p.stock = Math.max(0, p.stock + deltas[p.id]);
+        });
+        return cur;
+      }
+    );
+    return !!r.committed;
   } catch (e) {
-    console.warn('Stock restore failed:', e);
+    console.error('Stock change failed:', e);
+    return false;
   }
 }
+
+// Claim the one-time stock restore for an order, so it can never be given back
+// twice (e.g. cancelled on the phone AND on the desktop).
+// Returns 'won' | 'taken' (already restored) | 'error'.
+async function claimStockRestore(o) {
+  if (!(window._fbDb && window._fbTransaction && o && o.firebaseId)) return 'error';
+  try {
+    const r = await window._fbTransaction(
+      window._fbRef(window._fbDb, 'orders/' + o.firebaseId + '/stockRestored'),
+      (cur) => cur ? undefined : true
+    );
+    return r.committed ? 'won' : 'taken';
+  } catch (e) { console.error('claimStockRestore failed:', e); return 'error'; }
+}
+
+// Gives an order's stock back exactly once. true = stock is restored (now or before).
+async function restoreStockOnce(o) {
+  if (o.stockRestored) return true;
+  const claim = await claimStockRestore(o);
+  if (claim === 'error') return false;
+  if (claim === 'taken') return true;
+  const ok = await serverStockChange(stockDeltasForOrder(o, +1));
+  if (!ok) {
+    // Couldn't restore: release the claim so a retry can try again.
+    try { await window._fbUpdate(window._fbRef(window._fbDb, 'orders/' + o.firebaseId), { stockRestored: false }); } catch (e) {}
+    return false;
+  }
+  return true;
+}
+
+const _busyOrders = new Set();   // blocks double-taps while a change is in flight
 
 async function changeStatus(id, newStatus) {
   const o = getOrders().find(x => x.id === id);
   if (!o || !o.firebaseId) return;
+  if (_busyOrders.has(id)) return;
+
+  const updates = { status: newStatus, updatedAt: new Date().toISOString() };
 
   if (newStatus === 'cancelled') {
     if (!confirm('確定取消呢張訂單？庫存會自動回復。')) return;
-    if (o.status !== 'cancelled') await restoreStockForOrder(o);
   }
+
+  _busyOrders.add(id);
+  try {
+    if (newStatus === 'cancelled' && o.status !== 'cancelled') {
+      if (!(await restoreStockOnce(o))) {
+        showToast('❌ 庫存回復失敗，訂單未取消，請再試一次');
+        return;
+      }
+      updates.stockRestored = true;
+    } else if (o.status === 'cancelled' && newStatus !== 'cancelled' && o.stockRestored) {
+      // Un-cancelling: the goods are owed again, so take the stock back out.
+      if (!(await serverStockChange(stockDeltasForOrder(o, -1)))) {
+        showToast('❌ 庫存更新失敗，狀態未更改，請再試一次');
+        return;
+      }
+      updates.stockRestored = false;
+    }
+  } finally { _busyOrders.delete(id); }
 
   try {
     await window._fbUpdate(
       window._fbRef(window._fbDb, 'orders/' + o.firebaseId),
-      { status: newStatus, updatedAt: new Date().toISOString() }
+      updates
     );
     showToast(`✓ 已更新為「${STATUS_META[newStatus]?.label||newStatus}」`);
     // onValue listener will refresh the list + modal automatically
