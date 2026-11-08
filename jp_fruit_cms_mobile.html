@@ -160,6 +160,16 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
 .cat-item-row .ci-qty{color:var(--muted);margin:0 10px;white-space:nowrap;}
 .cat-item-row .ci-rev{color:var(--green,#2E7D32);font-weight:600;white-space:nowrap;}
 
+/* ── View-only / edit mode bar ── */
+.mode-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 14px;font-size:0.78rem;font-weight:600;}
+.mode-bar.view{background:#ECE7F2;color:#5b5368;}
+.mode-bar.edit{background:#F5C842;color:#1a1400;}
+.mode-bar.flash{animation:modeflash .7s ease;}
+@keyframes modeflash{0%,100%{filter:none}30%{filter:brightness(1.25) saturate(1.4)}}
+.mode-btn{border:none;border-radius:8px;padding:6px 12px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.mode-bar.view .mode-btn{background:var(--plum,#6B3FA0);color:#fff;}
+.mode-bar.edit .mode-btn{background:rgba(0,0,0,0.18);color:#1a1400;}
+
 /* ── Font size control ── */
 .header-btn{background:rgba(255,255,255,0.18);border:none;border-radius:8px;width:32px;height:32px;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .font-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:250;display:none;align-items:flex-end;justify-content:center;}
@@ -197,6 +207,7 @@ header .sync{font-size:0.68rem;opacity:0.85;display:flex;align-items:center;gap:
     <div class="sync"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">連接中...</span></div>
   </div>
 </header>
+<div class="mode-bar view" id="mode-bar"><span id="mode-text">👁 只讀模式</span><button class="mode-btn" id="mode-btn" onclick="toggleEditMode()">✏️ 開始編輯</button></div>
 <div class="store-status-bar" id="store-status-bar" onclick="toggleStorePause()">
   <span id="store-status-text">營業中，接受新訂單</span>
 </div>
@@ -611,6 +622,60 @@ async function changeStatus(id, newStatus) {
     console.error(e);
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// VIEW-ONLY / EDIT MODE
+// The page opens read-only. Changing an order status or pausing the store needs
+// "開始編輯" first, and editing falls back to read-only after 15 minutes idle.
+// ══════════════════════════════════════════════════════════════
+window.cmsEditMode = false;
+const EDIT_IDLE_MS = window.__EDIT_IDLE_MS || 15 * 60 * 1000;
+let _lastActivity = Date.now(), _idleTimer = null, _lastViewNudge = 0;
+
+function renderModeBar() {
+  const bar = document.getElementById('mode-bar'), txt = document.getElementById('mode-text'), btn = document.getElementById('mode-btn');
+  if (!bar) return;
+  if (window.cmsEditMode) { bar.className = 'mode-bar edit'; txt.textContent = '✏️ 編輯模式（閒置 15 分鐘自動鎖返）'; btn.textContent = '✓ 完成'; }
+  else { bar.className = 'mode-bar view'; txt.textContent = '👁 只讀模式：可以睇，唔可以改'; btn.textContent = '✏️ 開始編輯'; }
+  btn.disabled = false;
+}
+function notifyViewOnly() {
+  const now = Date.now();
+  if (now - _lastViewNudge < 1500) return;
+  _lastViewNudge = now;
+  showToast('👁 而家係只讀模式，請先撳上面「開始編輯」');
+  const bar = document.getElementById('mode-bar');
+  if (bar) { bar.classList.remove('flash'); void bar.offsetWidth; bar.classList.add('flash'); }
+}
+function startEditing() {
+  if (!(window._fbDb)) { showToast('⚠️ 未連上雲端，暫時唔可以編輯'); return; }
+  window.cmsEditMode = true; _lastActivity = Date.now(); renderModeBar();
+  clearInterval(_idleTimer);
+  _idleTimer = setInterval(() => { if (Date.now() - _lastActivity > EDIT_IDLE_MS) { stopEditing(true); } }, Math.min(30000, EDIT_IDLE_MS));
+  showToast('✏️ 已進入編輯模式');
+  updateStickyOffsets();
+}
+function stopEditing(auto) {
+  window.cmsEditMode = false; clearInterval(_idleTimer); renderModeBar();
+  showToast(auto ? '🔒 閒置太耐，已返回只讀模式' : '👁 已返回只讀模式');
+}
+function toggleEditMode() { window.cmsEditMode ? stopEditing() : startEditing(); }
+['click','touchstart','keydown'].forEach(ev => document.addEventListener(ev, () => { _lastActivity = Date.now(); }, true));
+
+// Guard every function that writes to the server.
+(function () {
+  const guard = name => {
+    const orig = window[name];
+    if (typeof orig !== 'function') return;
+    window[name] = function () {
+      if (!window.cmsEditMode) { notifyViewOnly(); return (name === 'serverStockChange') ? Promise.resolve(false) : undefined; }
+      return orig.apply(this, arguments);
+    };
+  };
+  ['changeStatus', 'toggleStorePause', 'serverStockChange'].forEach(guard);
+})();
+renderModeBar();
+setTimeout(updateStickyOffsets, 300);
 
 function showToast(msg) {
   const t = document.getElementById('toast');

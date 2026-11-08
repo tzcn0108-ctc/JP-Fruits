@@ -1186,7 +1186,7 @@ body { background: var(--cream, #FFFDF9); }
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, set, get, onValue, serverTimestamp }
+  import { getDatabase, ref, push, set, get, onValue, runTransaction, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -1207,6 +1207,7 @@ body { background: var(--cream, #FFFDF9); }
   window._fbSet  = set;
   window._fbGet  = get;
   window._fbOnValue = onValue;
+  window._fbTransaction = runTransaction;
   window._firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
 
@@ -1742,6 +1743,49 @@ async function loadProducts() {
   renderProducts();
   updateCart();
   applyVIPFromLink();
+  startLiveStock();
+}
+
+// ── LIVE STOCK SYNC ──────────────────────────────────────────────────
+// Listens to the server's product stock. When a stock figure changes (restock,
+// or another customer buys the last one) the product cards are refreshed quietly:
+// the cart is untouched, the scroll position is restored, and sold-out items move
+// to the bottom of their category (or back to their normal place after restock).
+let _liveStockStarted = false, _liveStockTimer = null;
+function startLiveStock() {
+  if (_liveStockStarted) return;
+  if (!(window._firebaseReady && window._fbDb && window._fbOnValue)) return;
+  _liveStockStarted = true;
+  try {
+    window._fbOnValue(window._fbRef(window._fbDb, 'catalogue/products'), snap => {
+      const v = snap.val();
+      if (!v) return;
+      const list = Array.isArray(v) ? v : Object.values(v);
+      const byId = {};
+      list.forEach(x => { if (x && x.id != null) byId[x.id] = x.stock; });
+      let changed = false;
+      products.forEach(p => {
+        if (!(p.id in byId)) return;
+        const ns = byId[p.id];
+        if (ns !== undefined && ns !== p.stock) { p.stock = ns; changed = true; }
+      });
+      if (!changed) return;
+      clearTimeout(_liveStockTimer);
+      _liveStockTimer = setTimeout(refreshAfterStockChange, 400);
+    });
+  } catch(e) { console.warn('live stock unavailable:', e.message); }
+}
+function refreshAfterStockChange() {
+  // don't redraw while the customer is typing in a product-area field
+  const ae = document.activeElement;
+  const area = document.getElementById('products-area');
+  if (ae && area && area.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) {
+    _liveStockTimer = setTimeout(refreshAfterStockChange, 1500);
+    return;
+  }
+  const y = window.scrollY;
+  try { renderProducts(); updateCart(); } catch(e) { console.warn(e); }
+  window.scrollTo(0, y);
 }
 
 // If the page was opened via a VIP magic link (?vip=JP0001), pre-fill the
@@ -1987,6 +2031,10 @@ function renderProducts(){
   // existing order (stable sort).
   Object.keys(grouped).forEach(catId=>{
     grouped[catId].sort((a,b)=>(a.sortOrder??999999)-(b.sortOrder??999999));
+    // Sold-out items (stock 0) drop to the bottom of their category. The sort is
+    // stable, so everything keeps its CMS order; once stock is added back the item
+    // is no longer sold out and returns to its normal position automatically.
+    grouped[catId].sort((a,b)=>(a.stock===0?1:0)-(b.stock===0?1:0));
   });
   // Category section order follows the CMS-configured category order (same as the tab bar),
   // not auto-sorted by sales — so dragging categories in CMS reorders both consistently.
@@ -2612,6 +2660,55 @@ function pdChQty(id, d) {
   }
 }
 
+// ── CART vs STOCK ───────────────────────────────────────────────────
+// Flags cart lines whose stock has run out / run low (e.g. someone else bought
+// the last one while this customer was browsing) and blocks ordering until fixed.
+function _lineStockProblem(p, qty) {
+  if (!p || p.stock === -1 || p.stock == null) return null;
+  if (p.stock <= 0) return {soldOut:true, left:0};
+  if (p.stock < qty) return {soldOut:false, left:p.stock};
+  return null;
+}
+function cartStockNote(p, qty) {
+  const pr = _lineStockProblem(p, qty);
+  if (!pr) return '';
+  const zh = lang==='zh';
+  const t = pr.soldOut ? (zh?'⚠️ 已售罄，請移除':'⚠️ Sold out, please remove')
+                       : (zh?`⚠️ 只剩 ${pr.left} 件，請減少數量`:`⚠️ Only ${pr.left} left, please reduce`);
+  return `<div class="ci-stock-warn" style="color:#c0392b;font-size:0.72rem;font-weight:600;margin-top:2px;">${t}</div>`;
+}
+function _setNeeds(val) {
+  const need = {};
+  (val.selections||[]).forEach(sel => { if (sel.id) need[sel.id] = (need[sel.id]||0) + (sel.qty||1); });
+  return need;
+}
+function cartSetStockNote(val) {
+  const bad = Object.entries(_setNeeds(val)).some(([id,q]) => _lineStockProblem(products.find(x=>x.id===id), q));
+  if (!bad) return '';
+  const t = lang==='zh' ? '⚠️ 套餐內有產品售罄或不足，請重新配置' : '⚠️ An item in this bundle is sold out or low, please rebuild';
+  return `<div class="ci-stock-warn" style="color:#c0392b;font-size:0.72rem;font-weight:600;margin-top:2px;">${t}</div>`;
+}
+function cartHasStockProblem() {
+  const total = {};
+  Object.entries(cart).forEach(([id,val]) => {
+    if (val && val.isSet) { Object.entries(_setNeeds(val)).forEach(([pid,q]) => total[pid]=(total[pid]||0)+q); }
+    else total[id] = (total[id]||0) + val;
+  });
+  return Object.entries(total).some(([id,q]) => _lineStockProblem(products.find(x=>x.id===id), q));
+}
+function applyStockBlock() {
+  const bad = cartHasStockProblem();
+  document.querySelectorAll('.whatsapp-btn').forEach(b => {
+    if (b.dataset.submitting === 'true') return;
+    if (bad) {
+      b.disabled = true; b.dataset.stockBlocked = '1';
+      b.title = lang==='zh' ? '購物車有產品售罄或不足，請先調整' : 'Some items are sold out or low, please adjust your cart';
+    } else if (b.dataset.stockBlocked === '1') {
+      b.disabled = false; delete b.dataset.stockBlocked; b.title = '';
+    }
+  });
+}
+
 function updateCart(){
   const n=getCount();
   const total=getTotal();
@@ -2620,6 +2717,7 @@ function updateCart(){
   renderCart('cart-section','');
   renderCart('cart-mobile','-m');
   refreshMinWarnings();   // keep the shortfall figure in step with the cart
+  applyStockBlock();
   // Update sticky bottom cart (class-based, CSS handles responsive)
   const sticky=document.getElementById('mobile-sticky-cart');
   if(sticky){
@@ -2718,13 +2816,13 @@ function renderCart(cid,sfx){
   const itemsHtml = items.map(({id,val})=>{
     if(val&&val.isSet){
       const setQty = val.qty||1;
-      return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="chSetQty('${id}',-1)">−</button><div class="ci-qnum">${setQty}</div><button class="ci-qbtn" onclick="chSetQty('${id}',1)">+</button></div><div class="ci-price">£${(parseFloat(val.price||0)*setQty).toFixed(2)}</div></div>`;
+      return`<div class="cart-item-row"><div class="ci-name" style="line-height:1.4;">${lang==='zh'?(val.nameZh||val.name):(val.nameEn||val.name)}${cartSetStockNote(val)}<br><span style="font-size:0.68rem;color:var(--muted);">${val.summary}</span></div><div class="ci-qty"><button class="ci-qbtn" onclick="chSetQty('${id}',-1)">−</button><div class="ci-qnum">${setQty}</div><button class="ci-qbtn" onclick="chSetQty('${id}',1)">+</button></div><div class="ci-price">£${(parseFloat(val.price||0)*setQty).toFixed(2)}</div></div>`;
     }
     const p=products.find(x=>x.id===id);if(!p)return'';
     const ciName=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
     const lineTotal = p.priceByWeight ? 0 : getTieredTotal(p, val);
     const priceDisplay = p.priceByWeight ? (lang==='zh'?'⚖ 以重量計價':'⚖ By weight') : `£${lineTotal.toFixed(2)}`;
-    return`<div class="cart-item-row"><div class="ci-name">${ciName}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum" data-qty-id="${id}${sfx}">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price" data-price-id="${id}${sfx}">${priceDisplay}</div></div>`;
+    return`<div class="cart-item-row"><div class="ci-name">${ciName}${cartStockNote(p,val)}</div><div class="ci-qty"><button class="ci-qbtn" onclick="chQty('${id}',-1)">−</button><div class="ci-qnum" data-qty-id="${id}${sfx}">${val}</div><button class="ci-qbtn" onclick="chQty('${id}',1)">+</button></div><div class="ci-price" data-price-id="${id}${sfx}">${priceDisplay}</div></div>`;
   }).join('');
 
   const discount = getDiscount();
@@ -2789,6 +2887,58 @@ function cartForm(sfx){
   </div>
   <button class="whatsapp-btn" onclick="sendWA('${sfx}')">${tx('waBtn')}</button></div>`;
 }
+// ── ATOMIC STOCK HELPERS ─────────────────────────────────────────────
+// Stock is changed with per-product transactions (never by rewriting the whole
+// product list), so two customers ordering at the same moment can neither wipe
+// out each other's deduction nor both buy the last unit.
+//   needed = { productId: qty }
+//   reserveStock(needed)  -> { ok, reserved:{id:qty}, shortfalls:[{id,requested,available}] }
+//   releaseStock(reserved) puts quantities back (used on failure / cancel of the attempt)
+async function _stockIndex() {
+  const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue/products'));
+  const v = snap.exists() ? snap.val() : null;
+  const list = !v ? [] : (Array.isArray(v) ? v : Object.values(v));
+  const idx = {};
+  list.forEach((p, i) => { if (p && p.id != null) idx[p.id] = i; });
+  return { idx, isArray: Array.isArray(v), keys: (v && !Array.isArray(v)) ? Object.keys(v) : null };
+}
+async function _txnProduct(info, pid, fn) {
+  // fn(product) -> new product object, or undefined to abort. Returns {committed, val}
+  const i = info.idx[pid];
+  if (i === undefined) return { committed:false, val:null, missing:true };
+  const key = info.keys ? info.keys[i] : i;
+  const r = await window._fbTransaction(
+    window._fbRef(window._fbDb, 'catalogue/products/' + key),
+    cur => (cur == null) ? cur : (cur.id !== pid ? undefined : fn(cur)));
+  return { committed: r.committed, val: r.snapshot.val() };
+}
+async function reserveStock(needed) {
+  const info = await _stockIndex();
+  const reserved = {}, shortfalls = [];
+  for (const [pid, qty] of Object.entries(needed)) {
+    const r = await _txnProduct(info, pid, cur => {
+      if (cur.stock === -1 || cur.stock === undefined || cur.stock === null) return cur;   // unlimited
+      if (cur.stock < qty) return undefined;                                               // not enough: abort
+      return { ...cur, stock: cur.stock - qty };
+    });
+    if (r.missing) continue;
+    const unlimited = r.val && (r.val.stock === -1 || r.val.stock == null);
+    if (r.committed) { if (!unlimited) reserved[pid] = qty; }
+    else if (r.val && r.val.id === pid) shortfalls.push({ id: pid, requested: qty, available: Math.max(0, r.val.stock) });
+  }
+  if (shortfalls.length) { await releaseStock(reserved); return { ok:false, reserved:{}, shortfalls }; }
+  return { ok:true, reserved, shortfalls:[] };
+}
+async function releaseStock(reserved) {
+  const ids = Object.keys(reserved || {});
+  if (!ids.length) return;
+  const info = await _stockIndex();
+  for (const pid of ids) {
+    try { await _txnProduct(info, pid, cur => (cur.stock === -1 ? cur : { ...cur, stock: (cur.stock||0) + reserved[pid] })); }
+    catch(e) { console.warn('release failed', pid, e); }
+  }
+}
+
 async function sendWA(sfx){
   // ── Anti-duplicate: disable button immediately ──
   const waBtn = document.querySelector(`#cart-${sfx?'mobile':'section'} .whatsapp-btn`);
@@ -2912,51 +3062,39 @@ Press OK if correct and we'll be in touch.`;
   // checked twice in isolation (which could miss a shortfall that only
   // shows up once the two sources are added together).
   let shortfallData = null; // set below if a genuine shortfall is found
-  if (window._firebaseReady && window._fbDb) {
+  window._stockReserved = null; // quantities already taken from server stock for THIS order
+  if (window._firebaseReady && window._fbDb && window._fbTransaction) {
     try {
-      const snap = await window._fbGet(window._fbRef(window._fbDb, 'catalogue/products'));
-      if (snap.exists()) {
-        const liveProds = snap.val();
-        const liveList = Array.isArray(liveProds) ? liveProds : Object.values(liveProds||{});
-
-        // Combine required quantity per underlying product across direct
-        // cart lines AND every set's selections.
-        const neededByProduct = {}; // productId -> total qty needed
-        Object.entries(cart).forEach(([cartKey, val]) => {
-          if (val && val.isSet) {
-            (val.selections||[]).forEach(sel => {
-              if (!sel.id) return;
-              neededByProduct[sel.id] = (neededByProduct[sel.id]||0) + (sel.qty||1);
-            });
-          } else {
-            neededByProduct[cartKey] = (neededByProduct[cartKey]||0) + val;
-          }
+      // Total needed per underlying product across direct lines AND set selections.
+      const neededByProduct = {};
+      Object.entries(cart).forEach(([cartKey, val]) => {
+        if (val && val.isSet) {
+          (val.selections||[]).forEach(sel => {
+            if (!sel.id) return;
+            neededByProduct[sel.id] = (neededByProduct[sel.id]||0) + (sel.qty||1);
+          });
+        } else {
+          neededByProduct[cartKey] = (neededByProduct[cartKey]||0) + val;
+        }
+      });
+      // Atomic: takes the stock now, or reports exactly what is short.
+      const res = await reserveStock(neededByProduct);
+      if (res.ok) {
+        window._stockReserved = res.reserved;
+      } else {
+        const shortfalls = res.shortfalls.map(sf => {
+          const localP = products.find(p => p.id === sf.id);
+          if (localP) localP.stock = sf.available;
+          const dispName = localP
+            ? (lang==='zh' ? (localP.nameZh||localP.zh||localP.name) : (localP.nameEn||localP.name))
+            : sf.id;
+          return { id: sf.id, name: dispName, requested: sf.requested, available: sf.available };
         });
-
-        const shortfalls = []; // { id, name, requested, available }
-        Object.entries(neededByProduct).forEach(([id, needed]) => {
-          const liveP = liveList.find(p => p && p.id === id);
-          if (!liveP || liveP.stock === -1) return; // unlimited stock or unknown product — skip
-          if (liveP.stock < needed) {
-            const localP = products.find(p => p.id === id);
-            const dispName = localP
-              ? (lang==='zh' ? (localP.nameZh||localP.zh||localP.name) : (localP.nameEn||localP.name))
-              : id;
-            shortfalls.push({ id, name: dispName, requested: needed, available: liveP.stock });
-            if (localP) localP.stock = liveP.stock; // sync local view to reality
-          }
-        });
-
-        if (shortfalls.length > 0) shortfallData = { shortfalls };
+        shortfallData = { shortfalls };
       }
     } catch(e) {
-      console.warn('Stock re-check failed, proceeding without it:', e);
-      // Fail open: a network hiccup on the FETCH itself shouldn't block a
-      // genuine order — same offline-friendly spirit as the rest of
-      // checkout. Note this only wraps the fetch/compute step — once a
-      // real shortfall is found, handling it (below) runs OUTSIDE this
-      // try/catch, so a bug there surfaces as a real error instead of
-      // being silently swallowed and letting a known-short order through.
+      console.warn('Stock reservation failed, proceeding without it:', e);
+      window._stockReserved = null;   // fail open, same as before: old-style deduction runs after save
     }
   }
 
@@ -3093,62 +3231,28 @@ Press OK if correct and we'll be in touch.`;
       window._fbSet(newRef, {...orderData, firebaseId: newRef.key})
         .then(async ()=>{
           console.log('Order saved to Firebase');
-          // Deduct stock for tracked products (stock > 0, not -1).
-          // Set items pick from real products too (each selection carries
-          // the underlying product's id in item.selections[]) — those need
-          // deducting from the SAME shared stock pool, or a product sold
-          // both standalone and inside a set would show a stock count
-          // that never reflects the set-side sales at all.
-          //
-          // CRITICAL: the deduction amount per product must be computed
-          // from FRESH Firebase data at write time, never from this
-          // browser's own (possibly stale) local `products` snapshot.
-          // Basing "new stock" on a local snapshot and then overwriting
-          // Firebase with that absolute number is a classic lost-update
-          // race: if another order was placed anywhere in between this
-          // customer loading the page and submitting, that other order's
-          // deduction gets silently wiped out the moment this one writes —
-          // stock can end up UNDER-deducted (looks like more is left than
-          // was really sold) or even allow overselling, since each
-          // customer's "how much is left" check was against stale data.
-          //
-          // Fix: first tally how much THIS order needs per product (pure
-          // arithmetic on the order itself, independent of any stock
-          // number), THEN fetch Firebase's current stock and subtract from
-          // THAT — so concurrent orders' deductions correctly accumulate
-          // instead of clobbering each other.
-          const qtyNeeded = {}; // productId -> qty this order consumes
-          const need = (productId, qty) => {
-            if (!productId) return;
-            qtyNeeded[productId] = (qtyNeeded[productId]||0) + (qty||1);
-          };
-          orderData.items.forEach(item => {
-            if (item.type==='set') {
-              (item.selections||[]).forEach(sel => need(sel.id, sel.qty));
-              return;
-            }
-            need(item.productId, item.qty);
-          });
-          if (Object.keys(qtyNeeded).length) {
-            const snap = await window._fbGet(window._fbRef(window._fbDb,'catalogue/products'));
-            if (snap.exists()) {
-              const fbProds = snap.val();
-              const fbList = Array.isArray(fbProds) ? fbProds : Object.values(fbProds||{});
-              Object.entries(qtyNeeded).forEach(([pid, qty]) => {
-                const idx = fbList.findIndex(p=>p&&p.id===pid);
-                if (idx<0) return;
-                const fp = fbList[idx];
-                if (fp.stock === -1) return; // unlimited — never touched
-                const newStock = Math.max(0, fp.stock - qty); // based on FRESH server value
-                fbList[idx].stock = newStock;
-                const localP = products.find(x=>x.id===pid);
-                if (localP) localP.stock = newStock; // keep this page's own view in sync
-              });
-              await window._fbSet(window._fbRef(window._fbDb,'catalogue/products'), fbProds);
+          // Stock was already taken atomically in Step 2.5 (window._stockReserved).
+          // Only if that step could not run (fail open) do we deduct now, still
+          // with per-product transactions, never by rewriting the whole list.
+          if (window._stockReserved === null && window._fbTransaction) {
+            const qtyNeeded = {};
+            orderData.items.forEach(item => {
+              if (item.type==='set') { (item.selections||[]).forEach(sel => { if (sel.id) qtyNeeded[sel.id] = (qtyNeeded[sel.id]||0) + (sel.qty||1); }); return; }
+              if (item.productId) qtyNeeded[item.productId] = (qtyNeeded[item.productId]||0) + (item.qty||1);
+            });
+            if (Object.keys(qtyNeeded).length) {
+              const info = await _stockIndex();
+              for (const [pid, qty] of Object.entries(qtyNeeded)) {
+                await _txnProduct(info, pid, cur => (cur.stock === -1 || cur.stock == null) ? cur : { ...cur, stock: Math.max(0, cur.stock - qty) });
+              }
             }
           }
+          window._stockReserved = undefined;
         })
         .catch(e=>{
+          // Order not saved: give back any stock reserved for it
+          try { releaseStock(window._stockReserved); } catch(_){}
+          window._stockReserved = undefined;
           // Offline: save locally
           const pending = JSON.parse(localStorage.getItem('jpfruit-pending')||'[]');
           pending.push(orderData);
