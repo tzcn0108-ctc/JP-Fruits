@@ -117,6 +117,8 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px
 .cat-btn:hover{border-color:var(--plum-m);color:var(--plum);box-shadow:var(--shadow-md);}
 .cat-btn.active{background:var(--plum);border-color:var(--plum);color:white;box-shadow:0 4px 14px rgba(107,76,138,0.35);}
 .best-btn{border-color:var(--gold);color:var(--gold);}
+.special-btn{border-color:#d9534f;color:#c0392b;}
+.special-btn.active{background:linear-gradient(135deg,#e74c3c,#c0392b);border-color:transparent;color:white;}
 .best-btn.active{background:linear-gradient(135deg,var(--gold),#E8881A);border-color:transparent;color:white;}
 
 /* ── SECTION HEADER ── */
@@ -1728,6 +1730,7 @@ async function loadProducts() {
       categories = data.categories||[];
       promos = data.promos||[];
       vips = data.vips||{};
+      specialDeals = data.specialDeals||null;
       if (data.banner) { currentBannerData = data.banner; applyBanner(data.banner); }
       if (data.settings) { siteSettings = data.settings; applySettings(data.settings); }
     } else {
@@ -1958,6 +1961,23 @@ function applyTX(){
 
 // ── CAT NAV ───────────────────────────────────────────────────
 function catLabel(c){return lang==='zh'?(c.zh||c.name):(c.name||c.zh);}
+// ── 特別特價區 (Special Deals) ───────────────────────────────
+// Products picked in the CMS (p.special). Name and hidden switch come from
+// catalogue/specialDeals. Hidden, or nothing selected, means no button and no strip.
+let specialDeals = null;
+function escapeHTML(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function specialLabel(){
+  const d = specialDeals || {};
+  return lang==='zh' ? (d.name || '特別特價區') : (d.nameEn || 'Special Deals');
+}
+function getSpecialDeals(){
+  if (specialDeals && specialDeals.hidden) return [];
+  const list = products.filter(p => p.special);
+  // keep the CMS order, sold-out items last (same rule as the category grids)
+  list.sort((a,b)=>(a.sortOrder??999999)-(b.sortOrder??999999));
+  list.sort((a,b)=>(a.stock===0?1:0)-(b.stock===0?1:0));
+  return list;
+}
 function getBestSellers(){
   const featured=products.filter(p=>p.featured);
   if(featured.length>=4){
@@ -1971,9 +1991,12 @@ function buildCatNav(){
   const used=new Set(products.map(p=>p.cat));
   const valid=categories.filter(c=>used.has(c.id));
   const hasBest=getBestSellers().length>0;
+  const hasSpecial=getSpecialDeals().length>0;
+  if(activeCat==='__special__'&&!hasSpecial) activeCat='all';
   document.getElementById('cat-nav').innerHTML=
     `<button class="cat-btn${activeCat==='all'?' active':''}" onclick="filterCat('all',this)">${tx('catAll')}</button>`+
     (hasBest?`<button class="cat-btn best-btn${activeCat==='__best__'?' active':''}" onclick="filterCat('__best__',this)">${tx('catBest')}</button>`:'')+
+    (hasSpecial?`<button class="cat-btn special-btn${activeCat==='__special__'?' active':''}" onclick="filterCat('__special__',this)">🏷️ ${escapeHTML(specialLabel())}</button>`:'')+
     valid.map(c=>`<button class="cat-btn${activeCat===c.id?' active':''}" onclick="filterCat('${c.id}',this)">${catLabel(c)}</button>`).join('');
 }
 
@@ -2003,6 +2026,26 @@ const EMOJI={
 
 function renderProducts(){
   const area=document.getElementById('products-area');
+  if(activeCat==='__special__'){
+    const list=getSpecialDeals();
+    if(!list.length){ activeCat='all'; buildCatNav(); }
+    else {
+      const isMobile = window.innerWidth <= 640;
+      area.innerHTML=`<div class="cat-section">
+        <div class="section-head">
+          <div class="section-icon">🏷️</div>
+          <div class="section-title">${escapeHTML(specialLabel())}</div>
+          <span class="section-count">${list.length} ${tx('unitItems')}</span>
+          ${isMobile ? `<span class="scroll-hint">${tx('swipeHint')}</span>` : ''}
+        </div>
+        ${isMobile
+          ? `<div class="best-scroll-wrap"><div class="best-scroll">${list.map(p=>pCard(p)).join('')}</div></div>`
+          : `<div class="product-grid">${list.map(p=>pCard(p)).join('')}</div>`
+        }
+      </div>`;
+      return;
+    }
+  }
   if(activeCat==='__best__'){
     const best=getBestSellers();
     const isMobile = window.innerWidth <= 640;
@@ -2064,7 +2107,27 @@ function renderProducts(){
       }).join('')}</div>
     </div>`;
   }
-  area.innerHTML=bestStrip+sorted.map(cid=>{
+  let specialStrip='';
+  if(activeCat==='all'&&!searchQuery){
+    const sp=getSpecialDeals();
+    if(sp.length) specialStrip=`<div class="featured-strip">
+      <div class="section-head">
+        <div class="section-icon">🏷️</div>
+        <div class="section-title">${escapeHTML(specialLabel())}</div>
+        <button onclick="filterCat('__special__',document.querySelector('.special-btn'))" class="section-count" style="cursor:pointer;border:none;font-family:inherit;background:var(--plum-l);color:var(--plum);">全部 →</button>
+      </div>
+      <div class="strip-scroll">${sp.slice(0,8).map(p=>{
+        const nm=lang==='zh'?(p.nameZh||p.zh||p.name):(p.nameEn||p.name);
+        const pr=(p.salePrice||p.price||0);
+        const img=p.image&&p.image.startsWith('http');
+        return `<div class="strip-card" onclick="document.getElementById('cat-${p.cat}')?.scrollIntoView({behavior:'smooth'})">
+          <div class="strip-thumb">${img?'<img src="'+p.image+'" alt="'+escapeHTML(nm)+'" loading="lazy">':EMOJI[p.cat]||''}</div>
+          <div class="strip-info"><div class="strip-name">${nm}</div><div class="strip-price">${p.priceByWeight?'⚖':'£'+pr.toFixed(2)}</div></div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }
+  area.innerHTML=bestStrip+specialStrip+sorted.map(cid=>{
     const cat=categories.find(c=>c.id===cid);
     const cprods=grouped[cid]; // already sorted by sortOrder above — do NOT re-sort by historicSold here
     const catSets=sets.filter(s=>s.cat===cid&&s.isSet);
@@ -3340,7 +3403,7 @@ function filterCat(id,el){
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
   renderProducts();
-  if(id!=='all'&&id!=='__best__'){const s=document.getElementById('cat-'+id);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});}
+  if(id!=='all'&&id!=='__best__'&&id!=='__special__'){const s=document.getElementById('cat-'+id);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});}
 }
 function searchProducts(q){
   searchQuery=q;activeCat='all';

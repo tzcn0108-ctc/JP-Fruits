@@ -141,6 +141,8 @@ input:checked+.slider:before{transform:translateX(16px);background:white;}
 .tabs{display:flex;gap:2px;padding:0 28px;margin-top:16px;border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{padding:9px 14px;font-size:0.82rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;white-space:nowrap;}
 .tab.active{color:var(--green);border-bottom-color:var(--green);font-weight:500;}
+button.tab{background:none;border:none;border-bottom:2px solid transparent;font-family:inherit;}
+button.tab.active{border-bottom-color:var(--green);}
 .notice{background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.2);border-radius:8px;padding:10px 14px;font-size:0.8rem;color:var(--green);margin-bottom:16px;}
 .cat-chip{display:inline-block;padding:2px 8px;background:var(--surface3);border-radius:4px;font-size:0.72rem;color:var(--muted);}
 .sold-bar{display:inline-block;width:40px;height:4px;background:var(--surface3);border-radius:2px;vertical-align:middle;margin-right:4px;overflow:hidden;}
@@ -768,13 +770,20 @@ function cmsUnlock() {
     <!-- FEATURED / BESTSELLERS -->
     <div id="page-featured" style="display:none;">
       <div class="header">
-        <div class="page-title">熱賣專區管理 Top Sellers</div>
+        <div class="page-title">熱賣及特價專區管理</div>
         <div class="header-actions">
-          <button class="btn btn-ghost btn-sm" onclick="clearAllFeatured()">清除全部推介</button>
-          <span id="featured-count-label" style="font-size:0.82rem;color:var(--muted);padding:0 8px;"></span>
         </div>
 </div>
 <div class="content">
+        <div class="tabs" style="margin:0 0 16px;padding:0;">
+          <button class="tab active" id="feat-tab-best" onclick="setFeatTab('best')">🏆 本店熱賣 Top Sellers <span id="feat-tab-best-n" class="badge badge-green" style="margin-left:4px;"></span></button>
+          <button class="tab" id="feat-tab-special" onclick="setFeatTab('special')">🏷️ <span id="feat-tab-special-name">特別特價區</span> <span id="feat-tab-special-n" class="badge badge-green" style="margin-left:4px;"></span></button>
+        </div>
+        <div id="feat-panel-best">
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:12px;">
+          <span id="featured-count-label" style="font-size:0.82rem;color:var(--muted);"></span>
+          <button class="btn btn-ghost btn-sm" onclick="clearAllFeatured()">清除全部推介</button>
+        </div>
         <div class="notice" id="featured-notice">💡 剔選最多 <strong>10 款</strong>產品作為「本店熱賣」。建議每月更新一次，反映當季貨品。冇剔選時，系統自動用歷史銷量 Top 10。</div>
 
         <!-- QUICK STATS -->
@@ -810,6 +819,46 @@ function cmsUnlock() {
             <div id="featured-sets"></div>
           </div>
         </div>
+        </div><!-- /feat-panel-best -->
+        <div id="feat-panel-special" style="display:none;">
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:12px;"><span id="special-count-label" style="font-size:0.82rem;color:var(--muted);"></span><button class="btn btn-ghost btn-sm" onclick="clearAllSpecial()">清除全部</button></div>
+        <div class="notice">💡 喺下面剔選要放入「特別特價區」嘅產品（冇數量上限）。客人落單頁會喺「本店熱賣」隔籬見到呢個分類。可以改名，亦可以一鍵隱藏。</div>
+
+        <div class="stat-card" style="margin-bottom:16px;padding:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;">
+            <div>
+              <div class="stat-label" style="margin-bottom:6px;">分類名稱（中文）</div>
+              <input class="search-box" id="special-name-zh" placeholder="特別特價區" onchange="saveSpecialConfig()" style="width:100%;">
+            </div>
+            <div>
+              <div class="stat-label" style="margin-bottom:6px;">Category name (English)</div>
+              <input class="search-box" id="special-name-en" placeholder="Special Deals" onchange="saveSpecialConfig()" style="width:100%;">
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.84rem;cursor:pointer;padding-bottom:8px;white-space:nowrap;">
+              <input type="checkbox" id="special-hidden" onchange="saveSpecialConfig()" style="width:16px;height:16px;"> 隱藏呢個分類
+            </label>
+          </div>
+          <div id="special-status" style="font-size:0.78rem;margin-top:10px;color:var(--muted);"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <input class="search-box" id="special-search" placeholder="搜尋產品..." oninput="renderSpecialTable()" style="flex:1;">
+          <select class="search-box" id="special-cat-filter" onchange="renderSpecialTable()" style="width:160px;"><option value="">所有分類</option></select>
+          <select class="search-box" id="special-show-filter" onchange="renderSpecialTable()" style="width:150px;">
+            <option value="all">全部產品</option>
+            <option value="selected">已放入特價區</option>
+            <option value="sale">有特價嘅產品</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:40px;">放入</th><th>產品名稱</th><th>分類</th><th>價錢</th><th>庫存</th></tr></thead>
+            <tbody id="special-table"></tbody>
+          </table>
+        </div>
+      
+      </div>
       </div>
     </div>
 
@@ -1831,10 +1880,12 @@ async function loadData() {
       state.promos     = saved.promos   || [];
       state.vips       = saved.vips     || {};
       state.settings   = saved.settings || {};
+      state.specialDeals = normalizeSpecialDeals(saved.specialDeals);
     } else {
       state.categories = SEED_CATEGORIES;
       state.products   = SEED_PRODUCTS.map(p=>({...p}));
       state.sets=[]; state.orders=[]; state.settings={};
+      state.specialDeals = normalizeSpecialDeals(null);
       await saveData({ system: true });
     }
   } catch(e) {
@@ -2058,7 +2109,8 @@ async function saveData(opts) {
     products: state.products, orders: state.orders,
     categories: state.categories, banner: state.banner,
     sets: state.sets,
-        promos: state.promos||[], settings: state.settings||{}, vips: state.vips||{}
+        promos: state.promos||[], settings: state.settings||{}, vips: state.vips||{},
+    specialDeals: state.specialDeals || normalizeSpecialDeals(null)
   };
   const data = JSON.stringify(payload);
 
@@ -2096,6 +2148,7 @@ async function saveData(opts) {
         settings:   state.settings || {},
         promos:     (state.promos||[]).filter(p=>p.active!==false),
         vips:       state.vips || {},
+        specialDeals: state.specialDeals || normalizeSpecialDeals(null),
         updatedAt:  new Date().toISOString(),
       });
       dirtyAtStart.forEach(id => stockDirty.delete(id));   // server now holds these deliberate numbers
@@ -2162,7 +2215,7 @@ function showPage(page) {
   if(page==='promos') renderPromosPage();
   if(page==='vip') renderVIPPage();
   if(page==='reports') initReports();
-  if(page==='featured') renderFeaturedPage();
+  if(page==='featured') { renderFeaturedPage(); renderSpecialPage(); setFeatTab(window._featTab||'best'); }
   if(page==='banner') renderBannerPage();
   if(page==='settings') initSettings();
   if(page==='categories') renderCategories();
@@ -4213,6 +4266,7 @@ function toggleFeatured(id, checked) {
 }
 
 function updateFeaturedStats() {
+  const _n0 = document.getElementById('feat-tab-best-n'); if (_n0) _n0.textContent = state.products.filter(p=>p.featured).length;
   const featCount = state.products.filter(p=>p.featured).length;
   const autoCount = Math.max(0, 10 - featCount);
   const setCount  = (state.sets||[]).filter(s=>s.featured).length;
@@ -4256,6 +4310,115 @@ function renderFeaturedSets() {
       </td>
     </tr>`;
   }).join('') + '</tbody></table>';
+}
+
+// ── SPECIAL DEALS (特別特價區) ───────────────────────────────
+// A second showcase category next to 熱賣推薦. Which products are in it is a
+// per-product flag (p.special); its name and hidden/visible state live in
+// state.specialDeals, which the order form reads from catalogue/specialDeals.
+function normalizeSpecialDeals(v) {
+  const d = (v && typeof v === 'object') ? v : {};
+  return {
+    name:   (d.name   || '').trim() || '特別特價區',
+    nameEn: (d.nameEn || '').trim() || 'Special Deals',
+    hidden: !!d.hidden,
+  };
+}
+
+function renderSpecialPage() {
+  if (!state.specialDeals) state.specialDeals = normalizeSpecialDeals(null);
+  const sd = state.specialDeals;
+  const z = document.getElementById('special-name-zh'), e = document.getElementById('special-name-en'), h = document.getElementById('special-hidden');
+  if (z) z.value = sd.name; if (e) e.value = sd.nameEn; if (h) h.checked = !!sd.hidden;
+  const sel = document.getElementById('special-cat-filter');
+  if (sel && sel.options.length <= 1) {
+    state.categories.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.zh || c.name; sel.appendChild(o); });
+  }
+  updateSpecialStats();
+  renderSpecialTable();
+}
+
+function setFeatTab(which) {
+  window._featTab = which;
+  const sp = which === 'special';
+  const pb = document.getElementById('feat-panel-best'), ps = document.getElementById('feat-panel-special');
+  if (pb) pb.style.display = sp ? 'none' : 'block';
+  if (ps) ps.style.display = sp ? 'block' : 'none';
+  document.getElementById('feat-tab-best')?.classList.toggle('active', !sp);
+  document.getElementById('feat-tab-special')?.classList.toggle('active', sp);
+}
+
+function updateSpecialStats() {
+  const nm = document.getElementById('feat-tab-special-name'); if (nm) nm.textContent = (state.specialDeals||{}).name || '特別特價區';
+  const n1 = document.getElementById('feat-tab-special-n'); if (n1) n1.textContent = state.products.filter(p=>p.special).length;
+  const n0 = document.getElementById('feat-tab-best-n'); if (n0) n0.textContent = state.products.filter(p=>p.featured).length;
+  const sd = state.specialDeals || normalizeSpecialDeals(null);
+  const chosen = state.products.filter(p => p.special);
+  const live   = chosen.filter(p => p.active !== false);
+  const lbl = document.getElementById('special-count-label');
+  if (lbl) lbl.textContent = `已放入 ${chosen.length} 款`;
+  const st = document.getElementById('special-status');
+  if (!st) return;
+  if (sd.hidden) st.innerHTML = '🙈 <strong>已隱藏</strong>：客人落單頁見唔到呢個分類（揀咗嘅產品會保留，取消隱藏就返嚟）。';
+  else if (!live.length) st.innerHTML = '⚠️ 而家未有任何上架產品放入呢個分類，所以客人暫時見唔到分類按鈕。';
+  else st.innerHTML = `✅ 客人見到「${escapeHTML(sd.name)}」，共 ${live.length} 款上架產品。`;
+}
+
+function saveSpecialConfig() {
+  const z = document.getElementById('special-name-zh'), e = document.getElementById('special-name-en'), h = document.getElementById('special-hidden');
+  state.specialDeals = normalizeSpecialDeals({ name: z.value, nameEn: e.value, hidden: h.checked });
+  z.value = state.specialDeals.name; e.value = state.specialDeals.nameEn;
+  saveData();
+  updateSpecialStats();
+  showToast(state.specialDeals.hidden ? '已隱藏特價區' : '已儲存分類名稱');
+}
+
+function toggleSpecial(id, checked) {
+  const p = state.products.find(x => x.id === id);
+  if (!p) return;
+  p.special = !!checked;
+  saveData();
+  updateSpecialStats();
+  renderSpecialTable();
+}
+
+function clearAllSpecial() {
+  if (!state.products.some(p => p.special)) return;
+  if (!confirm('確定將所有產品移出特別特價區？')) return;
+  state.products.forEach(p => { p.special = false; });
+  saveData();
+  renderSpecialPage();
+}
+
+function renderSpecialTable() {
+  const q    = (document.getElementById('special-search')?.value || '').toLowerCase();
+  const cat  = document.getElementById('special-cat-filter')?.value || '';
+  const show = document.getElementById('special-show-filter')?.value || 'all';
+  let prods = state.products;
+  if (q)   prods = prods.filter(p => (p.name||'').toLowerCase().includes(q) || (p.nameZh||p.zh||'').includes(q) || (p.id||'').toLowerCase().includes(q));
+  if (cat) prods = prods.filter(p => p.cat === cat);
+  if (show === 'selected') prods = prods.filter(p => p.special);
+  if (show === 'sale')     prods = prods.filter(p => p.salePrice);
+  // chosen first, then discounted ones, then the rest
+  prods = [...prods].sort((a,b) => (b.special?2:0)+(b.salePrice?1:0) - ((a.special?2:0)+(a.salePrice?1:0)));
+  const tbody = document.getElementById('special-table');
+  if (!prods.length) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty">沒有符合條件嘅產品</div></td></tr>`; return; }
+  tbody.innerHTML = prods.map(p => {
+    const c = state.categories.find(cc => cc.id === p.cat);
+    const stock = p.stock === -1 ? '<span style="color:var(--muted);">∞</span>' : p.stock === 0 ? '<span class="badge badge-red">售罄</span>' : `${p.stock}`;
+    const price = p.priceByWeight ? '⚖ 重量計價'
+      : p.salePrice ? `<span style="color:var(--green);font-weight:600;">£${p.salePrice.toFixed(2)}</span> <span style="text-decoration:line-through;color:var(--muted);font-size:0.75rem;">£${(p.price||0).toFixed(2)}</span>`
+      : (p.price ? `£${p.price.toFixed(2)}` : '<span class="badge badge-gold">未填</span>');
+    return `<tr style="${p.special?'background:rgba(0,200,150,0.04);':''}${p.active===false?'opacity:.55;':''}">
+      <td style="text-align:center;"><label style="cursor:pointer;display:flex;justify-content:center;">
+        <input type="checkbox" ${p.special?'checked':''} onchange="toggleSpecial('${p.id}',this.checked)" style="width:16px;height:16px;cursor:pointer;"></label></td>
+      <td><div style="font-size:0.84rem;font-weight:${p.special?'500':'400'};">${escapeHTML(p.name||'')}</div>
+        ${p.special?'<span class="badge badge-green" style="font-size:0.65rem;">特價區</span>':''}${p.active===false?' <span class="badge badge-gold" style="font-size:0.65rem;">已下架</span>':''}</td>
+      <td><span class="cat-chip">${c ? c.zh : '—'}</span></td>
+      <td style="font-family:var(--mono);font-size:0.83rem;">${price}</td>
+      <td>${stock}</td>
+    </tr>`;
+  }).join('');
 }
 
 function clearAllFeatured() {
@@ -5865,7 +6028,7 @@ _idleTimer = setInterval(() => {
     'advanceOrder','cancelOrder','deleteOrder','saveVIP','deleteVIP',
     'handleImportProducts','triggerImportProducts','bulkToggleCategory','catDrop',
     'deleteCategoryFromModal','saveCategory','deleteCategory','saveBanner',
-    'toggleFeatured','toggleSetFeatured','clearAllFeatured','saveSet','deleteSet',
+    'toggleFeatured','toggleSetFeatured','clearAllFeatured','toggleSpecial','saveSpecialConfig','clearAllSpecial','saveSet','deleteSet',
     'savePromo','deletePromo','saveSettings','syncProductToFirebase','syncSettingsToFirebase',
     'openProductModal','openOrderModal','openVIPModal','openCategoryModal','openSetModal','openPromoModal'
   ];
