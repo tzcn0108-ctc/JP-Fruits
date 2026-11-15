@@ -1726,7 +1726,7 @@ async function loadProducts() {
     const data = await getDB();
     if (data) {
       products = (data.products||[]).filter(p=>p.active!==false && (p.priceByWeight || p.price>0)); // sold-out (stock 0) still shows, badged as sold out — only active:false hides a product entirely
-      sets = data.sets||[];
+      sets = (data.sets||[]).filter(x=>x && x.active!==false);   // a set switched off (下架) in the CMS must not be sold
       categories = data.categories||[];
       promos = data.promos||[];
       vips = data.vips||{};
