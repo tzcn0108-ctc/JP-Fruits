@@ -4395,7 +4395,7 @@ function renderSpecialTable() {
   const cat  = document.getElementById('special-cat-filter')?.value || '';
   const show = document.getElementById('special-show-filter')?.value || 'all';
   let prods = state.products;
-  if (q)   prods = prods.filter(p => (p.name||'').toLowerCase().includes(q) || (p.nameZh||p.zh||'').includes(q) || (p.id||'').toLowerCase().includes(q));
+  if (q)   prods = prods.filter(p => ((p.nameZh||'')+' '+(p.zh||'')+' '+(p.nameEn||'')+' '+(p.name||'')+' '+(p.id||'')).toLowerCase().includes(q));
   if (cat) prods = prods.filter(p => p.cat === cat);
   if (show === 'selected') prods = prods.filter(p => p.special);
   if (show === 'sale')     prods = prods.filter(p => p.salePrice);
@@ -4412,7 +4412,8 @@ function renderSpecialTable() {
     return `<tr style="${p.special?'background:rgba(0,200,150,0.04);':''}${p.active===false?'opacity:.55;':''}">
       <td style="text-align:center;"><label style="cursor:pointer;display:flex;justify-content:center;">
         <input type="checkbox" ${p.special?'checked':''} onchange="toggleSpecial('${p.id}',this.checked)" style="width:16px;height:16px;cursor:pointer;"></label></td>
-      <td><div style="font-size:0.84rem;font-weight:${p.special?'500':'400'};">${escapeHTML(p.name||'')}</div>
+      <td><div style="font-size:0.84rem;font-weight:${p.special?'500':'400'};">${escapeHTML(p.nameZh||p.zh||p.name||'')}</div>
+        ${(p.nameZh||p.zh) && (p.nameEn||p.name) ? `<div style="font-size:0.72rem;color:var(--muted);">${escapeHTML(p.nameEn||p.name)}</div>` : ''}
         ${p.special?'<span class="badge badge-green" style="font-size:0.65rem;">特價區</span>':''}${p.active===false?' <span class="badge badge-gold" style="font-size:0.65rem;">已下架</span>':''}</td>
       <td><span class="cat-chip">${c ? c.zh : '—'}</span></td>
       <td style="font-family:var(--mono);font-size:0.83rem;">${price}</td>
